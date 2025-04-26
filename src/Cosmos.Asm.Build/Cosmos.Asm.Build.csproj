@@ -6,10 +6,4 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core"/>
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing"/>
   </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Build\Cosmos.Asm.Build.props" Pack="true">
-      <PackagePath>Build\Cosmos.Asm.Build.props</PackagePath>
-    </None>
-  </ItemGroup>
 </Project>
