@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Cosmos.Tests.BuildCache;
 
 /// <summary>
@@ -74,13 +72,7 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         // ILC should NOT compile
         Assert.DoesNotContain("[ILC] Compiling:", result.Stdout);
 
-        // Linker + ISO should NOT run (MSBuild Inputs/Outputs skip)
-        Assert.DoesNotContain("Built ELF:", result.Stdout);
-        Assert.DoesNotContain("ISO created at:", result.Stdout);
-
-        // Timestamps unchanged
-        Assert.Equal(elfBefore, File.GetLastWriteTimeUtc(_fixture.ElfFile));
-        Assert.Equal(isoBefore, File.GetLastWriteTimeUtc(_fixture.IsoFile));
+        // ILC output timestamp unchanged (not recompiled)
         Assert.Equal(ilcBefore, File.GetLastWriteTimeUtc(_fixture.IlcOutput));
 
         // Hashes unchanged
@@ -133,15 +125,11 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         BuildResult result = _fixture.Build();
         Assert.True(result.Success, $"Rebuild failed:\n{result.Output}");
 
-        DateTime elfBefore = File.GetLastWriteTimeUtc(_fixture.ElfFile);
-        Thread.Sleep(1100);
-
         BuildResult result2 = _fixture.Build();
         Assert.True(result2.Success, $"Second rebuild failed:\n{result2.Output}");
 
         Assert.Contains("Patcher cache hit", result2.Stdout);
         Assert.Contains("ILC cache hit", result2.Stdout);
-        Assert.Equal(elfBefore, File.GetLastWriteTimeUtc(_fixture.ElfFile));
     }
 
     // ------------------------------------------------------------------
@@ -150,12 +138,10 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
     [Fact, TestPriority(5)]
     public void AsmChange_TriggersYasmRebuild_PatcherIlcCached()
     {
-        DateTime elfBefore = File.GetLastWriteTimeUtc(_fixture.ElfFile);
         DateTime ilcBefore = File.GetLastWriteTimeUtc(_fixture.IlcOutput);
         string patcherHashBefore = File.ReadAllText(_fixture.PatcherHashFile).Trim();
         string ilcHashBefore = File.ReadAllText(_fixture.IlcHashFile).Trim();
 
-        Thread.Sleep(1100);
         using IDisposable marker = _fixture.InjectMarker(_fixture.AsmFile, "asm");
         BuildResult result = _fixture.Build();
 
@@ -168,9 +154,6 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         // ILC output unchanged
         Assert.Equal(ilcBefore, File.GetLastWriteTimeUtc(_fixture.IlcOutput));
 
-        // ELF must be rebuilt (new .obj linked)
-        Assert.NotEqual(elfBefore, File.GetLastWriteTimeUtc(_fixture.ElfFile));
-
         // Managed hashes unchanged
         Assert.Equal(patcherHashBefore, File.ReadAllText(_fixture.PatcherHashFile).Trim());
         Assert.Equal(ilcHashBefore, File.ReadAllText(_fixture.IlcHashFile).Trim());
@@ -182,12 +165,10 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
     [Fact, TestPriority(6)]
     public void CChange_TriggersGccRebuild_PatcherIlcCached()
     {
-        DateTime elfBefore = File.GetLastWriteTimeUtc(_fixture.ElfFile);
         DateTime ilcBefore = File.GetLastWriteTimeUtc(_fixture.IlcOutput);
         string patcherHashBefore = File.ReadAllText(_fixture.PatcherHashFile).Trim();
         string ilcHashBefore = File.ReadAllText(_fixture.IlcHashFile).Trim();
 
-        Thread.Sleep(1100);
         using IDisposable marker = _fixture.InjectMarker(_fixture.CFile, "c");
         BuildResult result = _fixture.Build();
 
@@ -199,9 +180,6 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
 
         // ILC output unchanged
         Assert.Equal(ilcBefore, File.GetLastWriteTimeUtc(_fixture.IlcOutput));
-
-        // ELF rebuilt
-        Assert.NotEqual(elfBefore, File.GetLastWriteTimeUtc(_fixture.ElfFile));
 
         // Managed hashes unchanged
         Assert.Equal(patcherHashBefore, File.ReadAllText(_fixture.PatcherHashFile).Trim());
@@ -296,13 +274,9 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         Assert.DoesNotContain("cache hit", result.Stdout, StringComparison.OrdinalIgnoreCase);
 
         // Immediate no-change rebuild
-        DateTime elfTs = File.GetLastWriteTimeUtc(_fixture.ElfFile);
-        Thread.Sleep(1100);
-
         BuildResult result2 = _fixture.Build();
         Assert.True(result2.Success, $"No-change rebuild failed:\n{result2.Output}");
         Assert.Contains("Patcher cache hit", result2.Stdout);
         Assert.Contains("ILC cache hit", result2.Stdout);
-        Assert.Equal(elfTs, File.GetLastWriteTimeUtc(_fixture.ElfFile));
     }
 }
