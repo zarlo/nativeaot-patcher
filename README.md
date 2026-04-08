@@ -6,7 +6,7 @@
 
 [![.NET Tests](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/dotnet.yml)
 [![Kernel Tests](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/kernel-tests.yml/badge.svg?branch=main)](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/kernel-tests.yml)
-[![Release](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/release.yml)
+[![Release](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/release.yml/badge.svg)](https://github.com/valentinbreiz/nativeaot-patcher/actions/workflows/release.yml)
 
 ![Alt](https://repobeats.axiom.co/api/embed/7845239d43b4d6c3e747d01b6d43fec344539812.svg "Repobeats analytics image")
 
