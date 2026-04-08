@@ -107,20 +107,30 @@ public class BuildFixture
     }
 
     /// <summary>
-    /// Injects a comment marker into a source file. Returns an IDisposable that reverts the change.
+    /// Injects a marker into a source file that actually affects the compiled output.
+    /// Comment-only changes don't change .o/.obj bytes (compilers strip comments), so we
+    /// inject something the assembler/compiler keeps in the output. Returns an IDisposable
+    /// that reverts the change.
     /// </summary>
     public IDisposable InjectMarker(string filePath, string fileType)
     {
         string original = File.ReadAllText(filePath);
+        long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         string marker = fileType switch
         {
-            "cs" => $"// CACHE_TEST_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}\n",
-            "asm" => $"; CACHE_TEST_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}\n",
-            "c" => $"// CACHE_TEST_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}\n",
-            _ => $"// CACHE_TEST_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}\n"
+            // C# comment + a new field — affects metadata + IL
+            "cs" => $"// CACHE_TEST_{ts}\n",
+            // YASM: append a unique global symbol so the .obj actually differs
+            "asm" => $"\nglobal cache_test_{ts}\nsection .cache_test_{ts}\ndb {ts & 0xff}\n",
+            // C: append a unique function so the .o actually differs
+            "c" => $"\nvoid cache_test_{ts}(void) {{ (void)0; }}\n",
+            _ => $"// CACHE_TEST_{ts}\n"
         };
 
-        File.WriteAllText(filePath, marker + original);
+        // For asm/c: append at end (avoid breaking top-of-file directives)
+        // For cs: prepend (top-of-file comment is fine in C#)
+        string newContent = fileType == "cs" ? marker + original : original + marker;
+        File.WriteAllText(filePath, newContent);
         return new FileRestorer(filePath, original);
     }
 
