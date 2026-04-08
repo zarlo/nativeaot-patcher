@@ -6,6 +6,15 @@
     <RootNamespace>Cosmos.Tests.BuildCache</RootNamespace>
   </PropertyGroup>
 
+  <!-- Inject the current Cosmos version so BuildFixture can resolve files in the
+       NuGet cache without a hardcoded literal. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>CosmosVersion</_Parameter1>
+      <_Parameter2>$(VersionPrefix)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />

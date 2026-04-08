@@ -19,8 +19,21 @@
 
   </PropertyGroup>
 
+  <!--
+    Single source of truth for the version of every Cosmos package.
+
+    The literal below is the local-development default and is the *only* place
+    a literal Cosmos version exists in the source tree. CI overrides it on
+    `v*` tag push by exporting `VersionPrefix=<tag>` (or `-p:VersionPrefix=<tag>`).
+    The Condition lets env vars win, since MSBuild loads env vars before
+    project PropertyGroups.
+
+    Everything else (Directory.Packages.props, the Cosmos.Sdk shipped Sdk.props,
+    the cosmos-kernel template, Cosmos.Kernel's generated VersionString and
+    kmain_version.h, the BuildCache test fixture) derives from $(VersionPrefix).
+  -->
   <PropertyGroup>
-    <VersionPrefix>3.0.43</VersionPrefix>
+    <VersionPrefix Condition="'$(VersionPrefix)' == ''">3.0.43</VersionPrefix>
   </PropertyGroup>
 
   <!-- Normalize TargetArchitecture early so GCC targets pick the right toolchain -->
@@ -28,17 +41,6 @@
     <TargetArchitecture Condition="'$(TargetArchitecture)' == '' and '$(RuntimeIdentifier)' != ''">$([System.String]::Copy('$(RuntimeIdentifier)').Split('-')[1])</TargetArchitecture>
     <TargetArchitecture Condition="'$(TargetArchitecture)' == '' and '$(CosmosArch)' != ''">$(CosmosArch)</TargetArchitecture>
   </PropertyGroup>
-
-  <!-- Dynamic version suffix for NuGet packaging only (CI sets CosmosDynamicVersion=true).
-       Without this gate, every build gets a new timestamp version which invalidates ALL
-       incremental caching (patcher, ILC, linker, ISO) because AssemblyInfo changes each build. -->
-  <Target Name="SetDynamicVersion" BeforeTargets="GenerateAssemblyInfo" Condition="'$(CosmosDynamicVersion)' == 'true'">
-    <PropertyGroup>
-      <VersionSuffix>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmm"))</VersionSuffix>
-      <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-    </PropertyGroup>
-    <Message Importance="High" Text="Version: $(Version)" />
-  </Target>
 
   <!-- Prefer Homebrew cross compilers when available to avoid hardcoded /opt/homebrew paths in downstream targets -->
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
