@@ -62,18 +62,23 @@
   <Target Name="_LinkTargetCore">
     <ItemGroup>
       <ObjFiles Include="$(AsmObjDir)/*.obj"/>
+      <!-- GCC produced object files -->
       <ObjFiles Include="$(CObjDir)/*.obj"/>
       <ObjFiles Include="$(CObjDir)/*.o"/>
     </ItemGroup>
 
     <PropertyGroup>
+      <!-- Framework linker script paths (included in package) -->
       <FrameworkLinkerScript>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Linker', 'linker.$(CosmosArch).ld'))</FrameworkLinkerScript>
       <FallbackLinkerScript>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Linker', 'linker.ld'))</FallbackLinkerScript>
+      <!-- User project linker script paths (for backward compatibility) -->
       <UserLinkerScript>$([MSBuild]::NormalizePath('Linker', 'linker.$(CosmosArch).ld'))</UserLinkerScript>
       <UserFallbackLinkerScript>$([MSBuild]::NormalizePath('Linker', 'linker.ld'))</UserFallbackLinkerScript>
     </PropertyGroup>
 
     <ItemGroup>
+      <!-- Arguments for ld.lld -->
+      <!-- Priority: User project -> Framework architecture-specific -> Framework fallback -->
       <LinkerArgs Include="-T $(UserLinkerScript)" Condition="Exists('$(UserLinkerScript)')"/>
       <LinkerArgs Include="-T $(FrameworkLinkerScript)" Condition="!Exists('$(UserLinkerScript)') AND Exists('$(FrameworkLinkerScript)')"/>
       <LinkerArgs Include="-T $(UserFallbackLinkerScript)" Condition="!Exists('$(UserLinkerScript)') AND !Exists('$(FrameworkLinkerScript)') AND Exists('$(UserFallbackLinkerScript)')"/>
@@ -93,6 +98,7 @@
     <Exec Command="&quot;$(LdLinkerPath)&quot; @(LinkerArgs, ' ')"/>
     <Message Text="Built ELF: $(AssemblyName).elf" Importance="High"/>
 
+    <!-- Write cache hash after successful linking -->
     <WriteLinesToFile File="$(_LinkCacheFile)" Lines="$(_CurrentLinkHash)" Overwrite="true" />
   </Target>
 
@@ -133,6 +139,7 @@
   <Target Name="_BuildIsoCore">
     <Message Text="Creating ISO image with Limine..." Importance="High"/>
 
+    <!-- Remove old ISO directory if it exists -->
     <RemoveDir Directories="$(IsoRoot)"/>
 
     <!-- Limine bootloader files bundled in the NuGet package (tools/Limine/) -->
@@ -146,24 +153,31 @@
       <IsoRootEfiBoot>$([MSBuild]::NormalizePath('$(IsoRoot)', 'EFI', 'BOOT'))</IsoRootEfiBoot>
     </PropertyGroup>
 
+    <!-- Create new directories for Limine and EFI boot files -->
     <MakeDir Directories="$(LimineDir)"/>
     <MakeDir Directories="$(IsoRootBootLimine)"/>
     <MakeDir Directories="$(IsoRootEfiBoot)"/>
 
+    <!-- Copy bundled Limine files from NuGet package to intermediate output -->
     <ItemGroup>
       <BundledLimineFiles Include="$(LiminePkgDir)/*"/>
     </ItemGroup>
     <Copy SourceFiles="@(BundledLimineFiles)" DestinationFolder="$(LimineDir)" SkipUnchangedFiles="true"/>
 
+    <!-- On Unix, build the limine CLI tool from the bundled source -->
     <Exec Condition="'$(IsWindows)' != 'true'" Command="make -C &quot;$(LimineDir)&quot;"/>
 
+    <!-- Copy built ELF and Limine config to ISO root -->
     <Copy SourceFiles="$(ElfBinary)" DestinationFolder="$(IsoRootBoot)"/>
     <Copy SourceFiles="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', 'Bootloader', 'limine.conf'))" DestinationFolder="$(IsoRootBootLimine)"/>
 
+    <!-- Copy Limine files -->
     <Copy SourceFiles="$([MSBuild]::NormalizePath('$(LimineDir)', 'limine-bios.sys'));$([MSBuild]::NormalizePath('$(LimineDir)', 'limine-bios-cd.bin'));$([MSBuild]::NormalizePath('$(LimineDir)', 'limine-uefi-cd.bin'))" DestinationFolder="$(IsoRootBootLimine)"/>
+    <!-- Copy architecture-specific UEFI bootloader -->
     <Copy Condition="'$(CosmosArch)' == 'x64'" SourceFiles="$([MSBuild]::NormalizePath('$(LimineDir)', 'BOOTX64.EFI'))" DestinationFolder="$(IsoRootEfiBoot)"/>
     <Copy Condition="'$(CosmosArch)' == 'arm64'" SourceFiles="$([MSBuild]::NormalizePath('$(LimineDir)', 'BOOTAA64.EFI'))" DestinationFolder="$(IsoRootEfiBoot)"/>
 
+    <!-- Arguments for xorriso to generate an ISO with MBR and UEFI boot entries -->
     <ItemGroup>
       <XorrisoArgs Include="-as mkisofs"/>
       <XorrisoArgs Include="-R"/>
@@ -179,11 +193,17 @@
       <XorrisoArgs Include="-o $(IsoOutput)"/>
     </ItemGroup>
 
+    <!-- Create Output Dir -->
     <MakeDir Directories="$(CosmosOutputPath)"/>
+
+    <!-- Build the ISO -->
     <Exec Command="&quot;$(XorrisoBinary)&quot; @(XorrisoArgs, ' ')"/>
+
+    <!-- Install Limine on the new ISO -->
     <Exec Command="&quot;$(LimineBinary)&quot; bios-install &quot;$(IsoOutput)&quot;"/>
     <Message Text="ISO created at: $(IsoOutput)" Importance="High"/>
 
+    <!-- Write cache hash after successful ISO creation -->
     <WriteLinesToFile File="$(_IsoCacheFile)" Lines="$(_CurrentIsoHash)" Overwrite="true" />
   </Target>
 

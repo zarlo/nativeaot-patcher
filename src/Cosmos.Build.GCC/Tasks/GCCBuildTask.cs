@@ -65,6 +65,7 @@ public sealed class GCCBuildTask : ToolTask
         using SHA1? hasher = SHA1.Create();
         var validOutputFiles = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // Produce Windows-friendly .obj extension so the linker (which currently searches for *.obj) can pick them up
         string objExt = Path.DirectorySeparatorChar == '\\' ? ".obj" : ".o";
 
         foreach (string file in SourceFiles)
@@ -74,7 +75,7 @@ public sealed class GCCBuildTask : ToolTask
             byte[] fileHash = hasher.ComputeHash(stream);
             string fileHashString = BitConverter.ToString(fileHash).Replace("-", "").ToLower();
 
-            // Full SHA1 hex (40 chars) — matches YasmBuildTask's filename convention.
+            // Set file-specific output name (full SHA1 hex — matches YasmBuildTask's filename convention)
             string baseName = Path.GetFileNameWithoutExtension(file);
             string outputName = $"{baseName}-{fileHashString}{objExt}";
             string outputPath = Path.GetFullPath(Path.Combine(OutputPath!, outputName));
@@ -90,14 +91,18 @@ public sealed class GCCBuildTask : ToolTask
 
             // Build and execute the command for this file
             StringBuilder sb = new();
+            // Compile to object file, not a shared library
             sb.Append(" -c ");
+            // Add output flag
             sb.Append($" -o {outputPath} ");
 
+            // Add any user-provided compiler flags
             if (!string.IsNullOrEmpty(CompilerFlags))
             {
                 sb.Append($" {CompilerFlags} ");
             }
 
+            // Add GCC's freestanding include directory for standard headers (stdint.h, stddef.h, etc.)
             if (gccIncludePath != null)
             {
                 sb.Append($" -I{gccIncludePath} ");
@@ -107,7 +112,9 @@ public sealed class GCCBuildTask : ToolTask
             string fileDir = Path.GetDirectoryName(file)!;
             sb.Append($" -I{fileDir} ");
 
+            // Add the source file
             sb.Append($" {file} ");
+            // Execute GCC for this file
             string commandLineArguments = sb.ToString();
             Log.LogMessage(MessageImportance.Normal, $"Compiling {file} with args: {commandLineArguments}");
 
