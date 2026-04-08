@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Cosmos.Tests.BuildCache;
 
@@ -11,7 +12,12 @@ public class BuildFixture
     private const string Arch = "x64";
     private const string Rid = "linux-x64";
     private const string Define = "ARCH_X64";
-    private const string CosmosVersion = "3.0.43";
+
+    // Sourced from $(VersionPrefix) at build time via [AssemblyMetadata("CosmosVersion", ...)]
+    // injected by Cosmos.Tests.BuildCache.csproj. Single source of truth = Directory.Build.props.
+    private static readonly string CosmosVersion = typeof(BuildFixture).Assembly
+        .GetCustomAttributes<AssemblyMetadataAttribute>()
+        .First(a => a.Key == "CosmosVersion").Value!;
 
     public string RootDir { get; }
     public string ObjDir { get; }
