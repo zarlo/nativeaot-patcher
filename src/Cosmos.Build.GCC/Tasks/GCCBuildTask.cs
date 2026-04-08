@@ -152,31 +152,36 @@ public sealed class GCCBuildTask : ToolTask
             }
         }
 
-        // Remove orphan object files from THIS source directory only (renamed/deleted source files).
-        // Multiple GCCBuildTask invocations share cobj/, so we only clean files whose base name
-        // prefix (before the hash) matches a source file we know about.
-        string objExt2 = Path.DirectorySeparatorChar == '\\' ? ".obj" : ".o";
-        var sourceBaseNames = new System.Collections.Generic.HashSet<string>(
-            sourceFilePaths.Select(f => Path.GetFileNameWithoutExtension(f)),
-            StringComparer.OrdinalIgnoreCase);
-
-        foreach (string existing in Directory.GetFiles(OutputPath!, "*" + objExt2))
+        // Remove orphan object files from THIS source directory only.
+        // Multiple GCCBuildTask invocations share cobj/, so we use a per-invocation manifest
+        // file (.gcc-manifest-<sourceDirHash>) to track which outputs belong to this source dir.
+        // On each run, anything in the previous manifest that's no longer valid is deleted.
+        string sourceDirHashStr;
+        using (SHA1 dirHasher = SHA1.Create())
         {
-            string normalizedExisting = Path.GetFullPath(existing);
-            if (validOutputFiles.Contains(normalizedExisting))
-                continue;
+            byte[] dirHashBytes = dirHasher.ComputeHash(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(SourceFiles!)));
+            sourceDirHashStr = BitConverter.ToString(dirHashBytes).Replace("-", "").ToLower().Substring(0, 12);
+        }
+        string manifestPath = Path.Combine(OutputPath!, $".gcc-manifest-{sourceDirHashStr}");
 
-            // Extract base name before the hash suffix: "kmain-a1b2c3d4.o" -> "kmain"
-            string fileName = Path.GetFileNameWithoutExtension(existing);
-            int dashIdx = fileName.LastIndexOf('-');
-            string baseName = dashIdx > 0 ? fileName.Substring(0, dashIdx) : fileName;
-
-            if (sourceBaseNames.Contains(baseName))
+        // Read previous manifest to find files this invocation owned previously
+        if (File.Exists(manifestPath))
+        {
+            foreach (string previousFile in File.ReadAllLines(manifestPath))
             {
-                Log.LogMessage(MessageImportance.Normal, $"Removing orphan object: {Path.GetFileName(existing)}");
-                File.Delete(existing);
+                if (string.IsNullOrWhiteSpace(previousFile))
+                    continue;
+                string normalizedPrev = Path.GetFullPath(previousFile);
+                if (!validOutputFiles.Contains(normalizedPrev) && File.Exists(normalizedPrev))
+                {
+                    Log.LogMessage(MessageImportance.Normal, $"Removing orphan object: {Path.GetFileName(normalizedPrev)}");
+                    File.Delete(normalizedPrev);
+                }
             }
         }
+
+        // Write current manifest
+        File.WriteAllLines(manifestPath, validOutputFiles);
 
         Log.LogMessage(MessageImportance.High, "GCCBuildTask completed successfully.");
         return true;
