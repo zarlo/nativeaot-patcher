@@ -27,23 +27,22 @@
     `<Sdk Name="Cosmos.Sdk" />` references in every kernel csproj, so keeping
     it in global.json lets in-repo kernels build without hardcoded versions.
 
-    The fallback below mirrors that value and is only used when neither the
-    `VersionPrefix` env var nor an MSBuild `-p:VersionPrefix=` override is set.
-    In practice:
-      - Release CI exports `VersionPrefix=<git tag>` (e.g. `3.0.44`)
-      - Local `./.devcontainer/postCreateCommand.sh` computes
-        `VersionPrefix=<git tag>.<yyyyMMdd>` and rewrites global.json before
-        building, so packages get a unique dev version per day.
-
-    When bumping the release version, update BOTH this fallback and
-    global.json's `msbuild-sdks.Cosmos.Sdk` entry so they stay in sync.
+    Resolution order for $(VersionPrefix):
+      1. Env var / `-p:VersionPrefix=` override (Release CI sets this from the
+         git tag, e.g. `3.0.44`)
+      2. `msbuild-sdks.Cosmos.Sdk` in global.json (rewritten in-place by
+         `./.devcontainer/postCreateCommand.sh` to `<base>.<yyyyMMdd>` for
+         local dev / PR CI so packages get a unique dev version per day —
+         ALWAYS pick this up here so sibling csprojs built in a fresh shell
+         see the same value the setup script generated)
 
     Everything else (Directory.Packages.props, the Cosmos.Sdk shipped Sdk.props,
     the cosmos-kernel template, Cosmos.Kernel's generated VersionString and
     kmain_version.h, the BuildCache test fixture) derives from $(VersionPrefix).
   -->
   <PropertyGroup>
-    <VersionPrefix Condition="'$(VersionPrefix)' == ''">3.0.44</VersionPrefix>
+    <_CosmosGlobalJsonPath>$(MSBuildThisFileDirectory)global.json</_CosmosGlobalJsonPath>
+    <VersionPrefix Condition="'$(VersionPrefix)' == '' and Exists('$(_CosmosGlobalJsonPath)')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(_CosmosGlobalJsonPath)')), '&quot;Cosmos\.Sdk&quot;\s*:\s*&quot;([^&quot;]+)&quot;').Groups[1].Value)</VersionPrefix>
   </PropertyGroup>
 
   <!--
