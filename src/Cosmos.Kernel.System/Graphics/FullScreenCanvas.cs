@@ -103,7 +103,7 @@ public static class FullScreenCanvas
     /// Attempts to get a screen display canvas, and changes the display mode to the default.
     /// </summary>
     /// <returns><see langword="true"/> if the operation was successful; otherwise, <see langword="false"/>.</returns>
-    public static bool TryGetFullScreenCanvas(Mode mode, out Canvas canvas)
+    public static bool TryGetFullScreenCanvas(Mode mode, out Canvas? canvas)
     {
         try
         {

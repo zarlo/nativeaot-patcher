@@ -37,8 +37,8 @@ public static unsafe partial class GarbageCollector
             }
 
             // const define for now
-           return new Dictionary<string, object>()
-           {
+            return new Dictionary<string, object>()
+            {
                 // "Whether we should be using Server GC"
                 ["gcServer"] = false,
                 // Whether we should be using Concurrent GC

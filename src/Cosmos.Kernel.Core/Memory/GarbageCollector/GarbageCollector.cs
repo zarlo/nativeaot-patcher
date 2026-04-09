@@ -339,7 +339,7 @@ public static unsafe partial class GarbageCollector
         {
             // Record GC start timestamp
             long gcStart = Stopwatch.GetTimestamp();
-            
+
             Serial.WriteString("[GC] Collection #");
             Serial.WriteNumber((uint)s_totalCollections + 1);
             Serial.WriteString("\n");
@@ -371,7 +371,7 @@ public static unsafe partial class GarbageCollector
             // Record post-GC metrics
             s_lastGen0SizeAfter = GetGenerationSize(0);
             s_lastGen0FragmentationAfter = GetCurrentFragmentation(0);
-            
+
             s_totalCollections++;
             s_totalObjectsFreed += freedCount;
 
