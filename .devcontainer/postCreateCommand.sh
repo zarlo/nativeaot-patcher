@@ -5,16 +5,23 @@ set -e
 echo "=== Starting postCreate setup (multi-arch) ==="
 
 # ── Resolve Cosmos package version ───────────────────────────────────────────
-# Single source of truth = global.json `msbuild-sdks.Cosmos.Sdk`.
-#
-# - Release CI sets $VersionPrefix from the git tag (e.g. `3.0.44`) and we just
-#   rewrite global.json to match so every `<Sdk Name="Cosmos.Sdk" />` in the
-#   repo resolves to the CI-built package.
-# - Local dev (no $VersionPrefix): derive a date-stamped dev version of the
-#   latest git tag so each rebuild produces a distinct package (e.g.
-#   `3.0.44.09042026`) and kernels always resolve to the freshly built one.
+# Single source of truth, in order of precedence:
+#   1. $VersionPrefix env var (set by Release CI from the git tag)
+#   2. Latest `v*` git tag (local dev on a full clone)
+#   3. global.json `msbuild-sdks.Cosmos.Sdk` (PR CI / shallow checkouts where
+#      git tags aren't fetched; the committed value is the current release)
+# If none of these resolve a 3-component base version, we bail out loudly
+# rather than silently building broken packages with a hardcoded literal.
 if [[ -z "${VersionPrefix:-}" ]]; then
-  BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "3.0.44")
+  BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+  BASE_TAG="${BASE_TAG#v}"
+  if [[ -z "$BASE_TAG" ]]; then
+    BASE_TAG=$(sed -nE 's/.*"Cosmos\.Sdk"[[:space:]]*:[[:space:]]*"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' global.json | head -n1)
+  fi
+  if [[ -z "$BASE_TAG" ]]; then
+    echo "ERROR: could not resolve Cosmos base version from git tags or global.json" >&2
+    exit 1
+  fi
   # yyyyMMdd (not ddMMyyyy) to avoid NuGet stripping a leading zero from the
   # day component when normalizing the package version.
   DATE_SUFFIX=$(date +%Y%m%d)

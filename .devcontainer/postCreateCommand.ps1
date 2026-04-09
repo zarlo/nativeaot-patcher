@@ -6,15 +6,27 @@ $ErrorActionPreference = "Stop"
 Write-Host "=== Starting postCreate setup (multi-arch) ===" -ForegroundColor Cyan
 
 # ── Resolve Cosmos package version ───────────────────────────────────────────
-# Single source of truth = global.json `msbuild-sdks.Cosmos.Sdk`.
+# Single source of truth, in order of precedence:
+#   1. $env:VersionPrefix (set by Release CI from the git tag)
+#   2. Latest `v*` git tag (local dev on a full clone)
+#   3. global.json `msbuild-sdks.Cosmos.Sdk` (PR CI / shallow checkouts)
 # See postCreateCommand.sh for the full explanation.
 if (-not $env:VersionPrefix) {
+    $baseTag = $null
     try {
-        $baseTag = (git describe --tags --abbrev=0 2>$null).TrimStart('v')
-    } catch {
-        $baseTag = "3.0.44"
+        $gitTag = git describe --tags --abbrev=0 2>$null
+        if ($LASTEXITCODE -eq 0 -and $gitTag) {
+            $baseTag = $gitTag.Trim().TrimStart('v')
+        }
+    } catch { }
+    if (-not $baseTag) {
+        $match = Select-String -Path "global.json" -Pattern '"Cosmos\.Sdk"\s*:\s*"([0-9]+\.[0-9]+\.[0-9]+)' -ErrorAction SilentlyContinue
+        if ($match) { $baseTag = $match.Matches[0].Groups[1].Value }
     }
-    if (-not $baseTag) { $baseTag = "3.0.44" }
+    if (-not $baseTag) {
+        Write-Error "ERROR: could not resolve Cosmos base version from git tags or global.json"
+        exit 1
+    }
     # yyyyMMdd (not ddMMyyyy) to avoid NuGet stripping a leading zero from the
     # day component when normalizing the package version.
     $dateSuffix = Get-Date -Format "yyyyMMdd"
