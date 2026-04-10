@@ -90,4 +90,16 @@ internal static class Math
         *intptr = (double)intPart;
         return x - intPart;
     }
+
+    [RuntimeExport("fma")]
+    internal static double fma(double x, double y, double z)
+    {
+        return x * y + z;
+    }
+
+    [RuntimeExport("fmaf")]
+    internal static float fmaf(float x, float y, float z)
+    {
+        return x * y + z;
+    }
 }
