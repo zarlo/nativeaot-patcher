@@ -14,15 +14,17 @@ public class InfoSettings : CommandSettings
     public bool Json { get; set; }
 }
 
-public class InfoCommand : Command<InfoSettings>
+public class InfoCommand : AsyncCommand<InfoSettings>
 {
-    public override int Execute(CommandContext context, InfoSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, InfoSettings settings)
     {
         string platform = GetPlatformName();
         string arch = PlatformInfo.CurrentArch.ToString().ToLower();
         string packageManager = PlatformInfo.GetPackageManager();
         string displayBackend = GetDisplayBackend();
         string gdbCommand = GetGdbCommand();
+        string gdbCommandX64 = await ResolveToolPathAsync(ToolDefinitions.X64ElfGdb) ?? gdbCommand;
+        string gdbCommandArm64 = await ResolveToolPathAsync(ToolDefinitions.Aarch64ElfGdb) ?? gdbCommand;
         if (settings.Json)
         {
             Console.WriteLine("{");
@@ -31,7 +33,9 @@ public class InfoCommand : Command<InfoSettings>
             Console.WriteLine($"  \"arch\": \"{arch}\",");
             Console.WriteLine($"  \"packageManager\": \"{packageManager}\",");
             Console.WriteLine($"  \"qemuDisplay\": \"{displayBackend}\",");
-            Console.WriteLine($"  \"gdbCommand\": \"{gdbCommand}\"");
+            Console.WriteLine($"  \"gdbCommand\": \"{EscapeJson(gdbCommand)}\",");
+            Console.WriteLine($"  \"gdbCommandX64\": \"{EscapeJson(gdbCommandX64)}\",");
+            Console.WriteLine($"  \"gdbCommandArm64\": \"{EscapeJson(gdbCommandArm64)}\"");
             Console.WriteLine("}");
         }
         else
@@ -43,11 +47,18 @@ public class InfoCommand : Command<InfoSettings>
             AnsiConsole.MarkupLine($"  Architecture: [blue]{arch}[/]");
             AnsiConsole.MarkupLine($"  Package Manager: [blue]{packageManager}[/]");
             AnsiConsole.MarkupLine($"  QEMU Display: [blue]{displayBackend}[/]");
-            AnsiConsole.MarkupLine($"  GDB Command: [blue]{gdbCommand}[/]");
+            AnsiConsole.MarkupLine($"  GDB (x64): [blue]{Markup.Escape(gdbCommandX64)}[/]");
+            AnsiConsole.MarkupLine($"  GDB (ARM64): [blue]{Markup.Escape(gdbCommandArm64)}[/]");
             AnsiConsole.WriteLine();
         }
 
         return 0;
+    }
+
+    private static async Task<string?> ResolveToolPathAsync(CommandToolDefinition tool)
+    {
+        var status = await ToolChecker.CheckToolAsync(tool);
+        return status.Found ? status.Path : null;
     }
 
     private static string GetPlatformName()

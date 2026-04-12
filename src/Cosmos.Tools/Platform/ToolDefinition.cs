@@ -202,6 +202,36 @@ public static class ToolDefinitions
         MacOSInstall = new() { Method = "package", BrewPackages = ["qemu"] }
     };
 
+    public static readonly CommandToolDefinition X64ElfGdb = new()
+    {
+        Name = "x86_64-elf-gdb",
+        DisplayName = "x64 GDB",
+        Description = "GDB debugger for x64 bare-metal kernels (bundled with x86_64-elf-tools)",
+        WindowsCommands = ["x86_64-elf-gdb"],
+        LinuxCommands = ["gdb-multiarch", "gdb"],
+        MacOSCommands = ["x86_64-elf-gdb", "gdb"],
+        VersionArg = "--version",
+        Required = false,
+        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/lordmilko/i686-elf-tools/releases/download/13.2.0/x86_64-elf-tools-windows.zip" },
+        LinuxInstall = new() { Method = "package", AptPackages = ["gdb-multiarch"], DnfPackages = ["gdb"], PacmanPackages = ["gdb"] },
+        MacOSInstall = new() { Method = "package", BrewPackages = ["x86_64-elf-gdb"] }
+    };
+
+    public static readonly CommandToolDefinition Aarch64ElfGdb = new()
+    {
+        Name = "aarch64-elf-gdb",
+        DisplayName = "ARM64 GDB",
+        Description = "GDB debugger for ARM64 bare-metal kernels (bundled with aarch64-elf-tools)",
+        WindowsCommands = ["aarch64-none-elf-gdb"],
+        LinuxCommands = ["gdb-multiarch", "aarch64-linux-gnu-gdb", "gdb"],
+        MacOSCommands = ["aarch64-elf-gdb", "gdb"],
+        VersionArg = "--version",
+        Required = false,
+        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/mmozeiko/build-gcc-arm/releases/download/gcc-v15.2.0/gcc-v15.2.0-aarch64-none-elf.7z" },
+        LinuxInstall = new() { Method = "package", AptPackages = ["gdb-multiarch"], DnfPackages = ["gdb"], PacmanPackages = ["gdb"] },
+        MacOSInstall = new() { Method = "package", BrewPackages = ["aarch64-elf-gdb"] }
+    };
+
     public static readonly FileToolDefinition QemuEfiArm64 = new()
     {
         Name = "QEMU EFI (ARM64)",
@@ -229,6 +259,8 @@ public static class ToolDefinitions
         Aarch64ElfAs,
         QemuX64,
         QemuArm64,
-        QemuEfiArm64
+        QemuEfiArm64,
+        X64ElfGdb,
+        Aarch64ElfGdb
     ];
 }
