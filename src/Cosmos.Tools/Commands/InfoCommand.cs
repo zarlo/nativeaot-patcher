@@ -22,9 +22,8 @@ public class InfoCommand : AsyncCommand<InfoSettings>
         string arch = PlatformInfo.CurrentArch.ToString().ToLower();
         string packageManager = PlatformInfo.GetPackageManager();
         string displayBackend = GetDisplayBackend();
-        string gdbCommand = GetGdbCommand();
-        string gdbCommandX64 = await ResolveToolPathAsync(ToolDefinitions.X64ElfGdb) ?? gdbCommand;
-        string gdbCommandArm64 = await ResolveToolPathAsync(ToolDefinitions.Aarch64ElfGdb) ?? gdbCommand;
+        string gdbCommandX64 = await ResolveToolPathAsync(ToolDefinitions.X64ElfGdb) ?? "gdb";
+        string gdbCommandArm64 = await ResolveToolPathAsync(ToolDefinitions.Aarch64ElfGdb) ?? "gdb";
         if (settings.Json)
         {
             Console.WriteLine("{");
@@ -33,7 +32,6 @@ public class InfoCommand : AsyncCommand<InfoSettings>
             Console.WriteLine($"  \"arch\": \"{arch}\",");
             Console.WriteLine($"  \"packageManager\": \"{packageManager}\",");
             Console.WriteLine($"  \"qemuDisplay\": \"{displayBackend}\",");
-            Console.WriteLine($"  \"gdbCommand\": \"{EscapeJson(gdbCommand)}\",");
             Console.WriteLine($"  \"gdbCommandX64\": \"{EscapeJson(gdbCommandX64)}\",");
             Console.WriteLine($"  \"gdbCommandArm64\": \"{EscapeJson(gdbCommandArm64)}\"");
             Console.WriteLine("}");
@@ -89,33 +87,6 @@ public class InfoCommand : AsyncCommand<InfoSettings>
         }
 
         return "gtk";
-    }
-
-    private static string GetGdbCommand()
-    {
-        // On Linux, prefer gdb-multiarch for cross-architecture debugging
-        if (RuntimeInformation.IsOSPlatform(SysOSPlatform.Linux))
-        {
-            // Check if gdb-multiarch exists
-            string gdbMultiarchPath = "/usr/bin/gdb-multiarch";
-            if (File.Exists(gdbMultiarchPath))
-            {
-                return "gdb-multiarch";
-            }
-        }
-
-        // macOS and Windows typically just use 'gdb'
-        // Windows might need the full path if installed via MinGW
-        if (RuntimeInformation.IsOSPlatform(SysOSPlatform.Windows))
-        {
-            string mingwPath = @"C:\msys64\mingw64\bin\gdb.exe";
-            if (File.Exists(mingwPath))
-            {
-                return mingwPath;
-            }
-        }
-
-        return "gdb";
     }
 
     private static string? GetCosmosToolsPath()
