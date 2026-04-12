@@ -960,7 +960,8 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         Path.Combine("x86_64-elf-tools", "bin"),
         Path.Combine("aarch64-elf-tools", "bin"),
         "qemu",
-        "gdb"
+        // grumpycoder's gdb-multiarch zip extracts to gdb\bin — DLLs live there too
+        Path.Combine("gdb", "bin")
     ];
 
     internal static bool AddToolsToWindowsPath(string toolsPath)

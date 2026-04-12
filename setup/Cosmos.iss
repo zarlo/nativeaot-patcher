@@ -235,7 +235,8 @@ begin
     AddToUserPath(ExpandConstant('{app}\Tools\x86_64-elf-tools\bin'));
     AddToUserPath(ExpandConstant('{app}\Tools\aarch64-elf-tools\bin'));
     AddToUserPath(ExpandConstant('{app}\Tools\qemu'));
-    AddToUserPath(ExpandConstant('{app}\Tools\gdb'));
+    { grumpycoder's gdb-multiarch zip extracts to gdb\bin — DLLs live there too }
+    AddToUserPath(ExpandConstant('{app}\Tools\gdb\bin'));
     { Broadcast so new terminals pick up the PATH change immediately }
     BroadcastEnvironmentChange;
   end;
@@ -252,7 +253,7 @@ begin
     RemoveFromUserPath(ExpandConstant('{app}\Tools\x86_64-elf-tools\bin'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\aarch64-elf-tools\bin'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\qemu'));
-    RemoveFromUserPath(ExpandConstant('{app}\Tools\gdb'));
+    RemoveFromUserPath(ExpandConstant('{app}\Tools\gdb\bin'));
     { Broadcast so terminals pick up the PATH removal }
     BroadcastEnvironmentChange;
   end;

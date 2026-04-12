@@ -120,7 +120,9 @@ public static class ToolChecker
                 // QEMU
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "qemu"), command, ext);
 
-                // GDB (portable gdb-multiarch bundle)
+                // GDB (portable gdb-multiarch bundle) — grumpycoder's zip puts
+                // gdb-multiarch.exe under gdb\bin\ next to its DLLs.
+                AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "gdb", "bin"), command, ext);
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "gdb"), command, ext);
 
                 // Named subdirectories for specific tools
@@ -245,6 +247,7 @@ public static class ToolChecker
                 Path.Combine(toolsBase, "x86_64-elf-tools", "bin"),
                 Path.Combine(toolsBase, "aarch64-elf-tools", "bin"),
                 Path.Combine(toolsBase, "qemu"),
+                Path.Combine(toolsBase, "gdb", "bin"),
                 Path.Combine(toolsBase, "gdb")
             };
             if (PlatformInfo.CurrentOS == OSPlatform.Windows)
