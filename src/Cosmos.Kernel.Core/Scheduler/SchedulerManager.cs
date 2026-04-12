@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
+using Cosmos.Kernel.Core.Memory.GarbageCollector;
 
 namespace Cosmos.Kernel.Core.Scheduler;
 
@@ -233,6 +234,17 @@ public static class SchedulerManager
         using (CPU.InternalCpu.DisableInterruptsScope())
         {
             PerCpuState state = _cpuStates[cpuId];
+
+            // Return TLAB and track unused bytes before unregistering
+            if (GarbageCollector.IsEnabled)
+            {
+                unsafe
+                {
+                    ulong unused = (ulong)(thread.AllocContext.AllocLimit - thread.AllocContext.AllocPtr);
+                    GarbageCollector.AddDeadThreadNonAllocBytes(unused);
+                    GarbageCollector.ReturnAllocContext(ref thread.AllocContext);
+                }
+            }
 
             thread.State = ThreadState.Dead;
             _currentScheduler.OnThreadExit(state, thread);
