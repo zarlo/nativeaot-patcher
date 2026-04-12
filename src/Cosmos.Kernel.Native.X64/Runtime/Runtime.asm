@@ -141,9 +141,9 @@ asin:
     sqrtsd xmm2, xmm2              ; sqrt(1 - x*x)
     movsd [rsp+8], xmm2
 
-    fld qword [rsp+8]              ; ST0 = sqrt(1-x*x)
-    fld qword [rsp]                ; ST0 = x, ST1 = sqrt(1-x*x)
-    fpatan                          ; atan2(x, sqrt(1-x*x)) = asin(x)
+    fld qword [rsp]                ; ST0 = x
+    fld qword [rsp+8]              ; ST0 = sqrt(1-x*x), ST1 = x
+    fpatan                          ; atan2(ST1, ST0) = atan2(x, sqrt(1-x*x)) = asin(x)
     fstp qword [rsp]
     movsd xmm0, [rsp]
     add rsp, 24
@@ -169,9 +169,9 @@ acos:
     sqrtsd xmm2, xmm2
     movsd [rsp+8], xmm2
 
-    fld qword [rsp]                ; ST0 = x
-    fld qword [rsp+8]              ; ST0 = sqrt(1-x*x), ST1 = x
-    fpatan                          ; atan2(sqrt(1-x*x), x) = acos(x)
+    fld qword [rsp+8]              ; ST0 = sqrt(1-x*x)
+    fld qword [rsp]                ; ST0 = x, ST1 = sqrt(1-x*x)
+    fpatan                          ; atan2(ST1, ST0) = atan2(sqrt(1-x*x), x) = acos(x)
     fstp qword [rsp]
     movsd xmm0, [rsp]
     add rsp, 24
@@ -189,9 +189,9 @@ atan:
 .atan_compute:
     sub rsp, 8
     movsd [rsp], xmm0
-    fld1                            ; ST0 = 1.0
-    fld qword [rsp]                ; ST0 = x, ST1 = 1.0
-    fpatan                          ; atan2(x, 1.0) = atan(x)
+    fld qword [rsp]                ; ST0 = x
+    fld1                            ; ST0 = 1.0, ST1 = x
+    fpatan                          ; atan2(ST1, ST0) = atan2(x, 1.0) = atan(x)
     fstp qword [rsp]
     movsd xmm0, [rsp]
     add rsp, 8
@@ -214,9 +214,9 @@ atan2:
     sub rsp, 16
     movsd [rsp], xmm1              ; x
     movsd [rsp+8], xmm0            ; y
-    fld qword [rsp]                ; ST0 = x
-    fld qword [rsp+8]              ; ST0 = y, ST1 = x
-    fpatan                          ; atan2(y, x)
+    fld qword [rsp+8]              ; ST0 = y
+    fld qword [rsp]                ; ST0 = x, ST1 = y
+    fpatan                          ; atan2(ST1, ST0) = atan2(y, x)
     fstp qword [rsp]
     movsd xmm0, [rsp]
     add rsp, 16

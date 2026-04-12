@@ -83,9 +83,43 @@ internal static class Math
     }
 
 
+    [RuntimeExport("trunc")]
+    internal static double trunc(double x)
+    {
+        if (double.IsNaN(x))
+        {
+            return double.NaN;
+        }
+
+        if (double.IsInfinity(x))
+        {
+            return x;
+        }
+
+        return (long)x;
+    }
+
+    [RuntimeExport("truncf")]
+    internal static float truncf(float x)
+    {
+        return (float)trunc(x);
+    }
+
     [RuntimeExport("modf")]
     internal static unsafe double ModF(double x, double* intptr)
     {
+        if (double.IsNaN(x))
+        {
+            *intptr = double.NaN;
+            return double.NaN;
+        }
+
+        if (double.IsInfinity(x))
+        {
+            *intptr = x;
+            return 0.0;
+        }
+
         long intPart = (long)x;
         *intptr = (double)intPart;
         return x - intPart;
