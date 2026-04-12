@@ -238,12 +238,13 @@
     <Message Importance="High" Condition="'$(PatcherExitCode)' == '0'"
              Text="Cosmos.Patcher successfully patched: '%(AssembliesToPatch.PatcherOutputPath)'" />
 
-    <!-- Copy PDB files for debug symbols -->
-    <!-- Copy main assembly PDB to cosmos folder -->
-    <Copy SourceFiles="$(OutputPath)$(AssemblyName).pdb"
-          DestinationFiles="$(IntermediateOutputPath)/cosmos/$(AssemblyName)_patched.pdb"
-          Condition="Exists('$(OutputPath)$(AssemblyName).pdb')"
-          SkipUnchangedFiles="true" />
+    <!-- NOTE: do NOT copy the original $(OutputPath)$(AssemblyName).pdb over the
+         patcher's output. Cosmos.Patcher already writes a matching Portable PDB
+         next to the patched .dll via Mono.Cecil's WriterParameters.WriteSymbols.
+         Copying the unpatched PDB here overwrites that matching PDB with one
+         whose MVID no longer matches the patched DLL — ILC then silently drops
+         all sequence points for the user project, killing DWARF source line
+         info and breaking source-level breakpoints under gdb. -->
 
     <!-- Write cache hash after successful patching -->
     <WriteLinesToFile File="$(_PatcherCacheFile)" Lines="$(_CurrentPatcherHash)" Overwrite="true" />
