@@ -188,9 +188,6 @@ namespace Cosmos.Kernel.Core.Runtime
         [RuntimeExport("RhReRegisterForFinalize")]
         internal static void RhReRegisterForFinalize(object obj) { }
 
-        [RuntimeExport("RhGetMemoryInfo")]
-        internal static void RhGetMemoryInfo(IntPtr pMemInfo) { }
-
         /// <summary>
         /// Returns the MethodTable* for System.Array. This is used by the runtime when
         /// it needs to determine the base type of array types.

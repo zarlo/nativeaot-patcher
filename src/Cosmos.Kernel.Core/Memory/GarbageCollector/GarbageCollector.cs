@@ -1,5 +1,6 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
@@ -225,6 +226,40 @@ public static unsafe partial class GarbageCollector
     /// </summary>
     private static int s_totalObjectsFreed;
 
+    /// <summary>
+    /// Last GC duration in timestamp ticks (Stopwatch ticks).
+    /// </summary>
+    private static long s_lastGCDurationTicks;
+
+    /// <summary>
+    /// Interval between last GC end and previous GC end in ticks.
+    /// </summary>
+    private static long s_lastGCIntervalTicks;
+
+    /// <summary>
+    /// Timestamp of last GC end (Stopwatch ticks).
+    /// </summary>
+    private static long s_lastGCEndTick;
+
+    // Last recorded generation 0 metrics (before/after last collection)
+    private static ulong s_lastGen0SizeBefore;
+    private static ulong s_lastGen0FragmentationBefore;
+    private static ulong s_lastGen0SizeAfter;
+    private static ulong s_lastGen0FragmentationAfter;
+
+    /// <summary>
+    /// Cumulative total of all bytes ever allocated through the GC.
+    /// Increments on every allocation, never decrements.
+    /// Used by <c>RhGetTotalAllocatedBytes</c> / <c>GC.GetTotalAllocatedBytes()</c>.
+    /// </summary>
+    private static ulong s_totalAllocatedBytes;
+
+    /// <summary>
+    /// Number of live objects currently on the pinned object heap.
+    /// Incremented on pinned allocation, decremented on pinned sweep free.
+    /// </summary>
+    private static ulong s_pinnedHeapObjectCount;
+
     // --- Properties ---
 
     /// <summary>
@@ -311,12 +346,20 @@ public static unsafe partial class GarbageCollector
             return 0;
         }
 
+        // TODO: Add compilation option to disable metric collection
         int freedCount;
         using (InternalCpu.DisableInterruptsScope())
         {
+            // Record GC start timestamp
+            long gcStart = Stopwatch.GetTimestamp();
+
             Serial.WriteString("[GC] Collection #");
             Serial.WriteNumber((uint)s_totalCollections + 1);
             Serial.WriteString("\n");
+
+            // Record pre-GC metrics
+            s_lastGen0SizeBefore = GetGenerationSize(0);
+            s_lastGen0FragmentationBefore = GetCurrentFragmentation(0);
 
             // Clear free lists - will be rebuilt during sweep
             for (int i = 0; i < NumSizeClasses; i++)
@@ -338,28 +381,28 @@ public static unsafe partial class GarbageCollector
             ReorderPinnedSegmentsAndFreeEmpty();
             RecomputeHeapRange();
 
+            // Record post-GC metrics
+            s_lastGen0SizeAfter = GetGenerationSize(0);
+            s_lastGen0FragmentationAfter = GetCurrentFragmentation(0);
+
             s_totalCollections++;
             s_totalObjectsFreed += freedCount;
 
             Serial.WriteString("[GC] Freed ");
             Serial.WriteNumber((uint)freedCount);
             Serial.WriteString(" objects\n");
+
+            // Record GC end timestamp and compute duration/interval
+            long gcEnd = Stopwatch.GetTimestamp();
+            long duration = gcEnd - gcStart;
+            long interval = s_lastGCEndTick == 0 ? duration : gcEnd - s_lastGCEndTick;
+            s_lastGCDurationTicks = duration;
+            s_lastGCIntervalTicks = interval;
+            s_lastGCEndTick = gcEnd;
         }
 
         return freedCount;
     }
-
-    /// <summary>
-    /// Gets cumulative GC statistics.
-    /// </summary>
-    /// <param name="totalCollections">Total number of collections performed.</param>
-    /// <param name="totalObjectsFreed">Total number of objects freed across all collections.</param>
-    public static void GetStats(out int totalCollections, out int totalObjectsFreed)
-    {
-        totalCollections = s_totalCollections;
-        totalObjectsFreed = s_totalObjectsFreed;
-    }
-
     // --- Internal methods ---
 
     /// <summary>
