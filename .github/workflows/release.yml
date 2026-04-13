@@ -165,7 +165,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Cosmos OS Development Kit v${{ needs.build-packages.outputs.version }}"
+          name: "v${{ needs.build-packages.outputs.version }}"
           body: |
             ### Downloads
 
