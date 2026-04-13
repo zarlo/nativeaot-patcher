@@ -6,7 +6,7 @@ using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Scheduler;
 using Cosmos.Kernel.Core.CPU;
 
-namespace Cosmos.Kernel.HAL.X64.Cpu;
+namespace Cosmos.Kernel.Core.X64.Cpu;
 
 /// <summary>
 /// Local APIC (Advanced Programmable Interrupt Controller) driver.

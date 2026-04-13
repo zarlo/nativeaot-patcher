@@ -7,7 +7,7 @@ using Cosmos.Kernel.System.Timer;
 using SysThread = System.Threading.Thread;
 using SchedThread = Cosmos.Kernel.Core.Scheduler.Thread;
 #if ARCH_X64
-using Cosmos.Kernel.HAL.X64.Cpu;
+using Cosmos.Kernel.Core.X64.Cpu;
 #endif
 
 namespace Cosmos.Kernel.Plugs.System.Threading;

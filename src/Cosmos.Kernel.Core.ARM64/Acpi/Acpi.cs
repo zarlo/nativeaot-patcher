@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.ARM64.Bridge;
 
-namespace Cosmos.Kernel.HAL.ARM64;
+namespace Cosmos.Kernel.Core.ARM64;
 
 /// <summary>
 /// C# bridge to native ACPI GIC discovery (acpi_wrapper.c in MultiArch).
@@ -12,7 +12,7 @@ namespace Cosmos.Kernel.HAL.ARM64;
 /// to extract GICD/GICR/GICC addresses. This class just retrieves the result.
 /// Native import lives in Cosmos.Kernel.Core.ARM64/Bridge/Import/AcpiNative.cs.
 /// </summary>
-public static unsafe class Acpi
+public static unsafe class AcpiGic
 {
     /// <summary>
     /// Mirrors the C struct acpi_gic_info_t from ACPI/acpi_wrapper.c.

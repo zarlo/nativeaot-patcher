@@ -1,7 +1,6 @@
 using Cosmos.Kernel.Core.CPU;
-using Cosmos.Kernel.HAL.Interfaces;
 
-namespace Cosmos.Kernel.HAL.ARM64;
+namespace Cosmos.Kernel.Core.ARM64.Cpu;
 
 public partial class ARM64CpuOps : ICpuOps
 {

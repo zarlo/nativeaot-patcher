@@ -1,10 +1,10 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using Cosmos.Kernel.Core.ARM64.Bridge;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.Interfaces;
 
-namespace Cosmos.Kernel.HAL.ARM64.Cpu;
+namespace Cosmos.Kernel.Core.ARM64.Cpu;
 
 /// <summary>
 /// ARM64 interrupt controller - manages exception vectors and GIC.

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Cosmos.Build.API.Attributes;
 #if ARCH_X64
 using Cosmos.Kernel.Core.X64.Bridge;
-using Cosmos.Kernel.HAL.X64;
+using Cosmos.Kernel.Core.X64.Cpu;
 #elif ARCH_ARM64
 using Cosmos.Kernel.Core.ARM64.Bridge;
 #endif

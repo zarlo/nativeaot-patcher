@@ -3,7 +3,7 @@
 using System.Runtime.CompilerServices;
 using Cosmos.Kernel.Core.IO;
 
-namespace Cosmos.Kernel.HAL.ARM64.Cpu;
+namespace Cosmos.Kernel.Core.ARM64.Cpu;
 
 /// <summary>
 /// ARM Generic Interrupt Controller v2 (GICv2) implementation.

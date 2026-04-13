@@ -1,4 +1,4 @@
-namespace Cosmos.Kernel.HAL.Interfaces;
+namespace Cosmos.Kernel.Core.IO;
 
 public interface IPortIO
 {

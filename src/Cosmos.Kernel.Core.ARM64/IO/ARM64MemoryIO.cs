@@ -1,7 +1,7 @@
 using Cosmos.Kernel.Core.ARM64.Bridge;
-using Cosmos.Kernel.HAL.Interfaces;
+using Cosmos.Kernel.Core.IO;
 
-namespace Cosmos.Kernel.HAL.ARM64;
+namespace Cosmos.Kernel.Core.ARM64.IO;
 
 /// <summary>
 /// ARM64 uses memory-mapped I/O instead of port I/O.

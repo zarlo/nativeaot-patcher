@@ -1,6 +1,6 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
-namespace Cosmos.Kernel.HAL.Interfaces;
+namespace Cosmos.Kernel.Core.CPU;
 
 /// <summary>
 /// Interface for platform-specific interrupt controller.

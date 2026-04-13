@@ -2,10 +2,13 @@
 
 using Cosmos.Build.API.Enum;
 using Cosmos.Kernel.Core;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
+using Cosmos.Kernel.Core.X64;
+using Cosmos.Kernel.Core.X64.Cpu;
+using Cosmos.Kernel.Core.X64.IO;
 using Cosmos.Kernel.HAL.Interfaces;
 using Cosmos.Kernel.HAL.Interfaces.Devices;
-using Cosmos.Kernel.HAL.X64.Cpu;
 using Cosmos.Kernel.HAL.X64.Devices.Clock;
 using Cosmos.Kernel.HAL.X64.Devices.Input;
 using Cosmos.Kernel.HAL.X64.Devices.Network;
@@ -40,7 +43,7 @@ public class X64PlatformInitializer : IPlatformInitializer
     {
         // Display ACPI MADT information
         Serial.WriteString("[X64HAL] Displaying ACPI MADT info...\n");
-        Acpi.DisplayMadtInfo();
+        AcpiMadt.DisplayMadtInfo();
 
         // Initialize APIC
         Serial.WriteString("[X64HAL] Initializing APIC...\n");
@@ -132,7 +135,7 @@ public class X64PlatformInitializer : IPlatformInitializer
 
     public unsafe uint GetCpuCount()
     {
-        var madtInfo = Acpi.GetMadtInfoPtr();
+        var madtInfo = AcpiMadt.GetMadtInfoPtr();
         return madtInfo != null ? madtInfo->CpuCount : 1;
     }
 

@@ -2,9 +2,9 @@
 
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.X64.Bridge;
-using Cosmos.Kernel.HAL.X64.Cpu.Data;
+using Cosmos.Kernel.Core.X64.Cpu.Data;
 
-namespace Cosmos.Kernel.HAL.X64.Cpu;
+namespace Cosmos.Kernel.Core.X64.Cpu;
 
 /// <summary>
 /// Handles Interrupt Descriptor Table initialization for x86_64.

@@ -1,7 +1,7 @@
+using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.X64.Bridge;
-using Cosmos.Kernel.HAL.Interfaces;
 
-namespace Cosmos.Kernel.HAL.X64;
+namespace Cosmos.Kernel.Core.X64.IO;
 
 public class X64PortIO : IPortIO
 {

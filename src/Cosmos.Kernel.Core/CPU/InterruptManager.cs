@@ -1,15 +1,14 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.Interfaces;
 
 namespace Cosmos.Kernel.Core.CPU;
 
 /// <summary>
 /// Interrupt manager - provides interrupt registration and dispatch for all architectures.
 /// Lives in Core because the vector table and dispatch logic are hardware-neutral;
-/// arch-specific interrupt controller drivers implement <see cref="IInterruptController"/>
-/// in Cosmos.Kernel.HAL.X64 / Cosmos.Kernel.HAL.ARM64.
+/// arch-specific drivers implement <see cref="IInterruptController"/> in
+/// Cosmos.Kernel.HAL.X64 / Cosmos.Kernel.HAL.ARM64.
 /// </summary>
 public static class InterruptManager
 {

@@ -5,7 +5,7 @@ using Cosmos.Kernel.Boot.Limine;
 using Cosmos.Kernel.Core.ARM64.Bridge;
 using Cosmos.Kernel.Core.IO;
 
-namespace Cosmos.Kernel.HAL.ARM64.Cpu;
+namespace Cosmos.Kernel.Core.ARM64.Cpu;
 
 /// <summary>
 /// Adds Device MMIO mappings into Limine's existing TTBR1 page tables.

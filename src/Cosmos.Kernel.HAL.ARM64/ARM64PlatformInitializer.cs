@@ -2,8 +2,10 @@
 
 using Cosmos.Build.API.Enum;
 using Cosmos.Kernel.Core;
+using Cosmos.Kernel.Core.ARM64.Cpu;
+using Cosmos.Kernel.Core.ARM64.IO;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.ARM64.Cpu;
 using Cosmos.Kernel.HAL.ARM64.Devices.Clock;
 using Cosmos.Kernel.HAL.ARM64.Devices.Input;
 using Cosmos.Kernel.HAL.ARM64.Devices.Network;

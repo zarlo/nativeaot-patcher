@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.X64.Bridge;
 
-namespace Cosmos.Kernel.HAL.X64;
+namespace Cosmos.Kernel.Core.X64;
 
 /// <summary>
 /// CPU information from MADT
@@ -107,7 +107,7 @@ public unsafe struct MadtInfo
 /// ACPI subsystem interface.
 /// Native import lives in Cosmos.Kernel.Core.X64/Bridge/Import/AcpiNative.cs.
 /// </summary>
-public static unsafe class Acpi
+public static unsafe class AcpiMadt
 {
     /// <summary>
     /// Get MADT (Multiple APIC Description Table) information

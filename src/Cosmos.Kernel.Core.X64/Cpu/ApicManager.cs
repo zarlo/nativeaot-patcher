@@ -1,9 +1,8 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.X64;
 
-namespace Cosmos.Kernel.HAL.X64.Cpu;
+namespace Cosmos.Kernel.Core.X64.Cpu;
 
 /// <summary>
 /// Manages APIC initialization and configuration.
@@ -28,7 +27,7 @@ public static class ApicManager
         LegacyPic.RemapAndDisable();
 
         // Get MADT info
-        MadtInfo* madtPtr = Acpi.GetMadtInfoPtr();
+        MadtInfo* madtPtr = AcpiMadt.GetMadtInfoPtr();
         if (madtPtr == null)
         {
             Serial.Write("[ApicManager] ERROR: MADT not available!\n");
@@ -77,7 +76,7 @@ public static class ApicManager
             return;
         }
 
-        MadtInfo* madtPtr = Acpi.GetMadtInfoPtr();
+        MadtInfo* madtPtr = AcpiMadt.GetMadtInfoPtr();
         if (madtPtr == null)
         {
             return;

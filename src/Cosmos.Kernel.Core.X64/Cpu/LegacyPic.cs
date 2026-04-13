@@ -3,7 +3,7 @@
 using Cosmos.Kernel.Core;
 using Cosmos.Kernel.Core.IO;
 
-namespace Cosmos.Kernel.HAL.X64.Cpu;
+namespace Cosmos.Kernel.Core.X64.Cpu;
 
 /// <summary>
 /// Legacy 8259 PIC (Programmable Interrupt Controller).

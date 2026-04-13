@@ -50,7 +50,7 @@ namespace Internal.Runtime.CompilerHelpers
                 {
                     // Initialize PCI (requires interrupts for MSI/MSI-X)
                     Serial.WriteString("[KERNEL]   - Initializing PCI...\n");
-                    ulong ecamBase = Acpi.GetEcamBase();
+                    ulong ecamBase = AcpiMcfg.GetEcamBase();
                     initializer.PreparePciMapping(ecamBase);
                     PciDevice.SetEcamBase(ecamBase);
                     PciManager.Setup();

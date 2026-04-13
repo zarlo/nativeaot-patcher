@@ -2,9 +2,8 @@
 
 using Cosmos.Kernel.Core;
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.X64;
 
-namespace Cosmos.Kernel.HAL.X64.Cpu;
+namespace Cosmos.Kernel.Core.X64.Cpu;
 
 /// <summary>
 /// I/O APIC (Advanced Programmable Interrupt Controller) driver.

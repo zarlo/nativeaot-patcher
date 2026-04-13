@@ -1,9 +1,9 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.Interfaces;
 
-namespace Cosmos.Kernel.HAL.X64.Cpu;
+namespace Cosmos.Kernel.Core.X64.Cpu;
 
 /// <summary>
 /// X64 interrupt controller - manages IDT and APIC.

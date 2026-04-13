@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Cosmos.Kernel.HAL.X64.Cpu.Data;
+namespace Cosmos.Kernel.Core.X64.Cpu.Data;
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 16)]
 public struct IdtEntry

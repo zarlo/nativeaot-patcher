@@ -3,6 +3,7 @@
 using Cosmos.Kernel.Boot.Limine;
 using Cosmos.Kernel.Core;
 using Cosmos.Kernel.Core.IO;
+using Cosmos.Kernel.Core.X64.Cpu;
 using Cosmos.Kernel.HAL.Devices;
 using Cosmos.Kernel.HAL.Devices.Clock;
 
