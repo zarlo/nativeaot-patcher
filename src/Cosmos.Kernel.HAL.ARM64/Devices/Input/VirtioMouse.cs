@@ -1,11 +1,11 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.ARM64.Cpu;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Memory;
-using Cosmos.Kernel.Core.ARM64.Cpu;
 using Cosmos.Kernel.HAL.ARM64.Devices.Virtio;
-using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.HAL.Devices.Input;
 
 namespace Cosmos.Kernel.HAL.ARM64.Devices.Input;

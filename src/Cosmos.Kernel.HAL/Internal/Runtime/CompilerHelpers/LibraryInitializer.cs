@@ -1,12 +1,12 @@
 using Cosmos.Kernel;
 using Cosmos.Kernel.Core;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Memory;
 using Cosmos.Kernel.Core.Memory.GarbageCollector;
 using Cosmos.Kernel.Core.Runtime;
 using Cosmos.Kernel.Core.Scheduler;
 using Cosmos.Kernel.Core.Scheduler.Stride;
-using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.HAL;
 using Cosmos.Kernel.HAL.Pci;
 

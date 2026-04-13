@@ -1,8 +1,8 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using Cosmos.Kernel.Core;
-using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.CPU;
+using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.HAL.Devices.Input;
 
 namespace Cosmos.Kernel.HAL.X64.Devices.Input;
