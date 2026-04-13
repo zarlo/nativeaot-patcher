@@ -1,4 +1,3 @@
-
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -191,9 +190,10 @@ internal static unsafe class GC
     [RuntimeExport("RhGetAllocatedBytesForCurrentThread")]
     internal static long RhGetAllocatedBytesForCurrentThread()
     {
-        // Per-thread allocation accounting is not tracked currently.
-        // Return 0 as a safe default.
-        return 0;
+        // Cumulative bytes allocated by this thread. Does not subtract unused TLAB space
+        // (that would cause the value to decrease on TLAB refill).
+        ref AllocContext ac = ref GarbageCollector.GetCurrentAllocContext();
+        return (long)(ac.AllocBytes + ac.AllocBytesUoh);
     }
 
     [RuntimeExport("RhGetTotalAllocatedBytes")]
@@ -211,8 +211,7 @@ internal static unsafe class GC
     [RuntimeExport("RhGetTotalAllocatedBytesPrecise")]
     internal static long RhGetTotalAllocatedBytesPrecise()
     {
-        // Without per-thread allocation contexts, the result is already precise.
-        return RhGetTotalAllocatedBytes();
+        return (long)GarbageCollector.GetTotalAllocatedBytesPrecise();
     }
 
     [RuntimeExport("RhRegisterForGCReporting")]

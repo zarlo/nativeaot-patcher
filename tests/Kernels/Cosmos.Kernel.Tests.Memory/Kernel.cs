@@ -12,7 +12,7 @@ public unsafe class Kernel : Sys.Kernel
 {
     protected override void BeforeRun()
     {
-        TR.Start("Memory Tests", expectedTests: 63);
+        TR.Start("Memory Tests", expectedTests: 65);
 
         // Boxing/Unboxing Tests
         TR.Run("Boxing_Char", TestBoxingChar);
@@ -83,6 +83,10 @@ public unsafe class Kernel : Sys.Kernel
         TR.Run("MemCopy_0Bytes", TestMemCopy0Bytes);
         TR.Run("MemCopy_1Byte", TestMemCopy1Byte);
         TR.Run("MemMove_Overlap_DestBeforeSrc", TestMemMoveOverlapDestBeforeSrc);
+
+        // Per-thread allocation accounting (TLAB)
+        TR.Run("Memory_ThreadAllocBytesPositive", TestThreadAllocBytesPositive);
+        TR.Run("Memory_TotalAllocBytesPositive", TestTotalAllocBytesPositive);
 
         // Array.Copy Tests (uses SIMD via memmove/RhBulkMoveWithWriteBarrier)
         TR.Run("ArrayCopy_IntArray", TestArrayCopyIntArray);
@@ -565,6 +569,23 @@ public unsafe class Kernel : Sys.Kernel
         }
 
         Assert.True(sum == 6, "IEnumerable foreach on array");
+    }
+
+    // ==================== Per-Thread Allocation Tests ====================
+
+    private static void TestThreadAllocBytesPositive()
+    {
+        // GC.GetAllocatedBytesForCurrentThread() tracks per-thread TLAB allocations.
+        // After all the previous allocation tests, it must be > 0.
+        long threadBytes = GC.GetAllocatedBytesForCurrentThread();
+        Assert.True(threadBytes > 0, "Memory: per-thread allocated bytes must be > 0, got: " + threadBytes);
+    }
+
+    private static void TestTotalAllocBytesPositive()
+    {
+        // GC.GetTotalAllocatedBytes() must be > 0 after allocations
+        long total = GC.GetTotalAllocatedBytes(precise: false);
+        Assert.True(total > 0, "Memory: total allocated bytes must be > 0");
     }
 
     // ==================== Memory Copy Tests ====================

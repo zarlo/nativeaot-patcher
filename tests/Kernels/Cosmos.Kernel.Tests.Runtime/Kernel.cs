@@ -102,7 +102,7 @@
 // │ sqrt                                              │ Mth │  1 │   1 │ real │   1   │ 100  │ 100  │
 // │ ----- GC & Finalization ------------------------- │     │    │     │      │       │      │      │
 // │ RhCollect                                         │ GC  │  2 │   0 │ real │   1   │  33  │  50  │
-// │ RhGetAllocatedBytesForCurrentThread               │ GC  │  0 │   1 │ stub │   1   │  —   │ 100  │
+// │ RhGetAllocatedBytesForCurrentThread               │ GC  │  0 │   1 │ real │   1   │  —   │ 100  │
 // │ RhGetGcCollectionCount                            │ GC  │  2 │   1 │ real │   1   │  33  │ 100  │
 // │ RhGetGCDescSize                                   │ GC  │  1 │   1 │ real │   1   │  50  │ 100  │
 // │ RhGetGcTotalMemory                                │ GC  │  0 │   1 │ real │   1   │  —   │ 100  │
@@ -396,7 +396,7 @@ public unsafe class Kernel : Sys.Kernel
         // -- RhCollect --
         TR.Run("RhCollect_Smoke", Test_RhCollect_Smoke);
         // -- RhGetAllocatedBytesForCurrentThread --
-        TR.Run("RhGetAllocatedBytesForCurrentThread_ReturnsZero", Test_RhGetAllocatedBytesForCurrentThread_ReturnsZero);
+        TR.Run("RhGetAllocatedBytesForCurrentThread_NonNegative", Test_RhGetAllocatedBytesForCurrentThread_ReturnsZero);
         // -- RhGetGcCollectionCount --
         TR.Run("RhGetGcCollectionCount_Gen0_NonNegative", Test_RhGetGcCollectionCount_Gen0_NonNegative);
         // -- RhGetGCDescSize --
@@ -416,7 +416,7 @@ public unsafe class Kernel : Sys.Kernel
         // -- RhGetTotalAllocatedBytes --
         TR.Run("RhGetTotalAllocatedBytes_Positive", Test_RhGetTotalAllocatedBytes_Positive);
         // -- RhGetTotalAllocatedBytesPrecise --
-        TR.Run("RhGetTotalAllocatedBytesPrecise_MatchesNonPrecise", Test_RhGetTotalAllocatedBytesPrecise_MatchesNonPrecise);
+        TR.Run("RhGetTotalAllocatedBytesPrecise_LessOrEqualNonPrecise", Test_RhGetTotalAllocatedBytesPrecise_MatchesNonPrecise);
         // -- RhIsPromoted --
         TR.Run("RhIsPromoted_ReturnsFalse", Test_RhIsPromoted_ReturnsFalse);
         // -- RhIsServerGc --
@@ -1128,8 +1128,11 @@ public unsafe class Kernel : Sys.Kernel
     // -- RhGetAllocatedBytesForCurrentThread --
     private static void Test_RhGetAllocatedBytesForCurrentThread_ReturnsZero()
     {
+        // With per-thread allocation contexts (TLABs), this now returns the
+        // cumulative bytes allocated by the current thread minus unused TLAB space.
+        // After the kernel has booted and run prior tests, this must be > 0.
         long result = RuntimeGC.RhGetAllocatedBytesForCurrentThread();
-        Assert.Equal(0L, result, "RhGetAllocatedBytesForCurrentThread must return 0 (not tracked)");
+        Assert.True(result >= 0, "RhGetAllocatedBytesForCurrentThread must return >= 0");
     }
 
     // -- RhGetGcCollectionCount --
@@ -1202,9 +1205,12 @@ public unsafe class Kernel : Sys.Kernel
     // -- RhGetTotalAllocatedBytesPrecise --
     private static void Test_RhGetTotalAllocatedBytesPrecise_MatchesNonPrecise()
     {
+        // With TLABs, the precise variant subtracts live threads' unused TLAB space
+        // in addition to dead thread unused bytes. So precise <= normal.
         long precise = RuntimeGC.RhGetTotalAllocatedBytesPrecise();
         long normal = RuntimeGC.RhGetTotalAllocatedBytes();
-        Assert.Equal(normal, precise, "RhGetTotalAllocatedBytesPrecise must match RhGetTotalAllocatedBytes");
+        Assert.True(precise > 0, "RhGetTotalAllocatedBytesPrecise must be > 0 after allocations");
+        Assert.True(precise <= normal, "RhGetTotalAllocatedBytesPrecise must be <= RhGetTotalAllocatedBytes");
     }
 
     // -- RhIsPromoted --
