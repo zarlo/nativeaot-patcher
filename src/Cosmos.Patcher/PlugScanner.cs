@@ -3,7 +3,7 @@ using Mono.Cecil;
 
 namespace Cosmos.Patcher;
 
-public sealed class PlugScanner(IBuildLogger? logger = null)
+public sealed class PlugScanner
 {
     public const string PlugAttributeFullName = "Cosmos.Build.API.Attributes.PlugAttribute";
 
@@ -11,7 +11,13 @@ public sealed class PlugScanner(IBuildLogger? logger = null)
 
     public const string PlatformSpecificAttributeFullName = "Cosmos.Build.API.Attributes.PlatformSpecificAttribute";
 
-    private readonly IBuildLogger _log = logger ?? new ConsoleBuildLogger();
+    private readonly IBuildLogger _log;
+
+    public PlugScanner(IBuildLogger? logger = null)
+    {
+        _log = logger ?? new ConsoleBuildLogger();
+        MonoCecilExtensions.Logger = _log;
+    }
 
     public List<TypeDefinition> LoadPlugs(params AssemblyDefinition[] assemblies) => LoadPlugs(null, assemblies);
 
