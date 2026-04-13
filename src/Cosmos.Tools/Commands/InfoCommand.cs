@@ -22,11 +22,7 @@ public class InfoCommand : AsyncCommand<InfoSettings>
         string arch = PlatformInfo.CurrentArch.ToString().ToLower();
         string packageManager = PlatformInfo.GetPackageManager();
         string displayBackend = GetDisplayBackend();
-        // Single multiarch GDB serves both architectures. Falls back to "gdb-multiarch"
-        // on PATH (Linux apt package) or "gdb" if neither is installed.
-        string gdbPath = await ResolveToolPathAsync(ToolDefinitions.GdbMultiarch) ?? "gdb-multiarch";
-        string gdbCommandX64 = gdbPath;
-        string gdbCommandArm64 = gdbPath;
+
         if (settings.Json)
         {
             Console.WriteLine("{");
@@ -35,8 +31,6 @@ public class InfoCommand : AsyncCommand<InfoSettings>
             Console.WriteLine($"  \"arch\": \"{arch}\",");
             Console.WriteLine($"  \"packageManager\": \"{packageManager}\",");
             Console.WriteLine($"  \"qemuDisplay\": \"{displayBackend}\",");
-            Console.WriteLine($"  \"gdbCommandX64\": \"{EscapeJson(gdbCommandX64)}\",");
-            Console.WriteLine($"  \"gdbCommandArm64\": \"{EscapeJson(gdbCommandArm64)}\"");
             Console.WriteLine("}");
         }
         else
@@ -48,8 +42,6 @@ public class InfoCommand : AsyncCommand<InfoSettings>
             AnsiConsole.MarkupLine($"  Architecture: [blue]{arch}[/]");
             AnsiConsole.MarkupLine($"  Package Manager: [blue]{packageManager}[/]");
             AnsiConsole.MarkupLine($"  QEMU Display: [blue]{displayBackend}[/]");
-            AnsiConsole.MarkupLine($"  GDB (x64): [blue]{Markup.Escape(gdbCommandX64)}[/]");
-            AnsiConsole.MarkupLine($"  GDB (ARM64): [blue]{Markup.Escape(gdbCommandArm64)}[/]");
             AnsiConsole.WriteLine();
         }
 
