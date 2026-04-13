@@ -807,6 +807,7 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         "aarch64-elf-gcc" or "aarch64-elf-as" => "aarch64-elf-tools",
         "qemu-system-x86_64" or "qemu-system-aarch64" => "qemu",
         "ld.lld" => "lld",
+        "gdb-multiarch" => "gdb",
         _ => tool.Name
     };
 
@@ -958,7 +959,9 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         "yasm", "xorriso", "lld",
         Path.Combine("x86_64-elf-tools", "bin"),
         Path.Combine("aarch64-elf-tools", "bin"),
-        "qemu"
+        "qemu",
+        // grumpycoder's gdb-multiarch zip extracts to gdb\bin — DLLs live there too
+        Path.Combine("gdb", "bin")
     ];
 
     internal static bool AddToolsToWindowsPath(string toolsPath)
