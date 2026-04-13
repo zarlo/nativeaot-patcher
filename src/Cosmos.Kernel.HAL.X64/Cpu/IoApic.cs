@@ -2,7 +2,7 @@
 
 using Cosmos.Kernel.Core;
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.Acpi;
+using Cosmos.Kernel.HAL.X64;
 
 namespace Cosmos.Kernel.HAL.X64.Cpu;
 

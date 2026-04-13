@@ -28,9 +28,12 @@ public class ARM64PlatformInitializer : IPlatformInitializer
     public ICpuOps CreateCpuOps() => new ARM64CpuOps();
     public IInterruptController CreateInterruptController() => new ARM64InterruptController();
 
-    public void PreparePciMapping()
+    public void PreparePciMapping(ulong ecamBase)
     {
-        DeviceMapper.EnsureMapped(0x3F000000); // QEMU virt ECAM base
+        if (ecamBase != 0)
+        {
+            DeviceMapper.EnsureMapped(ecamBase);
+        }
     }
 
     public void InitializeHardware()

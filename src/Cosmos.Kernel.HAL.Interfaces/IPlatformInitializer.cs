@@ -25,7 +25,8 @@ public interface IPlatformInitializer
     /// Maps PCI configuration space memory before device enumeration.
     /// ARM64 maps ECAM as device memory; x64 uses port I/O (no mapping needed).
     /// </summary>
-    void PreparePciMapping();
+    /// <param name="ecamBase">Physical ECAM base address from ACPI MCFG.</param>
+    void PreparePciMapping(ulong ecamBase);
 
     /// <summary>
     /// Initializes platform-specific hardware (PCI, ACPI, APIC, GIC, etc.).

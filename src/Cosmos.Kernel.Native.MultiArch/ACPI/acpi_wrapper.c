@@ -91,6 +91,22 @@ static acpi_madt_info_t g_madt_info;
 #endif // ARCH_X64
 
 // ============================================================================
+// PCI MCFG structure (shared across architectures)
+// ============================================================================
+
+typedef struct {
+    uint8_t  found;
+    uint8_t  start_bus;
+    uint8_t  end_bus;
+    uint8_t  _pad1;
+    uint16_t segment;
+    uint16_t _pad2;
+    uint64_t base_address;  // ECAM physical base
+} acpi_mcfg_info_t;
+
+static acpi_mcfg_info_t g_mcfg_info;
+
+// ============================================================================
 // Global state
 // ============================================================================
 
@@ -261,6 +277,40 @@ static void parse_madt(acpi_header_t* madt_header) {
 }
 
 // ============================================================================
+// MCFG parsing (PCI ECAM base address discovery)
+// ============================================================================
+
+static void parse_mcfg(acpi_header_t* mcfg_header) {
+    uint8_t* mcfg = (uint8_t*)mcfg_header;
+    uint32_t length = mcfg_header->length;
+
+    // MCFG: header(36) + reserved(8) + entries(16 each)
+    uint32_t offset = sizeof(acpi_header_t) + 8;
+
+    if (offset + 16 > length) {
+        __cosmos_serial_write("[ACPI-MCFG] No entries in MCFG table\n");
+        return;
+    }
+
+    // Parse first entry (segment 0)
+    g_mcfg_info.base_address = *(uint64_t*)(mcfg + offset);
+    g_mcfg_info.segment = *(uint16_t*)(mcfg + offset + 8);
+    g_mcfg_info.start_bus = mcfg[offset + 10];
+    g_mcfg_info.end_bus = mcfg[offset + 11];
+    g_mcfg_info.found = 1;
+
+    __cosmos_serial_write("[ACPI-MCFG] ECAM base=0x");
+    __cosmos_serial_write_hex_u64(g_mcfg_info.base_address);
+    __cosmos_serial_write(" segment=");
+    __cosmos_serial_write_dec_u32(g_mcfg_info.segment);
+    __cosmos_serial_write(" bus=");
+    __cosmos_serial_write_dec_u32(g_mcfg_info.start_bus);
+    __cosmos_serial_write("-");
+    __cosmos_serial_write_dec_u32(g_mcfg_info.end_bus);
+    __cosmos_serial_write("\n");
+}
+
+// ============================================================================
 // XSDT/RSDT table walking (shared)
 // ============================================================================
 
@@ -283,6 +333,8 @@ void acpi_early_init(void* rsdp_address, uint64_t hhdm_offset) {
     for (int i = 0; i < (int)sizeof(g_gic_info); i++)
         ((uint8_t*)&g_gic_info)[i] = 0;
 #endif
+    for (int i = 0; i < (int)sizeof(g_mcfg_info); i++)
+        ((uint8_t*)&g_mcfg_info)[i] = 0;
 
     acpi_rsdp_t* rsdp = (acpi_rsdp_t*)rsdp_address;
 
@@ -303,8 +355,9 @@ void acpi_early_init(void* rsdp_address, uint64_t hhdm_offset) {
     lai_set_acpi_revision(acpi_rev);
     cosmos_acpi_set_rsdp(rsdp_address);
 
-    // Find MADT in XSDT or RSDT
+    // Find ACPI tables (MADT, MCFG) in XSDT or RSDT
     acpi_header_t* madt = NULL_PTR;
+    acpi_header_t* mcfg = NULL_PTR;
 
     if (rsdp->revision >= 2 && ((acpi_xsdp_t*)rsdp)->xsdt != 0) {
         uint64_t xsdt_phys = ((acpi_xsdp_t*)rsdp)->xsdt;
@@ -318,11 +371,13 @@ void acpi_early_init(void* rsdp_address, uint64_t hhdm_offset) {
         uint32_t count = (xsdt->header.length - sizeof(acpi_header_t)) / sizeof(uint64_t);
         for (uint32_t i = 0; i < count; i++) {
             acpi_header_t* tbl = (acpi_header_t*)phys_to_virt(xsdt->tables[i]);
-            if (tbl->signature[0] == 'A' && tbl->signature[1] == 'P' &&
-                tbl->signature[2] == 'I' && tbl->signature[3] == 'C') {
+            char* sig = tbl->signature;
+            if (sig[0] == 'A' && sig[1] == 'P' && sig[2] == 'I' && sig[3] == 'C') {
                 madt = tbl;
                 __cosmos_serial_write("[ACPI] MADT found\n");
-                break;
+            } else if (sig[0] == 'M' && sig[1] == 'C' && sig[2] == 'F' && sig[3] == 'G') {
+                mcfg = tbl;
+                __cosmos_serial_write("[ACPI] MCFG found\n");
             }
         }
     } else if (rsdp->rsdt != 0) {
@@ -334,11 +389,13 @@ void acpi_early_init(void* rsdp_address, uint64_t hhdm_offset) {
         uint32_t count = (rsdt->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
         for (uint32_t i = 0; i < count; i++) {
             acpi_header_t* tbl = (acpi_header_t*)phys_to_virt((uint64_t)rsdt->tables[i]);
-            if (tbl->signature[0] == 'A' && tbl->signature[1] == 'P' &&
-                tbl->signature[2] == 'I' && tbl->signature[3] == 'C') {
+            char* sig = tbl->signature;
+            if (sig[0] == 'A' && sig[1] == 'P' && sig[2] == 'I' && sig[3] == 'C') {
                 madt = tbl;
                 __cosmos_serial_write("[ACPI] MADT found\n");
-                break;
+            } else if (sig[0] == 'M' && sig[1] == 'C' && sig[2] == 'F' && sig[3] == 'G') {
+                mcfg = tbl;
+                __cosmos_serial_write("[ACPI] MCFG found\n");
             }
         }
     }
@@ -348,6 +405,11 @@ void acpi_early_init(void* rsdp_address, uint64_t hhdm_offset) {
         parse_madt(madt);
     } else {
         __cosmos_serial_write("[ACPI] WARNING: MADT not found\n");
+    }
+
+    if (mcfg) {
+        __cosmos_serial_write("[ACPI] Parsing MCFG...\n");
+        parse_mcfg(mcfg);
     }
 
     g_initialized = 1;
@@ -369,3 +431,7 @@ const acpi_gic_info_t* acpi_get_gic_info(void) {
     return g_initialized ? &g_gic_info : NULL_PTR;
 }
 #endif
+
+const acpi_mcfg_info_t* acpi_get_mcfg_info(void) {
+    return g_initialized ? &g_mcfg_info : NULL_PTR;
+}

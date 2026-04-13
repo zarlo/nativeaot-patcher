@@ -4,7 +4,7 @@
 using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.IO;
 
-namespace Cosmos.Kernel.HAL.Acpi;
+namespace Cosmos.Kernel.HAL.X64;
 
 /// <summary>
 /// CPU information from MADT

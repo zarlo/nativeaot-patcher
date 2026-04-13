@@ -2,7 +2,7 @@
 
 using Cosmos.Kernel.Boot.Limine;
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.ARM64.Acpi;
+using Cosmos.Kernel.HAL.ARM64;
 
 namespace Cosmos.Kernel.HAL.ARM64.Cpu;
 
@@ -75,7 +75,7 @@ public static class GIC
     public static unsafe void Initialize()
     {
         // Priority 1: Try ACPI MADT (parsed by C code in kmain via acpi_early_init)
-        var acpiGic = AcpiGIC.GetGicInfo();
+        var acpiGic = Acpi.GetGicInfo();
         if (acpiGic != null && acpiGic->Found != 0)
         {
             _distBase = acpiGic->DistBase;

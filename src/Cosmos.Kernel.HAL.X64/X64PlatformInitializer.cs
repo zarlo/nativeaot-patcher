@@ -30,7 +30,7 @@ public class X64PlatformInitializer : IPlatformInitializer
     public ICpuOps CreateCpuOps() => new X64CpuOps();
     public IInterruptController CreateInterruptController() => new X64InterruptController();
 
-    public void PreparePciMapping()
+    public void PreparePciMapping(ulong ecamBase)
     {
         // x64 uses legacy port I/O (0xCF8/0xCFC) for PCI config access,
         // which bypasses the MMU — no memory mapping needed.
@@ -40,7 +40,7 @@ public class X64PlatformInitializer : IPlatformInitializer
     {
         // Display ACPI MADT information
         Serial.WriteString("[X64HAL] Displaying ACPI MADT info...\n");
-        Acpi.Acpi.DisplayMadtInfo();
+        Acpi.DisplayMadtInfo();
 
         // Initialize APIC
         Serial.WriteString("[X64HAL] Initializing APIC...\n");
@@ -132,7 +132,7 @@ public class X64PlatformInitializer : IPlatformInitializer
 
     public unsafe uint GetCpuCount()
     {
-        var madtInfo = Acpi.Acpi.GetMadtInfoPtr();
+        var madtInfo = Acpi.GetMadtInfoPtr();
         return madtInfo != null ? madtInfo->CpuCount : 1;
     }
 

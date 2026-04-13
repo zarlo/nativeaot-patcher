@@ -36,8 +36,8 @@ public class PciDevice : Device
     public const ushort ConfigAddressPort = 0xCF8;
     public const ushort ConfigDataPort = 0xCFC;
 
-    // ARM64 ECAM Base Address (QEMU virt machine VIRT_PCIE_ECAM)
-    private const ulong PciEcamBase = 0x3F000000;
+    // ECAM Base Address (discovered from ACPI MCFG table at runtime)
+    private static ulong s_pciEcamBase;
 
     public readonly PciBaseAddressBar[] BaseAddressBar;
 
@@ -269,11 +269,26 @@ public class PciDevice : Device
         0x80000000 | (aBus << 16) | ((aSlot & 0x1F) << 11) | ((aFunction & 0x07) << 8);
 
     /// <summary>
+    /// Sets the ECAM base address (physical) discovered from ACPI MCFG.
+    /// Called by LibraryInitializer before PCI scanning.
+    /// </summary>
+    internal static void SetEcamBase(ulong physBase)
+    {
+        s_pciEcamBase = physBase;
+        if (physBase != 0)
+        {
+            Serial.WriteString("[PciDevice] ECAM base from ACPI MCFG: 0x");
+            Serial.WriteHex(physBase);
+            Serial.WriteString("\n");
+        }
+    }
+
+    /// <summary>
     /// Get ECAM address for ARM64 (returns virtual address via HHDM).
     /// </summary>
     private static unsafe ulong GetEcamAddress(ushort bus, ushort slot, ushort func, byte offset)
     {
-        ulong phys = PciEcamBase + ((ulong)bus << 20) + ((ulong)slot << 15) + ((ulong)func << 12) + offset;
+        ulong phys = s_pciEcamBase + ((ulong)bus << 20) + ((ulong)slot << 15) + ((ulong)func << 12) + offset;
         ulong hhdmOffset = Limine.HHDM.Response != null ? Limine.HHDM.Response->Offset : 0;
         return phys + hhdmOffset;
     }

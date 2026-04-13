@@ -3,14 +3,14 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Cosmos.Kernel.HAL.ARM64.Acpi;
+namespace Cosmos.Kernel.HAL.ARM64;
 
 /// <summary>
 /// C# bridge to native ACPI GIC discovery (acpi_wrapper.c in MultiArch).
 /// The native code is called during early boot (kmain) and parses the MADT
 /// to extract GICD/GICR/GICC addresses. This class just retrieves the result.
 /// </summary>
-public static unsafe partial class AcpiGIC
+public static unsafe partial class Acpi
 {
     /// <summary>
     /// Mirrors the C struct acpi_gic_info_t from ACPI/acpi_wrapper.c.
