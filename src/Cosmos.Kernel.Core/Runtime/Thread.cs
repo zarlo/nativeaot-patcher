@@ -1,4 +1,5 @@
 using System.Runtime;
+using Cosmos.Kernel.Core.Bridge;
 using Cosmos.Kernel.Core.Scheduler;
 
 namespace Cosmos.Kernel.Core.Runtime;
@@ -25,7 +26,7 @@ public class Thread
     [RuntimeExport("RhGetCurrentThreadStackBounds")]
     internal static void RhGetCurrentThreadStackBounds(out IntPtr pStackLow, out IntPtr pStackHigh)
     {
-        pStackLow = (nint)ContextSwitch.GetRsp(); ;
+        pStackLow = (nint)ContextSwitchNative.GetSp();
         pStackHigh = pStackLow + (nint)Scheduler.Thread.DefaultStackSize;
     }
 }

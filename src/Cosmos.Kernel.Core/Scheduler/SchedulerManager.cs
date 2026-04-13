@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Cosmos.Kernel.Core.Bridge;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Memory.GarbageCollector;
@@ -532,8 +533,8 @@ public static class SchedulerManager
             next.LastScheduledAt = GetTimestamp();
 
             // Request context switch - set new thread flag and target RSP
-            ContextSwitch.SetContextSwitchNewThread(isNewThread ? 1 : 0);
-            ContextSwitch.SetContextSwitchRsp(next.StackPointer);
+            ContextSwitchNative.SetContextSwitchNewThread(isNewThread ? 1 : 0);
+            ContextSwitchNative.SetContextSwitchSp(next.StackPointer);
         }
     }
 
@@ -554,7 +555,7 @@ public static class SchedulerManager
         }
 
         next.State = ThreadState.Running;
-        ContextSwitch.SetContextSwitchRsp(next.StackPointer);
+        ContextSwitchNative.SetContextSwitchSp(next.StackPointer);
     }
 
     private static ulong GetTimestamp()
