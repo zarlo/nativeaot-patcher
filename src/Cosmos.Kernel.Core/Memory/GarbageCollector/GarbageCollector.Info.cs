@@ -1,6 +1,8 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.Scheduler;
+using SchedulerThread = Cosmos.Kernel.Core.Scheduler.Thread;
 
 namespace Cosmos.Kernel.Core.Memory.GarbageCollector;
 
@@ -476,12 +478,63 @@ public static unsafe partial class GarbageCollector
 
     /// <summary>
     /// Returns the cumulative total of all bytes ever allocated through the GC.
-    /// This counter only increases and never decrements, matching the semantics of
-    /// <c>GC.GetTotalAllocatedBytes()</c> in dotnet.
+    /// Subtracts dead thread unused TLAB bytes for accuracy.
     /// </summary>
     public static ulong GetTotalAllocatedBytes()
     {
-        return s_totalAllocatedBytes;
+        ulong total = s_totalAllocatedBytes;
+        if (total > s_deadThreadsNonAllocBytes)
+        {
+            total -= s_deadThreadsNonAllocBytes;
+        }
+
+        return total;
+    }
+
+    /// <summary>
+    /// Returns a precise total of allocated bytes, subtracting both dead thread
+    /// unused bytes and live threads' current unused TLAB space.
+    /// </summary>
+    public static ulong GetTotalAllocatedBytesPrecise()
+    {
+        ulong total = s_totalAllocatedBytes;
+        ulong unused = s_deadThreadsNonAllocBytes;
+
+        // Subtract live threads' unused TLAB space
+        if (CosmosFeatures.SchedulerEnabled)
+        {
+            SchedulerThread?[]? threads = SchedulerManager.Threads;
+            if (threads != null)
+            {
+                int count = SchedulerManager.ThreadCount;
+                for (int i = 0; i < threads.Length && count > 0; i++)
+                {
+                    SchedulerThread? thread = threads[i];
+                    if (thread != null)
+                    {
+                        if (thread.AllocContext.AllocLimit != null && thread.AllocContext.AllocPtr != null)
+                        {
+                            unused += (ulong)(thread.AllocContext.AllocLimit - thread.AllocContext.AllocPtr);
+                        }
+
+                        count--;
+                    }
+                }
+            }
+        }
+
+        // Also subtract fallback context unused space
+        if (s_fallbackAllocContext.AllocLimit != null && s_fallbackAllocContext.AllocPtr != null)
+        {
+            unused += (ulong)(s_fallbackAllocContext.AllocLimit - s_fallbackAllocContext.AllocPtr);
+        }
+
+        if (total > unused)
+        {
+            total -= unused;
+        }
+
+        return total;
     }
 
     /// <summary>

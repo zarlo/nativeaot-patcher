@@ -244,6 +244,161 @@ public static unsafe partial class GarbageCollector
         s_heapRangeDirty = true;
     }
 
+    // --- Raw variants (no s_totalAllocatedBytes increment) for TLAB refill ---
+
+    /// <summary>
+    /// Allocates from the free list without incrementing <see cref="s_totalAllocatedBytes"/>.
+    /// Used by TLAB refill to avoid double-counting (individual objects are counted at TLAB alloc time).
+    /// </summary>
+    private static void* AllocFromFreeListRaw(uint size)
+    {
+        if (!s_freeListsInitialized)
+        {
+            return null;
+        }
+
+        int sizeClass = -1;
+        uint classSize = MinSizeClass;
+        for (int i = 0; i < NumSizeClasses; i++, classSize <<= 1)
+        {
+            if (size <= classSize)
+            {
+                sizeClass = i;
+                break;
+            }
+        }
+
+        if (sizeClass < 0)
+        {
+            return null;
+        }
+
+        for (int i = sizeClass; i < NumSizeClasses; i++)
+        {
+            FreeBlock* block = s_freeLists[i];
+            if (block == null)
+            {
+                continue;
+            }
+
+            FreeBlock* prev = null;
+            while (block != null)
+            {
+                if (block->Size >= size)
+                {
+                    uint remainder = (uint)(block->Size - size);
+
+                    if (remainder != 0 && remainder < MinBlockSize)
+                    {
+                        prev = block;
+                        block = block->Next;
+                        continue;
+                    }
+
+                    if (prev != null)
+                    {
+                        prev->Next = block->Next;
+                    }
+                    else
+                    {
+                        s_freeLists[i] = block->Next;
+                    }
+
+                    if (remainder >= MinBlockSize)
+                    {
+                        FreeBlock* split = (FreeBlock*)((byte*)block + size);
+                        split->MethodTable = s_freeMethodTable;
+                        split->Size = (int)remainder;
+                        split->Next = null;
+                        AddToFreeList(split);
+                    }
+
+                    MemoryOp.MemSet((byte*)block, 0, (int)size);
+                    return block;
+                }
+
+                prev = block;
+                block = block->Next;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Bump allocation in a segment without incrementing <see cref="s_totalAllocatedBytes"/>.
+    /// Used by TLAB refill.
+    /// </summary>
+    private static void* BumpAllocInSegmentRaw(GCSegment* segment, uint size)
+    {
+        if (segment == null)
+        {
+            return null;
+        }
+
+        byte* newBump = segment->Bump + size;
+        if (newBump <= segment->End)
+        {
+            void* result = segment->Bump;
+            segment->Bump = newBump;
+            segment->UsedSize += size;
+            s_currentSegment = segment;
+            s_lastSegment = segment;
+            return result;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Slow allocation path without incrementing <see cref="s_totalAllocatedBytes"/>.
+    /// Walks segments and allocates a new one if needed. Used by TLAB refill.
+    /// </summary>
+    private static void* AllocateObjectSlowRaw(uint size)
+    {
+        if (s_segments == null)
+        {
+            return null;
+        }
+
+        if (s_lastSegment == null)
+        {
+            s_lastSegment = s_segments;
+        }
+
+        GCSegment* start = s_lastSegment;
+
+        for (GCSegment* seg = start; seg != null; seg = seg->Next)
+        {
+            void* result = BumpAllocInSegmentRaw(seg, size);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        for (GCSegment* seg = s_segments; seg != start; seg = seg->Next)
+        {
+            void* result = BumpAllocInSegmentRaw(seg, size);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        GCSegment* newSegment = AllocateSegment(size);
+        if (newSegment == null)
+        {
+            return null;
+        }
+
+        AppendSegment(newSegment);
+        s_lastSegment = newSegment;
+        s_currentSegment = newSegment;
+
+        return BumpAllocInSegmentRaw(newSegment, size);
+    }
+
     /// <summary>
     /// Inserts a free block into the appropriate size-class free list.
     /// </summary>

@@ -19,7 +19,7 @@ public class Kernel : Sys.Kernel
         Serial.WriteString("[GarbageCollector] BeforeRun() reached!\n");
         Serial.WriteString("[GarbageCollector] Starting tests...\n");
 
-        TR.Start("GarbageCollector Tests", expectedTests: 30);
+        TR.Start("GarbageCollector Tests", expectedTests: 35);
 
         // Garbage Collection Tests
         TR.Run("GC_IsEnabled", TestGCIsEnabled);
@@ -54,6 +54,13 @@ public class Kernel : Sys.Kernel
         TR.Run("GC_Info_GCSegmentSizeAndPercent", TestGCInfoGCSegmentSizeAndPercent);
         TR.Run("GC_Info_RhGetMemoryInfoWiring", TestGCInfoRhGetMemoryInfoWiring);
         TR.Run("GC_Variables", TestGCVariables);
+
+        // TLAB (Thread-Local Allocation Buffer) Tests
+        TR.Run("GC_TLAB_AllocBytesNonZero", TestTlabAllocBytesNonZero);
+        TR.Run("GC_TLAB_AllocBytesIncrease", TestTlabAllocBytesIncrease);
+        TR.Run("GC_TLAB_PreciseLessOrEqualTotal", TestTlabPreciseLessOrEqualTotal);
+        TR.Run("GC_TLAB_SurvivalAfterCollect", TestTlabSurvivalAfterCollect);
+        TR.Run("GC_TLAB_GapStampedOnCollect", TestTlabGapStampedOnCollect);
 
         TR.Finish();
 
@@ -707,6 +714,112 @@ public class Kernel : Sys.Kernel
             "GC.Info: GCCpuGroup must be false");
         Assert.Equal(false, (bool)vars["GCLargePages"],
             "GC.Info: GCLargePages must be false");
+    }
+
+    // ==================== TLAB (Thread-Local Allocation Buffer) Tests ====================
+
+    private static void TestTlabAllocBytesNonZero()
+    {
+        // After all previous tests, per-thread cumulative allocated bytes must be > 0
+        long threadBytes = GC.GetAllocatedBytesForCurrentThread();
+        Assert.True(threadBytes > 0,
+            "TLAB: GetAllocatedBytesForCurrentThread must be > 0 after allocations, got: " + threadBytes);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static byte[] AllocByteArray(int size)
+    {
+        return new byte[size];
+    }
+
+    private static void TestTlabAllocBytesIncrease()
+    {
+        // Allocating objects must increase the global total allocated bytes counter
+        long before = GC.GetTotalAllocatedBytes(precise: false);
+
+        // Allocate via NoInlining helper to prevent compiler elision
+        byte[] a1 = AllocByteArray(128);
+        byte[] a2 = AllocByteArray(256);
+        byte[] a3 = AllocByteArray(512);
+
+        long after = GC.GetTotalAllocatedBytes(precise: false);
+
+        // Keep references alive so they're not optimized away
+        Assert.True(a1 != null && a2 != null && a3 != null, "TLAB: allocations must not be null");
+        Assert.True(after > before,
+            "TLAB: GetTotalAllocatedBytes must increase after allocations");
+    }
+
+    private static void TestTlabPreciseLessOrEqualTotal()
+    {
+        // Precise total subtracts unused TLAB space; must be <= non-precise total
+        long total = GC.GetTotalAllocatedBytes(precise: false);
+        long precise = GC.GetTotalAllocatedBytes(precise: true);
+        Assert.True(total > 0, "TLAB: GetTotalAllocatedBytes must be > 0");
+        Assert.True(precise > 0, "TLAB: GetTotalAllocatedBytes(precise) must be > 0");
+        Assert.True(precise <= total,
+            "TLAB: precise (" + precise + ") must be <= non-precise (" + total + ")");
+    }
+
+    private static void TestTlabSurvivalAfterCollect()
+    {
+        // Allocate objects, trigger GC (which returns all TLABs), then verify
+        // objects survive and we can allocate again (TLAB refill works)
+        List<int> list = new List<int>();
+        for (int i = 0; i < 100; i++)
+        {
+            list.Add(i);
+        }
+
+        CoreGC.Collect();
+
+        // List must survive
+        Assert.Equal(100, list.Count, "TLAB: list count must survive GC");
+        Assert.Equal(99, list[99], "TLAB: list last element must survive GC");
+
+        // Post-GC allocation must work (TLAB refill after ReturnAllAllocContexts)
+        byte[] postGC = new byte[256];
+        postGC[0] = 0xAB;
+        Assert.Equal((byte)0xAB, postGC[0], "TLAB: allocation after GC must work");
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void AllocateTlabGarbage(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            byte[] temp = new byte[64];
+            if (temp == null)
+            {
+                break;
+            }
+        }
+    }
+
+    private static void TestTlabGapStampedOnCollect()
+    {
+        // After GC, unused TLAB gaps are stamped as FreeBlocks.
+        // Verify that a collection doesn't corrupt the heap by allocating
+        // garbage, collecting, then allocating more and verifying correctness.
+        AllocateTlabGarbage(100);
+
+        CoreGC.GetStats(out int collsBefore, out int _);
+        int freed = CoreGC.Collect();
+        CoreGC.GetStats(out int collsAfter, out int _2);
+
+        Assert.Equal(collsBefore + 1, collsAfter,
+            "TLAB: exactly 1 collection recorded");
+        Assert.True(freed >= 0,
+            "TLAB: freed count must be >= 0");
+
+        // Allocate after collect to verify heap integrity (TLAB gaps properly handled)
+        int[] arr = new int[50];
+        for (int i = 0; i < 50; i++)
+        {
+            arr[i] = i * 3;
+        }
+
+        Assert.Equal(147, arr[49], "TLAB: post-collect allocation data integrity");
     }
 }
 
