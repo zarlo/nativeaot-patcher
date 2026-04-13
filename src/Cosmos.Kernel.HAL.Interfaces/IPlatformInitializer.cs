@@ -22,6 +22,12 @@ public interface IPlatformInitializer
     IInterruptController CreateInterruptController();
 
     /// <summary>
+    /// Maps PCI configuration space memory before device enumeration.
+    /// ARM64 maps ECAM as device memory; x64 uses port I/O (no mapping needed).
+    /// </summary>
+    void PreparePciMapping();
+
+    /// <summary>
     /// Initializes platform-specific hardware (PCI, ACPI, APIC, GIC, etc.).
     /// Called after HAL and interrupt manager are initialized.
     /// </summary>

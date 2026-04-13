@@ -28,6 +28,11 @@ public class ARM64PlatformInitializer : IPlatformInitializer
     public ICpuOps CreateCpuOps() => new ARM64CpuOps();
     public IInterruptController CreateInterruptController() => new ARM64InterruptController();
 
+    public void PreparePciMapping()
+    {
+        DeviceMapper.EnsureMapped(0x3F000000); // QEMU virt ECAM base
+    }
+
     public void InitializeHardware()
     {
         // Initialize Generic Timer

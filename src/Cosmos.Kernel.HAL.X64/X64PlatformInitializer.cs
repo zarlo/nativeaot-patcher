@@ -30,6 +30,12 @@ public class X64PlatformInitializer : IPlatformInitializer
     public ICpuOps CreateCpuOps() => new X64CpuOps();
     public IInterruptController CreateInterruptController() => new X64InterruptController();
 
+    public void PreparePciMapping()
+    {
+        // x64 uses legacy port I/O (0xCF8/0xCFC) for PCI config access,
+        // which bypasses the MMU — no memory mapping needed.
+    }
+
     public void InitializeHardware()
     {
         // Display ACPI MADT information

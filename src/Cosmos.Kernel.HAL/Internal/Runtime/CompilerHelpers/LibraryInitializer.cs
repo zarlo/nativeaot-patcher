@@ -50,6 +50,7 @@ namespace Internal.Runtime.CompilerHelpers
                 {
                     // Initialize PCI (requires interrupts for MSI/MSI-X)
                     Serial.WriteString("[KERNEL]   - Initializing PCI...\n");
+                    initializer.PreparePciMapping();
                     PciManager.Setup();
                 }
 

@@ -1,5 +1,6 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
+using Cosmos.Kernel.Boot.Limine;
 using Cosmos.Kernel.Core;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.HAL.Devices;
@@ -268,12 +269,13 @@ public class PciDevice : Device
         0x80000000 | (aBus << 16) | ((aSlot & 0x1F) << 11) | ((aFunction & 0x07) << 8);
 
     /// <summary>
-    /// Get ECAM address for ARM64.
+    /// Get ECAM address for ARM64 (returns virtual address via HHDM).
     /// </summary>
-    private static ulong GetEcamAddress(ushort bus, ushort slot, ushort func, byte offset)
+    private static unsafe ulong GetEcamAddress(ushort bus, ushort slot, ushort func, byte offset)
     {
-        // ECAM Base + (Bus << 20) + (Device << 15) + (Function << 12) + Offset
-        return PciEcamBase + ((ulong)bus << 20) + ((ulong)slot << 15) + ((ulong)func << 12) + offset;
+        ulong phys = PciEcamBase + ((ulong)bus << 20) + ((ulong)slot << 15) + ((ulong)func << 12) + offset;
+        ulong hhdmOffset = Limine.HHDM.Response != null ? Limine.HHDM.Response->Offset : 0;
+        return phys + hhdmOffset;
     }
 
     /// <summary>
