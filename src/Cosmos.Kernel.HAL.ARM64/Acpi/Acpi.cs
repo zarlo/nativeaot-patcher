@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.ARM64.Bridge;
 
 namespace Cosmos.Kernel.HAL.ARM64;
 
@@ -9,8 +10,9 @@ namespace Cosmos.Kernel.HAL.ARM64;
 /// C# bridge to native ACPI GIC discovery (acpi_wrapper.c in MultiArch).
 /// The native code is called during early boot (kmain) and parses the MADT
 /// to extract GICD/GICR/GICC addresses. This class just retrieves the result.
+/// Native import lives in Cosmos.Kernel.Core.ARM64/Bridge/Import/AcpiNative.cs.
 /// </summary>
-public static unsafe partial class Acpi
+public static unsafe class Acpi
 {
     /// <summary>
     /// Mirrors the C struct acpi_gic_info_t from ACPI/acpi_wrapper.c.
@@ -28,16 +30,12 @@ public static unsafe partial class Acpi
         public ulong CpuIfBase;    // GICC physical base (GICv2)
     }
 
-    [LibraryImport("*", EntryPoint = "acpi_get_gic_info")]
-    [SuppressGCTransition]
-    private static partial GicInfo* NativeGetGicInfo();
-
     /// <summary>
     /// Gets GIC information discovered from ACPI MADT during early boot.
     /// Returns null if ACPI was not available or GIC entries weren't found.
     /// </summary>
     public static GicInfo* GetGicInfo()
     {
-        return NativeGetGicInfo();
+        return (GicInfo*)AcpiGicNative.GetGicInfo();
     }
 }

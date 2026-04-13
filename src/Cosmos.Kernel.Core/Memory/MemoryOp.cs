@@ -1,8 +1,11 @@
-using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.Bridge;
 
 namespace Cosmos.Kernel.Core.Memory;
 
-public static unsafe partial class MemoryOp
+/// <summary>
+/// Native SIMD imports live in Bridge/Import/SimdNative.cs.
+/// </summary>
+public static unsafe class MemoryOp
 {
     public static void InitializeHeap(ulong heapBase, ulong heapSize) =>
         PageAllocator.InitializeHeap((byte*)heapBase, heapSize);
@@ -11,33 +14,6 @@ public static unsafe partial class MemoryOp
 
     public static void Free(void* ptr) => Heap.Heap.Free(ptr);
 
-    #region Native SIMD Imports
-
-    [LibraryImport("*", EntryPoint = "_simd_copy_16")]
-    [SuppressGCTransition]
-    private static partial void SimdCopy16(byte* dest, byte* src);
-
-    [LibraryImport("*", EntryPoint = "_simd_copy_32")]
-    [SuppressGCTransition]
-    private static partial void SimdCopy32(byte* dest, byte* src);
-
-    [LibraryImport("*", EntryPoint = "_simd_copy_64")]
-    [SuppressGCTransition]
-    private static partial void SimdCopy64(byte* dest, byte* src);
-
-    [LibraryImport("*", EntryPoint = "_simd_copy_128")]
-    [SuppressGCTransition]
-    private static partial void SimdCopy128(byte* dest, byte* src);
-
-    [LibraryImport("*", EntryPoint = "_simd_copy_128_blocks")]
-    [SuppressGCTransition]
-    private static partial void SimdCopy128Blocks(byte* dest, byte* src, int blockCount);
-
-    [LibraryImport("*", EntryPoint = "_simd_fill_16_blocks")]
-    [SuppressGCTransition]
-    private static partial void SimdFill16Blocks(byte* dest, int value, int blockCount);
-
-    #endregion
 
     #region MemSet
 
@@ -94,7 +70,7 @@ public static unsafe partial class MemoryOp
         int blockCount = count / 16;
         if (blockCount > 0)
         {
-            SimdFill16Blocks(dest, (int)value, blockCount);
+            SimdNative.Fill16Blocks(dest, (int)value, blockCount);
             offset = blockCount * 16;
         }
 
@@ -160,28 +136,28 @@ public static unsafe partial class MemoryOp
         // Copy 128-byte blocks
         while (count - offset >= 128)
         {
-            SimdCopy128(dest + offset, src + offset);
+            SimdNative.Copy128(dest + offset, src + offset);
             offset += 128;
         }
 
         // Copy 64-byte chunk
         if (count - offset >= 64)
         {
-            SimdCopy64(dest + offset, src + offset);
+            SimdNative.Copy64(dest + offset, src + offset);
             offset += 64;
         }
 
         // Copy 32-byte chunk
         if (count - offset >= 32)
         {
-            SimdCopy32(dest + offset, src + offset);
+            SimdNative.Copy32(dest + offset, src + offset);
             offset += 32;
         }
 
         // Copy 16-byte chunk
         if (count - offset >= 16)
         {
-            SimdCopy16(dest + offset, src + offset);
+            SimdNative.Copy16(dest + offset, src + offset);
             offset += 16;
         }
 

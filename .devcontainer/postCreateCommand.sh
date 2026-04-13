@@ -102,6 +102,14 @@ ls -la artifacts/package/release/Cosmos.Kernel.HAL.Interfaces.*.nupkg
 ls -la artifacts/package/release/Cosmos.Kernel.Debug.*.nupkg
 ls -la artifacts/package/release/Cosmos.Kernel.Boot.*.nupkg
 
+# Architecture-specific Core bridge packages (single-arch, host all LibraryImport
+# declarations consumed by HAL.X64/HAL.ARM64 — must be built before them)
+echo "Building and packing architecture-specific Core bridge packages..."
+dotnet build src/Cosmos.Kernel.Core.X64/Cosmos.Kernel.Core.X64.csproj -c Release -p:GeneratePackageOnBuild=false
+dotnet pack src/Cosmos.Kernel.Core.X64/Cosmos.Kernel.Core.X64.csproj -c Release --no-build -o artifacts/package/release
+dotnet build src/Cosmos.Kernel.Core.ARM64/Cosmos.Kernel.Core.ARM64.csproj -c Release -p:GeneratePackageOnBuild=false
+dotnet pack src/Cosmos.Kernel.Core.ARM64/Cosmos.Kernel.Core.ARM64.csproj -c Release --no-build -o artifacts/package/release
+
 # Architecture-specific HAL packages (build first, then pack)
 echo "Building and packing architecture-specific HAL packages..."
 dotnet build src/Cosmos.Kernel.HAL.X64/Cosmos.Kernel.HAL.X64.csproj -c Release -p:GeneratePackageOnBuild=false

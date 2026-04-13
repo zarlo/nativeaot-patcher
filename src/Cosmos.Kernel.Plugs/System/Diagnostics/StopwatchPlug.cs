@@ -1,31 +1,31 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Cosmos.Build.API.Attributes;
 #if ARCH_X64
+using Cosmos.Kernel.Core.X64.Bridge;
 using Cosmos.Kernel.HAL.X64;
+#elif ARCH_ARM64
+using Cosmos.Kernel.Core.ARM64.Bridge;
 #endif
 
 namespace Cosmos.Kernel.Plugs.System.Diagnostics;
 
 /// <summary>
 /// Plug for System.Diagnostics.Stopwatch to provide timestamp functionality.
-/// Uses TSC (Time Stamp Counter) on x64 for high-resolution timing.
+/// Uses TSC (Time Stamp Counter) on x64 and the ARM64 generic timer on ARM64.
+/// Native imports live in Cosmos.Kernel.Core.X64/Bridge/Import/X64CpuNative.cs and
+/// Cosmos.Kernel.Core.ARM64/Bridge/Import/GenericTimerNative.cs.
 /// </summary>
 [Plug(typeof(Stopwatch))]
-public static partial class StopwatchPlug
+public static class StopwatchPlug
 {
 #if ARCH_X64
-    [LibraryImport("*", EntryPoint = "_native_cpu_rdtsc")]
-    [SuppressGCTransition]
-    private static partial ulong NativeReadTSC();
-
     /// <summary>
     /// Gets the current timestamp using TSC.
     /// </summary>
     [PlugMember]
     public static long GetTimestamp()
     {
-        return (long)NativeReadTSC();
+        return (long)X64CpuNative.ReadTsc();
     }
 
     /// <summary>
@@ -55,23 +55,14 @@ public static partial class StopwatchPlug
     {
         return true;
     }
-
-#else
-    [LibraryImport("*", EntryPoint = "_native_arm64_timer_get_counter")]
-    [SuppressGCTransition]
-    private static partial ulong NativeGetCounter();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_timer_get_frequency")]
-    [SuppressGCTransition]
-    private static partial ulong NativeGetFrequency();
-
+#elif ARCH_ARM64
     /// <summary>
     /// Gets the current timestamp using the ARM64 generic timer counter (cntpct_el0).
     /// </summary>
     [PlugMember]
     public static long GetTimestamp()
     {
-        return (long)NativeGetCounter();
+        return (long)GenericTimerNative.GetCounter();
     }
 
     /// <summary>
@@ -80,7 +71,7 @@ public static partial class StopwatchPlug
     [PlugMember]
     public static long GetFrequency()
     {
-        return (long)NativeGetFrequency();
+        return (long)GenericTimerNative.GetFrequency();
     }
 
     /// <summary>
@@ -89,7 +80,7 @@ public static partial class StopwatchPlug
     [PlugMember("get_Frequency")]
     public static long get_Frequency()
     {
-        return (long)NativeGetFrequency();
+        return (long)GenericTimerNative.GetFrequency();
     }
 
     /// <summary>

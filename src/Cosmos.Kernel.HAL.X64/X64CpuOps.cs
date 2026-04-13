@@ -1,21 +1,17 @@
-using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
+using Cosmos.Kernel.Core.X64.Bridge;
 using Cosmos.Kernel.HAL.Interfaces;
 
 namespace Cosmos.Kernel.HAL.X64;
 
-public partial class X64CpuOps : ICpuOps
+public class X64CpuOps : ICpuOps
 {
     public void Halt() => InternalCpu.Halt();
 
     public void DisableInterrupts() => Cosmos.Kernel.Core.CPU.InternalCpu.DisableInterrupts();
 
     public void EnableInterrupts() => Cosmos.Kernel.Core.CPU.InternalCpu.EnableInterrupts();
-
-    [LibraryImport("*", EntryPoint = "_native_cpu_rdtsc")]
-    [SuppressGCTransition]
-    private static partial ulong NativeReadTSC();
 
     /// <summary>
     /// TSC (Time Stamp Counter) frequency in Hz.
@@ -33,7 +29,9 @@ public partial class X64CpuOps : ICpuOps
     /// Reads the Time Stamp Counter (TSC).
     /// Returns a 64-bit value representing CPU cycles since reset.
     /// </summary>
-    public static ulong ReadTSC() => NativeReadTSC();
+    public static ulong ReadTSC() => X64CpuNative.ReadTsc();
+
+    // Native import lives in Cosmos.Kernel.Core.X64/Bridge/Import/X64CpuNative.cs.
 
     /// <summary>
     /// Calibrates the TSC frequency using LAPIC timer as a reference.
@@ -51,13 +49,13 @@ public partial class X64CpuOps : ICpuOps
         const uint calibrationMs = 10;
 
         // Read TSC before
-        ulong tscStart = NativeReadTSC();
+        ulong tscStart = X64CpuNative.ReadTsc();
 
         // Wait using calibrated LAPIC timer
         Cpu.LocalApic.Wait(calibrationMs);
 
         // Read TSC after
-        ulong tscEnd = NativeReadTSC();
+        ulong tscEnd = X64CpuNative.ReadTsc();
 
         ulong tscElapsed = tscEnd - tscStart;
         ulong ticksPerMs = tscElapsed / calibrationMs;

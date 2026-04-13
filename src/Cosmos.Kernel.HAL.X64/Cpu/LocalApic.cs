@@ -4,8 +4,7 @@ using System.Runtime.CompilerServices;
 using Cosmos.Kernel.Core;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Scheduler;
-using Cosmos.Kernel.HAL.Cpu;
-using Cosmos.Kernel.HAL.Cpu.Data;
+using Cosmos.Kernel.Core.CPU;
 
 namespace Cosmos.Kernel.HAL.X64.Cpu;
 

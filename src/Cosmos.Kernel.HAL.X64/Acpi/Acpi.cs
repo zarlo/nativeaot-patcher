@@ -3,6 +3,7 @@
 
 using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.IO;
+using Cosmos.Kernel.Core.X64.Bridge;
 
 namespace Cosmos.Kernel.HAL.X64;
 
@@ -103,15 +104,11 @@ public unsafe struct MadtInfo
 }
 
 /// <summary>
-/// ACPI subsystem interface
+/// ACPI subsystem interface.
+/// Native import lives in Cosmos.Kernel.Core.X64/Bridge/Import/AcpiNative.cs.
 /// </summary>
-public static unsafe partial class Acpi
+public static unsafe class Acpi
 {
-    // Get MADT info (already initialized in C during early boot)
-    [LibraryImport("*", EntryPoint = "acpi_get_madt_info")]
-    [SuppressGCTransition]
-    private static partial MadtInfo* AcpiGetMadtInfo();
-
     /// <summary>
     /// Get MADT (Multiple APIC Description Table) information
     /// NOTE: ACPI is initialized early in C code, this just retrieves the data
@@ -119,7 +116,7 @@ public static unsafe partial class Acpi
     /// <returns>Pointer to MADT info if found, null otherwise</returns>
     public static MadtInfo* GetMadtInfoPtr()
     {
-        return AcpiGetMadtInfo();
+        return (MadtInfo*)AcpiMadtNative.GetMadtInfo();
     }
 
     /// <summary>
@@ -128,7 +125,7 @@ public static unsafe partial class Acpi
     /// <returns>True if MADT was found and parsed successfully during early boot</returns>
     public static bool DisplayMadtInfo()
     {
-        MadtInfo* ptr = AcpiGetMadtInfo();
+        MadtInfo* ptr = (MadtInfo*)AcpiMadtNative.GetMadtInfo();
 
         if (ptr == null)
         {

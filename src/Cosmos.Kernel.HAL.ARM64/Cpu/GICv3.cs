@@ -1,7 +1,7 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.ARM64.Bridge;
 using Cosmos.Kernel.Core.IO;
 
 namespace Cosmos.Kernel.HAL.ARM64.Cpu;
@@ -11,8 +11,9 @@ namespace Cosmos.Kernel.HAL.ARM64.Cpu;
 /// GICv3 uses system registers (ICC_*) for the CPU interface instead of MMIO,
 /// and adds a Redistributor component (one per CPU).
 /// Base addresses are configurable to support both QEMU and real hardware.
+/// Native imports live in Cosmos.Kernel.Core.ARM64/Bridge/Import/GICv3Native.cs.
 /// </summary>
-public static partial class GICv3
+public static class GICv3
 {
     // Default QEMU virt machine GICv3 base addresses (overridable via Configure)
     private static ulong _gicDistBase = 0x08000000;
@@ -94,63 +95,6 @@ public static partial class GICv3
     /// the GIC bus doesn't respond (e.g., Qualcomm wearable SoCs).
     /// </summary>
     public static bool IsMmioAvailable => _mmioAvailable;
-
-    // Native ICC system register access (GICv3 CPU interface)
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_read_icc_iar1_el1")]
-    [SuppressGCTransition]
-    private static partial uint ReadIAR1();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_write_icc_eoir1_el1")]
-    [SuppressGCTransition]
-    private static partial void WriteEOIR1(uint intId);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_read_icc_hppir1_el1")]
-    [SuppressGCTransition]
-    private static partial uint ReadHPPIR1();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_write_icc_pmr_el1")]
-    [SuppressGCTransition]
-    private static partial void WritePMR(uint priority);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_read_icc_pmr_el1")]
-    [SuppressGCTransition]
-    private static partial uint ReadPMR();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_write_icc_bpr1_el1")]
-    [SuppressGCTransition]
-    private static partial void WriteBPR1(uint value);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_write_icc_ctlr_el1")]
-    [SuppressGCTransition]
-    private static partial void WriteCTLR(uint value);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_read_icc_ctlr_el1")]
-    [SuppressGCTransition]
-    private static partial uint ReadCTLR();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_write_icc_igrpen1_el1")]
-    [SuppressGCTransition]
-    private static partial void WriteIGRPEN1(uint value);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_read_icc_igrpen1_el1")]
-    [SuppressGCTransition]
-    private static partial uint ReadIGRPEN1();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_write_icc_sgi1r_el1")]
-    [SuppressGCTransition]
-    private static partial void WriteSGI1R(ulong value);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_read_icc_sre_el1")]
-    [SuppressGCTransition]
-    private static partial uint ReadSRE();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_gicv3_write_icc_sre_el1")]
-    [SuppressGCTransition]
-    private static partial void WriteSRE(uint value);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_read_mpidr_el1")]
-    [SuppressGCTransition]
-    private static partial ulong ReadMPIDR();
 
     /// <summary>
     /// Configures the GICv3 base addresses. Must be called before Initialize()
@@ -243,7 +187,7 @@ public static partial class GICv3
         Serial.Write("[GIC] SPIs configured\n");
 
         // Step 6: Read current CPU's MPIDR affinity for SPI routing
-        ulong mpidr = ReadMPIDR();
+        ulong mpidr = GICv3Native.ReadMpidr();
         ulong affinity = ExtractAffinity(mpidr);
         Serial.Write("[GIC] CPU MPIDR=0x");
         Serial.WriteHex(mpidr);
@@ -312,7 +256,7 @@ public static partial class GICv3
     /// </summary>
     private static void EnableSystemRegisterAccess()
     {
-        uint sre = ReadSRE();
+        uint sre = GICv3Native.ReadSre();
         Serial.Write("[GIC] ICC_SRE_EL1=0x");
         Serial.WriteHex(sre);
         Serial.Write("\n");
@@ -321,10 +265,10 @@ public static partial class GICv3
         {
             // Enable SRE bit
             sre |= 0x1;
-            WriteSRE(sre);
+            GICv3Native.WriteSre(sre);
 
             // Verify it took effect
-            sre = ReadSRE();
+            sre = GICv3Native.ReadSre();
             if ((sre & 0x1) == 0)
             {
                 Serial.Write("[GIC] WARNING: Failed to enable ICC_SRE_EL1.SRE\n");
@@ -470,16 +414,16 @@ public static partial class GICv3
         Serial.Write("[GIC] Initializing CPU interface (system registers)...\n");
 
         // Disable Group 1 interrupts during configuration
-        WriteIGRPEN1(0);
+        GICv3Native.WriteIgrpen1(0);
 
         // Set priority mask to allow all priorities
-        WritePMR(0xFF);
+        GICv3Native.WritePmr(0xFF);
 
         // Set binary point to 0
-        WriteBPR1(0);
+        GICv3Native.WriteBpr1(0);
 
         // Enable Group 1 Non-Secure interrupts
-        WriteIGRPEN1(1);
+        GICv3Native.WriteIgrpen1(1);
 
         Serial.Write("[GIC] CPU interface initialized\n");
     }
@@ -589,7 +533,7 @@ public static partial class GICv3
     /// <returns>The interrupt ID, or 1023 if spurious.</returns>
     public static uint AcknowledgeInterrupt()
     {
-        return ReadIAR1() & 0x3FF;
+        return GICv3Native.ReadIar1() & 0x3FF;
     }
 
     /// <summary>
@@ -599,7 +543,7 @@ public static partial class GICv3
     /// <param name="intId">The interrupt ID that was acknowledged.</param>
     public static void EndOfInterrupt(uint intId)
     {
-        WriteEOIR1(intId);
+        GICv3Native.WriteEoir1(intId);
     }
 
     /// <summary>
@@ -613,7 +557,7 @@ public static partial class GICv3
         if (!_mmioAvailable)
         {
             // Best effort: check if the highest pending interrupt matches
-            uint hppir = ReadHPPIR1() & 0x3FF;
+            uint hppir = GICv3Native.ReadHppir1() & 0x3FF;
             return hppir == intId;
         }
 
@@ -732,7 +676,7 @@ public static partial class GICv3
             value |= (1ul << 40); // IRM = 1
         }
 
-        WriteSGI1R(value);
+        GICv3Native.WriteSgi1r(value);
     }
 
     /// <summary>

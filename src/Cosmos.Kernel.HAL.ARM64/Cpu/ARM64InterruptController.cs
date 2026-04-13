@@ -1,6 +1,6 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
-using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.ARM64.Bridge;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.HAL.Interfaces;
 
@@ -8,13 +8,10 @@ namespace Cosmos.Kernel.HAL.ARM64.Cpu;
 
 /// <summary>
 /// ARM64 interrupt controller - manages exception vectors and GIC.
+/// Native imports live in Cosmos.Kernel.Core.ARM64/Bridge/Import/ARM64InterruptNative.cs.
 /// </summary>
-public partial class ARM64InterruptController : IInterruptController
+public class ARM64InterruptController : IInterruptController
 {
-    [LibraryImport("*", EntryPoint = "_native_arm64_init_exception_vectors")]
-    [SuppressGCTransition]
-    private static partial void InitExceptionVectors();
-
     private bool _initialized;
 
     /// <summary>
@@ -29,7 +26,7 @@ public partial class ARM64InterruptController : IInterruptController
         Serial.Write("[ARM64InterruptController] Starting exception vector initialization...\n");
 
         // Initialize exception vectors (VBAR_EL1)
-        InitExceptionVectors();
+        Arm64ExceptionVectorNative.InitExceptionVectors();
         Serial.Write("[ARM64InterruptController] Exception vectors initialized\n");
 
         // Initialize the GIC (Generic Interrupt Controller)

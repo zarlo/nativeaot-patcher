@@ -1,17 +1,15 @@
-using System.Runtime.InteropServices;
 using System.Text.Unicode;
 using Cosmos.Build.API.Attributes;
+using Cosmos.Kernel.Core.Bridge;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Utilities;
 
 namespace Cosmos.Kernel.Plugs.System;
 
 [Plug(typeof(AppContext))]
-public static partial class AppContextPlug
+public static class AppContextPlug
 {
-    [LibraryImport("*", EntryPoint = "RhGetKnobValues")]
-    [SuppressGCTransition]
-    private static unsafe partial uint RhGetKnobValues(out byte** keys, out byte** values);
+    // Native import lives in Cosmos.Kernel.Core/Bridge/Import/KnobsNative.cs.
     private static SimpleDictionary<string, object?>? dataStore;
     private static SimpleDictionary<string, bool>? switches;
 
@@ -25,7 +23,7 @@ public static partial class AppContextPlug
 
         unsafe
         {
-            uint count = RhGetKnobValues(out byte** knobKeys, out byte** knobValues);
+            uint count = KnobsNative.GetKnobValues(out byte** knobKeys, out byte** knobValues);
 
             dataStore = new(capacity: (int)count);
             switches = new();

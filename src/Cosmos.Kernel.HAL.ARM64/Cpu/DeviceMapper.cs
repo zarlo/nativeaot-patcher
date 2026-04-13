@@ -1,8 +1,8 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Cosmos.Kernel.Boot.Limine;
+using Cosmos.Kernel.Core.ARM64.Bridge;
 using Cosmos.Kernel.Core.IO;
 
 namespace Cosmos.Kernel.HAL.ARM64.Cpu;
@@ -13,8 +13,9 @@ namespace Cosmos.Kernel.HAL.ARM64.Cpu;
 /// are NOT mapped. This class walks the TTBR1 page tables and inserts
 /// 2MiB block descriptors with Device-nGnRnE/nGnRE attributes so the
 /// HHDM virtual address (phys + HHDM_OFFSET) can be dereferenced for MMIO.
+/// Native imports live in Cosmos.Kernel.Core.ARM64/Bridge/Import/DeviceMapperNative.cs.
 /// </summary>
-public static unsafe partial class DeviceMapper
+public static unsafe class DeviceMapper
 {
     // Page table descriptor bits
     private const ulong DESC_VALID = 1UL << 0;
@@ -27,32 +28,6 @@ public static unsafe partial class DeviceMapper
     private const ulong BLOCK_1GB_ADDR_MASK = 0x0000FFFFC0000000UL;
 
     private static bool _spareL2Used;
-
-    // ── Native helpers ──────────────────────────────────────────────
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_read_ttbr1_el1")]
-    [SuppressGCTransition]
-    private static partial ulong ReadTTBR1();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_read_mair_el1")]
-    [SuppressGCTransition]
-    private static partial ulong ReadMAIR();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_tlbi_vale1")]
-    [SuppressGCTransition]
-    private static partial void FlushTLB(ulong vaShifted);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_va_to_pa")]
-    [SuppressGCTransition]
-    private static partial ulong VirtToPhys(ulong va);
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_spare_l2_table_addr")]
-    [SuppressGCTransition]
-    private static partial ulong GetSpareL2TableAddr();
-
-    [LibraryImport("*", EntryPoint = "_native_arm64_dsb_isb")]
-    [SuppressGCTransition]
-    private static partial void DsbIsb();
 
     // ── Public API ──────────────────────────────────────────────────
 
@@ -87,7 +62,7 @@ public static unsafe partial class DeviceMapper
         Serial.Write("\n");
 
         // ── Find Device memory MAIR index ────────────────────────
-        ulong mair = ReadMAIR();
+        ulong mair = DeviceMapperNative.ReadMair();
         int deviceIdx = FindDeviceMairIndex(mair);
         if (deviceIdx < 0)
         {
@@ -99,7 +74,7 @@ public static unsafe partial class DeviceMapper
         Serial.Write("\n");
 
         // ── Read TTBR1 and walk page tables ──────────────────────
-        ulong ttbr1Phys = ReadTTBR1() & ADDR_MASK;
+        ulong ttbr1Phys = DeviceMapperNative.ReadTtbr1() & ADDR_MASK;
         ulong* l0 = (ulong*)(ttbr1Phys + hhdmOffset);
 
         // L0 index (bits [47:39] of the VA offset within TTBR1 space)
@@ -191,9 +166,9 @@ public static unsafe partial class DeviceMapper
             // ARM Break-Before-Make: must invalidate first, flush TLB,
             // then write the new descriptor. Cannot change attributes in-place.
             l2[l2idx] = 0;  // Step 1: invalidate
-            DsbIsb();
-            FlushTLB(virtAddr >> 12);  // Step 2: flush stale TLB
-            DsbIsb();
+            DeviceMapperNative.DsbIsb();
+            DeviceMapperNative.FlushTlb(virtAddr >> 12);  // Step 2: flush stale TLB
+            DeviceMapperNative.DsbIsb();
         }
 
         // Build 2MiB block descriptor with Device attributes
@@ -213,10 +188,10 @@ public static unsafe partial class DeviceMapper
         l2[l2idx] = desc;
 
         // Ensure descriptor is visible before use
-        DsbIsb();
+        DeviceMapperNative.DsbIsb();
 
         // Final TLB flush for the new mapping
-        FlushTLB(virtAddr >> 12);
+        DeviceMapperNative.FlushTlb(virtAddr >> 12);
 
         Serial.Write("[DeviceMapper] Mapping complete\n");
     }
@@ -234,14 +209,14 @@ public static unsafe partial class DeviceMapper
         }
 
         // Get pre-allocated L2 table virtual address
-        ulong l2va = GetSpareL2TableAddr();
+        ulong l2va = DeviceMapperNative.GetSpareL2TableAddr();
         if (l2va == 0)
         {
             return null;
         }
 
         // Get its physical address (for the L1 table descriptor)
-        ulong l2pa = VirtToPhys(l2va);
+        ulong l2pa = DeviceMapperNative.VirtToPhys(l2va);
         if (l2pa == 0)
         {
             Serial.Write("[DeviceMapper] ERROR: Cannot translate spare L2 table VA\n");
@@ -265,17 +240,17 @@ public static unsafe partial class DeviceMapper
         }
 
         // Ensure all L2 entries are written before updating L1
-        DsbIsb();
+        DeviceMapperNative.DsbIsb();
 
         // Replace L1 block with table descriptor pointing to L2
         // Table descriptor: PA | 0x3 (valid + table)
         l1[l1idx] = l2pa | DESC_VALID | DESC_TABLE;
 
-        DsbIsb();
+        DeviceMapperNative.DsbIsb();
 
         // Flush entire TLB since we changed a 1GiB mapping
         // (vale1 only flushes one page; we need broader flush)
-        FlushTLB(0); // will be followed by individual flushes if needed
+        DeviceMapperNative.FlushTlb(0); // will be followed by individual flushes if needed
 
         _spareL2Used = true;
 

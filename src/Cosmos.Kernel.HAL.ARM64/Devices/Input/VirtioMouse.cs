@@ -5,8 +5,7 @@ using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Memory;
 using Cosmos.Kernel.HAL.ARM64.Cpu;
 using Cosmos.Kernel.HAL.ARM64.Devices.Virtio;
-using Cosmos.Kernel.HAL.Cpu;
-using Cosmos.Kernel.HAL.Cpu.Data;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.HAL.Devices.Input;
 
 namespace Cosmos.Kernel.HAL.ARM64.Devices.Input;

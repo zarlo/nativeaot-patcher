@@ -1,26 +1,24 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.Bridge;
 
 namespace Cosmos.Kernel.Core.CPU;
 
 /// <summary>
 /// Low-level CPU operations that can be used by Core components like the heap.
+/// Native imports live in Bridge/Import/CpuNative.cs.
 /// </summary>
-public static partial class InternalCpu
+public static class InternalCpu
 {
-    [LibraryImport("*", EntryPoint = "_native_cpu_disable_interrupts")]
-    [SuppressGCTransition]
-    public static partial void DisableInterrupts();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DisableInterrupts() => CpuNative.DisableInterrupts();
 
-    [LibraryImport("*", EntryPoint = "_native_cpu_enable_interrupts")]
-    [SuppressGCTransition]
-    public static partial void EnableInterrupts();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void EnableInterrupts() => CpuNative.EnableInterrupts();
 
-    [LibraryImport("*", EntryPoint = "_native_cpu_halt")]
-    [SuppressGCTransition]
-    public static partial void Halt();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Halt() => CpuNative.Halt();
 
     /// <summary>
     /// Creates a scope that disables interrupts and automatically re-enables them on dispose.

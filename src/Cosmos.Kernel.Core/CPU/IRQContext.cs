@@ -2,7 +2,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace Cosmos.Kernel.HAL.Cpu.Data;
+namespace Cosmos.Kernel.Core.CPU;
 
 #if ARCH_ARM64
 

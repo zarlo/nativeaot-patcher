@@ -69,9 +69,9 @@
 
   <!-- ILC arguments -->
   <ItemGroup>
+    <!-- All [UnmanagedCallersOnly] entry points live in Cosmos.Kernel.Core/Bridge/Export/ -->
     <UnmanagedEntryPointsAssembly Include="Cosmos.Kernel.Core"/>
     <IlcArg Include="--feature:System.Diagnostics.Tracing.EventSource.IsSupported=false"/>
-    <IlcArg Include="--generateunmanagedentrypoints:Cosmos.Kernel"/>
     <!-- Cosmos Feature Switches -->
     <RuntimeHostConfigurationOption Include="Cosmos.Kernel.HAL.Interrupts.Enabled" Value="$(CosmosEnableInterrupts)" Trim="true"/>
     <RuntimeHostConfigurationOption Include="Cosmos.Kernel.HAL.UART.Enabled" Value="$(CosmosEnableUART)" Trim="true"/>
@@ -152,6 +152,8 @@
     <PackageReference Include="Cosmos.Kernel.Native.X64" Version="@CosmosPackageVersion@" />
     <PackageReference Include="Cosmos.Kernel.Native.ARM64" Version="@CosmosPackageVersion@" />
     <PackageReference Include="Cosmos.Kernel.Native.MultiArch" Version="@CosmosPackageVersion@" />
+    <PackageReference Include="Cosmos.Kernel.Core.X64" Version="@CosmosPackageVersion@" />
+    <PackageReference Include="Cosmos.Kernel.Core.ARM64" Version="@CosmosPackageVersion@" />
     <PackageReference Include="Cosmos.Kernel.HAL.X64" Version="@CosmosPackageVersion@" />
     <PackageReference Include="Cosmos.Kernel.HAL.ARM64" Version="@CosmosPackageVersion@" />
   </ItemGroup>
@@ -159,6 +161,8 @@
     <PackageReference Include="Cosmos.Kernel.Native.X64" />
     <PackageReference Include="Cosmos.Kernel.Native.ARM64" />
     <PackageReference Include="Cosmos.Kernel.Native.MultiArch" />
+    <PackageReference Include="Cosmos.Kernel.Core.X64" />
+    <PackageReference Include="Cosmos.Kernel.Core.ARM64" />
     <PackageReference Include="Cosmos.Kernel.HAL.X64" />
     <PackageReference Include="Cosmos.Kernel.HAL.ARM64" />
   </ItemGroup>

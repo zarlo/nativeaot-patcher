@@ -1,23 +1,18 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
-using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.IO;
+using Cosmos.Kernel.Core.X64.Bridge;
 using Cosmos.Kernel.HAL.X64.Cpu.Data;
 
 namespace Cosmos.Kernel.HAL.X64.Cpu;
 
 /// <summary>
 /// Handles Interrupt Descriptor Table initialization for x86_64.
+/// Native imports live in Cosmos.Kernel.Core.X64/Bridge/Import/IdtNative.cs.
 /// </summary>
-public static unsafe partial class Idt
+public static unsafe class Idt
 {
-    [LibraryImport("*", EntryPoint = "_native_x64_load_idt")]
-    [SuppressGCTransition]
-    private static partial void LoadIdt(void* ptr);
-
-    [LibraryImport("*", EntryPoint = "_native_x64_get_code_selector")]
-    [SuppressGCTransition]
-    public static partial ulong GetCurrentCodeSelector();
+    public static ulong GetCurrentCodeSelector() => IdtNative.GetCurrentCodeSelector();
 
     private static IdtEntry[]? IdtEntries;
 
@@ -67,16 +62,12 @@ public static unsafe partial class Idt
             Serial.Write("[IDT] IDT Limit: 0x", ((ulong)idtPtr.Limit).ToString("X"), "\n");
 
             // Load the IDT
-            LoadIdt((void*)&idtPtr);
+            IdtNative.LoadIdt((void*)&idtPtr);
             Serial.Write("[IDT] Loaded 256 interrupt vectors at 0x", idtPtr.Base.ToString("X"), "\n");
         }
 
         Serial.Write("[IDT] IDT loaded.\n");
     }
-
-    [LibraryImport("*", EntryPoint = "_native_x64_get_irq_stub")]
-    [SuppressGCTransition]
-    private static partial nint GetIrqStub(int index);
 
     public static delegate* unmanaged<void> GetStub(int index)
     {
@@ -85,7 +76,7 @@ public static unsafe partial class Idt
             throw new ArgumentOutOfRangeException(nameof(index));
         }
 
-        nint stubAddr = GetIrqStub(index);
+        nint stubAddr = IdtNative.GetIrqStub(index);
 
         return (delegate* unmanaged<void>)stubAddr;
     }
