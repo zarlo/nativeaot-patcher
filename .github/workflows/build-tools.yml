@@ -578,11 +578,12 @@ jobs:
             make flex bison diffutils
 
       - name: Download QEMU source
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           curl -L -o qemu.tar.xz \
             "https://download.qemu.org/qemu-${{ env.QEMU_VERSION }}.tar.xz"
-          tar xf qemu.tar.xz
+          tar xf qemu.tar.xz 2>/dev/null || true
 
       - name: Download QEMU source (Windows)
         if: runner.os == 'Windows'
@@ -590,7 +591,7 @@ jobs:
         run: |
           curl -L -o qemu.tar.xz \
             "https://download.qemu.org/qemu-${{ env.QEMU_VERSION }}.tar.xz"
-          tar xf qemu.tar.xz
+          tar xf qemu.tar.xz 2>/dev/null || true
 
       - name: Build QEMU (Linux/macOS)
         if: runner.os != 'Windows'
