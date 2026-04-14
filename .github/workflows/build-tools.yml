@@ -329,7 +329,7 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          sed -i '' 's|^#define fdopen(fd,mode) NULL|#ifndef fdopen\n#define fdopen(fd,mode) NULL /* No fdopen() */\n#endif|' \
+          perl -i -pe 's|^#define fdopen\(fd,mode\) NULL.*|#ifndef fdopen\n#define fdopen(fd,mode) NULL\n#endif|' \
             gcc-${{ env.GCC_VERSION }}/zlib/zutil.h
 
       - name: Build native cross tools (for Windows cross-compilation)
@@ -499,7 +499,7 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          sed -i '' 's|^#define fdopen(fd,mode) NULL|#ifndef fdopen\n#define fdopen(fd,mode) NULL /* No fdopen() */\n#endif|' \
+          perl -i -pe 's|^#define fdopen\(fd,mode\) NULL.*|#ifndef fdopen\n#define fdopen(fd,mode) NULL\n#endif|' \
             gcc-${{ env.GCC_VERSION }}/zlib/zutil.h
 
       - name: Build native cross tools (for Windows cross-compilation)
