@@ -160,6 +160,7 @@ jobs:
           CONFIGURE_ARGS="--disable-libreadline --disable-libacl --disable-xattr"
           if [ -n "${{ matrix.host }}" ]; then
             CONFIGURE_ARGS="--host=${{ matrix.host }} $CONFIGURE_ARGS"
+            export XORRISO_ASSUME_ICONV=yes
           fi
           ./configure $CONFIGURE_ARGS
           make -j$NPROC
