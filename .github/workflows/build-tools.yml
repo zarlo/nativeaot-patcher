@@ -192,7 +192,8 @@ jobs:
           cd xorriso-${{ env.XORRISO_DIR }}
           ./configure --disable-libreadline --disable-libacl --disable-xattr
           make -j$(nproc)
-          strip xorriso/xorriso.exe
+          # Strip the real binary (not the libtool wrapper stub)
+          strip xorriso/.libs/xorriso.exe 2>/dev/null || strip xorriso/xorriso.exe
 
       - name: Package (tar.gz)
         if: runner.os != 'Windows'
@@ -206,7 +207,14 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path pkg/xorriso
-          Copy-Item xorriso-${{ env.XORRISO_DIR }}/xorriso/xorriso.exe pkg/xorriso/
+          # Copy the real binary from .libs/ (not the libtool wrapper stub)
+          $realBinary = "xorriso-${{ env.XORRISO_DIR }}/xorriso/.libs/xorriso.exe"
+          $wrapper = "xorriso-${{ env.XORRISO_DIR }}/xorriso/xorriso.exe"
+          if (Test-Path $realBinary) {
+            Copy-Item $realBinary pkg/xorriso/
+          } else {
+            Copy-Item $wrapper pkg/xorriso/
+          }
           # Bundle MSYS2 runtime DLLs needed by xorriso
           $msysRoot = "C:\msys64\usr\bin"
           Copy-Item "$msysRoot\msys-2.0.dll" pkg/xorriso/
