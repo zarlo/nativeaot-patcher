@@ -705,10 +705,13 @@ jobs:
         run: |
           BUILD_DIR="qemu-${{ env.QEMU_VERSION }}/build"
           mkdir -p pkg/qemu/share/qemu
-          # Find binaries (meson may place them in build/ or build/system/)
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img' -type f | head -1 | xargs -I{} cp {} pkg/qemu/ 2>/dev/null || true
+          # Find binaries — macOS uses *-unsigned suffix (code signing)
+          for bin in qemu-system-x86_64 qemu-system-aarch64 qemu-img; do
+            SRC=$(find "$BUILD_DIR" -maxdepth 2 \( -name "$bin" -o -name "${bin}-unsigned" \) -type f | head -1)
+            if [ -n "$SRC" ]; then
+              cp "$SRC" "pkg/qemu/$bin"
+            fi
+          done
           strip pkg/qemu/qemu-system-* pkg/qemu/qemu-img 2>/dev/null || true
           # Verify binaries exist
           ls -la pkg/qemu/qemu-system-*
