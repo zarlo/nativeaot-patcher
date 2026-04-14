@@ -270,20 +270,31 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════
   #  x86_64-elf-gcc — cross-compiler for bare-metal x64 kernels
   #  Builds binutils + GCC from source
-  #  Linux job also cross-compiles for Windows using mingw-w64
+  #  win-x64 is cross-compiled from Linux using mingw-w64
   # ═══════════════════════════════════════════════════════════════════════
   build-gcc-x64:
     name: x86_64-elf-gcc ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             target: linux-x64
+            host: ""
+            strip: strip
+            ext: ""
           - os: macos-latest
             target: darwin-arm64
+            host: ""
+            strip: strip
+            ext: ""
+          - os: ubuntu-latest
+            target: win-x64
+            host: x86_64-w64-mingw32
+            strip: x86_64-w64-mingw32-strip
+            ext: .exe
     env:
       TARGET: x86_64-elf
       TOOLDIR: x86_64-elf-tools
@@ -293,7 +304,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential texinfo bison flex \
-            libgmp-dev libmpfr-dev libmpc-dev libisl-dev
+            libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
+            ${{ matrix.host != '' && 'mingw-w64' || '' }}
 
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
@@ -308,6 +320,7 @@ jobs:
           tar xf gcc.tar.xz
 
       - name: Download GCC prerequisites
+        shell: bash
         run: cd gcc-${{ env.GCC_VERSION }} && ./contrib/download_prerequisites
 
       - name: Build binutils
@@ -315,9 +328,14 @@ jobs:
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
+          HOST_ARG=""
+          if [ -n "${{ matrix.host }}" ]; then
+            HOST_ARG="--host=${{ matrix.host }}"
+          fi
           mkdir build-binutils && cd build-binutils
           ../binutils-${{ env.BINUTILS_VERSION }}/configure \
             --target=${{ env.TARGET }} \
+            $HOST_ARG \
             --prefix="$PREFIX" \
             --with-sysroot \
             --disable-nls \
@@ -331,9 +349,14 @@ jobs:
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           export PATH="$PREFIX/bin:$PATH"
+          HOST_ARG=""
+          if [ -n "${{ matrix.host }}" ]; then
+            HOST_ARG="--host=${{ matrix.host }}"
+          fi
           mkdir build-gcc && cd build-gcc
           ../gcc-${{ env.GCC_VERSION }}/configure \
             --target=${{ env.TARGET }} \
+            $HOST_ARG \
             --prefix="$PREFIX" \
             --disable-nls \
             --enable-languages=c,c++ \
@@ -345,108 +368,55 @@ jobs:
       - name: Strip binaries
         shell: bash
         run: |
-          find output/bin -type f -executable -exec strip {} \; 2>/dev/null || true
-          find output/libexec -type f -executable -exec strip {} \; 2>/dev/null || true
+          find output/bin -type f \( -executable -o -name '*.exe' \) -exec ${{ matrix.strip }} {} \; 2>/dev/null || true
+          find output/libexec -type f \( -executable -o -name '*.exe' \) -exec ${{ matrix.strip }} {} \; 2>/dev/null || true
 
-      - name: Package
+      - name: Package (tar.gz)
+        if: matrix.ext == ''
         shell: bash
         run: |
           mv output ${{ env.TOOLDIR }}
           tar czf ${{ env.TOOLDIR }}-${{ env.GCC_VERSION }}-${{ matrix.target }}.tar.gz ${{ env.TOOLDIR }}
 
+      - name: Package (zip)
+        if: matrix.ext == '.exe'
+        run: |
+          mv output ${{ env.TOOLDIR }}
+          zip -r ${{ env.TOOLDIR }}-${{ env.GCC_VERSION }}-${{ matrix.target }}.zip ${{ env.TOOLDIR }}
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.TOOLDIR }}-${{ matrix.target }}
-          path: ${{ env.TOOLDIR }}-*.*
-
-  build-gcc-x64-win:
-    name: x86_64-elf-gcc win-x64
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    env:
-      TARGET: x86_64-elf
-      HOST: x86_64-w64-mingw32
-      TOOLDIR: x86_64-elf-tools
-    steps:
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential texinfo bison flex \
-            libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
-            mingw-w64
-
-      - name: Download sources
-        run: |
-          curl -L -o binutils.tar.xz "https://ftpmirror.gnu.org/gnu/binutils/binutils-${{ env.BINUTILS_VERSION }}.tar.xz"
-          curl -L -o gcc.tar.xz "https://ftp.gnu.org/gnu/gcc/gcc-${{ env.GCC_VERSION }}/gcc-${{ env.GCC_VERSION }}.tar.xz"
-          tar xf binutils.tar.xz
-          tar xf gcc.tar.xz
-
-      - name: Download GCC prerequisites
-        run: cd gcc-${{ env.GCC_VERSION }} && ./contrib/download_prerequisites
-
-      - name: Build binutils (cross-compile for Windows)
-        run: |
-          export PREFIX=$(pwd)/output
-          mkdir build-binutils && cd build-binutils
-          ../binutils-${{ env.BINUTILS_VERSION }}/configure \
-            --target=${{ env.TARGET }} \
-            --host=${{ env.HOST }} \
-            --prefix="$PREFIX" \
-            --with-sysroot \
-            --disable-nls \
-            --disable-werror
-          make -j$(nproc)
-          make install
-
-      - name: Build GCC (cross-compile for Windows)
-        run: |
-          export PREFIX=$(pwd)/output
-          export PATH="$PREFIX/bin:$PATH"
-          mkdir build-gcc && cd build-gcc
-          ../gcc-${{ env.GCC_VERSION }}/configure \
-            --target=${{ env.TARGET }} \
-            --host=${{ env.HOST }} \
-            --prefix="$PREFIX" \
-            --disable-nls \
-            --enable-languages=c,c++ \
-            --without-headers \
-            --disable-hosted-libstdcxx
-          make -j$(nproc) all-gcc all-target-libgcc
-          make install-gcc install-target-libgcc
-
-      - name: Strip binaries
-        run: |
-          find output/bin -name '*.exe' -exec x86_64-w64-mingw32-strip {} \; 2>/dev/null || true
-          find output/libexec -name '*.exe' -exec x86_64-w64-mingw32-strip {} \; 2>/dev/null || true
-
-      - name: Package
-        run: |
-          mv output ${{ env.TOOLDIR }}
-          zip -r ${{ env.TOOLDIR }}-${{ env.GCC_VERSION }}-win-x64.zip ${{ env.TOOLDIR }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.TOOLDIR }}-win-x64
           path: ${{ env.TOOLDIR }}-*.*
 
   # ═══════════════════════════════════════════════════════════════════════
   #  aarch64-none-elf-gcc — cross-compiler for bare-metal ARM64 kernels
   #  Builds binutils + GCC from source
-  #  Linux job also cross-compiles for Windows using mingw-w64
+  #  win-x64 is cross-compiled from Linux using mingw-w64
   # ═══════════════════════════════════════════════════════════════════════
   build-gcc-arm64:
     name: aarch64-none-elf-gcc ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             target: linux-x64
+            host: ""
+            strip: strip
+            ext: ""
           - os: macos-latest
             target: darwin-arm64
+            host: ""
+            strip: strip
+            ext: ""
+          - os: ubuntu-latest
+            target: win-x64
+            host: x86_64-w64-mingw32
+            strip: x86_64-w64-mingw32-strip
+            ext: .exe
     env:
       TARGET: aarch64-none-elf
       TOOLDIR: aarch64-elf-tools
@@ -456,7 +426,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential texinfo bison flex \
-            libgmp-dev libmpfr-dev libmpc-dev libisl-dev
+            libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
+            ${{ matrix.host != '' && 'mingw-w64' || '' }}
 
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
@@ -471,6 +442,7 @@ jobs:
           tar xf gcc.tar.xz
 
       - name: Download GCC prerequisites
+        shell: bash
         run: cd gcc-${{ env.GCC_VERSION }} && ./contrib/download_prerequisites
 
       - name: Build binutils
@@ -478,9 +450,14 @@ jobs:
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
+          HOST_ARG=""
+          if [ -n "${{ matrix.host }}" ]; then
+            HOST_ARG="--host=${{ matrix.host }}"
+          fi
           mkdir build-binutils && cd build-binutils
           ../binutils-${{ env.BINUTILS_VERSION }}/configure \
             --target=${{ env.TARGET }} \
+            $HOST_ARG \
             --prefix="$PREFIX" \
             --with-sysroot \
             --disable-nls \
@@ -494,9 +471,14 @@ jobs:
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           export PATH="$PREFIX/bin:$PATH"
+          HOST_ARG=""
+          if [ -n "${{ matrix.host }}" ]; then
+            HOST_ARG="--host=${{ matrix.host }}"
+          fi
           mkdir build-gcc && cd build-gcc
           ../gcc-${{ env.GCC_VERSION }}/configure \
             --target=${{ env.TARGET }} \
+            $HOST_ARG \
             --prefix="$PREFIX" \
             --disable-nls \
             --enable-languages=c,c++ \
@@ -508,89 +490,25 @@ jobs:
       - name: Strip binaries
         shell: bash
         run: |
-          find output/bin -type f -executable -exec strip {} \; 2>/dev/null || true
-          find output/libexec -type f -executable -exec strip {} \; 2>/dev/null || true
+          find output/bin -type f \( -executable -o -name '*.exe' \) -exec ${{ matrix.strip }} {} \; 2>/dev/null || true
+          find output/libexec -type f \( -executable -o -name '*.exe' \) -exec ${{ matrix.strip }} {} \; 2>/dev/null || true
 
-      - name: Package
+      - name: Package (tar.gz)
+        if: matrix.ext == ''
         shell: bash
         run: |
           mv output ${{ env.TOOLDIR }}
           tar czf ${{ env.TOOLDIR }}-${{ env.GCC_VERSION }}-${{ matrix.target }}.tar.gz ${{ env.TOOLDIR }}
 
+      - name: Package (zip)
+        if: matrix.ext == '.exe'
+        run: |
+          mv output ${{ env.TOOLDIR }}
+          zip -r ${{ env.TOOLDIR }}-${{ env.GCC_VERSION }}-${{ matrix.target }}.zip ${{ env.TOOLDIR }}
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.TOOLDIR }}-${{ matrix.target }}
-          path: ${{ env.TOOLDIR }}-*.*
-
-  build-gcc-arm64-win:
-    name: aarch64-none-elf-gcc win-x64
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    env:
-      TARGET: aarch64-none-elf
-      HOST: x86_64-w64-mingw32
-      TOOLDIR: aarch64-elf-tools
-    steps:
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential texinfo bison flex \
-            libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
-            mingw-w64
-
-      - name: Download sources
-        run: |
-          curl -L -o binutils.tar.xz "https://ftpmirror.gnu.org/gnu/binutils/binutils-${{ env.BINUTILS_VERSION }}.tar.xz"
-          curl -L -o gcc.tar.xz "https://ftp.gnu.org/gnu/gcc/gcc-${{ env.GCC_VERSION }}/gcc-${{ env.GCC_VERSION }}.tar.xz"
-          tar xf binutils.tar.xz
-          tar xf gcc.tar.xz
-
-      - name: Download GCC prerequisites
-        run: cd gcc-${{ env.GCC_VERSION }} && ./contrib/download_prerequisites
-
-      - name: Build binutils (cross-compile for Windows)
-        run: |
-          export PREFIX=$(pwd)/output
-          mkdir build-binutils && cd build-binutils
-          ../binutils-${{ env.BINUTILS_VERSION }}/configure \
-            --target=${{ env.TARGET }} \
-            --host=${{ env.HOST }} \
-            --prefix="$PREFIX" \
-            --with-sysroot \
-            --disable-nls \
-            --disable-werror
-          make -j$(nproc)
-          make install
-
-      - name: Build GCC (cross-compile for Windows)
-        run: |
-          export PREFIX=$(pwd)/output
-          export PATH="$PREFIX/bin:$PATH"
-          mkdir build-gcc && cd build-gcc
-          ../gcc-${{ env.GCC_VERSION }}/configure \
-            --target=${{ env.TARGET }} \
-            --host=${{ env.HOST }} \
-            --prefix="$PREFIX" \
-            --disable-nls \
-            --enable-languages=c,c++ \
-            --without-headers \
-            --disable-hosted-libstdcxx
-          make -j$(nproc) all-gcc all-target-libgcc
-          make install-gcc install-target-libgcc
-
-      - name: Strip binaries
-        run: |
-          find output/bin -name '*.exe' -exec x86_64-w64-mingw32-strip {} \; 2>/dev/null || true
-          find output/libexec -name '*.exe' -exec x86_64-w64-mingw32-strip {} \; 2>/dev/null || true
-
-      - name: Package
-        run: |
-          mv output ${{ env.TOOLDIR }}
-          zip -r ${{ env.TOOLDIR }}-${{ env.GCC_VERSION }}-win-x64.zip ${{ env.TOOLDIR }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.TOOLDIR }}-win-x64
           path: ${{ env.TOOLDIR }}-*.*
 
   # ═══════════════════════════════════════════════════════════════════════
@@ -604,9 +522,7 @@ jobs:
       - build-xorriso
       - build-yasm
       - build-gcc-x64
-      - build-gcc-x64-win
       - build-gcc-arm64
-      - build-gcc-arm64-win
     runs-on: ubuntu-latest
     permissions:
       contents: write
