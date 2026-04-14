@@ -128,57 +128,70 @@ jobs:
         include:
           - os: ubuntu-latest
             target: linux-x64
-            host: ""
-            ext: ""
-            strip: strip
           - os: macos-latest
             target: darwin-arm64
-            host: ""
-            ext: ""
-            strip: strip
-          - os: ubuntu-latest
+          - os: windows-latest
             target: win-x64
-            host: x86_64-w64-mingw32
-            ext: .exe
-            strip: x86_64-w64-mingw32-strip
     steps:
-      - name: Install mingw-w64
-        if: matrix.host != ''
-        run: sudo apt-get update && sudo apt-get install -y mingw-w64
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          install: make gcc pkg-config
 
-      - name: Download xorriso source
+      - name: Download xorriso source (Unix)
+        if: runner.os != 'Windows'
         run: |
           curl -L -o xorriso.tar.gz \
             "https://www.gnu.org/software/xorriso/xorriso-${{ env.XORRISO_VERSION }}.tar.gz"
           tar xzf xorriso.tar.gz
 
-      - name: Build xorriso
-        shell: bash
+      - name: Download xorriso source (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          curl -L -o xorriso.tar.gz \
+            "https://www.gnu.org/software/xorriso/xorriso-${{ env.XORRISO_VERSION }}.tar.gz"
+          tar xzf xorriso.tar.gz
+
+      - name: Build xorriso (Unix)
+        if: runner.os != 'Windows'
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           cd xorriso-${{ env.XORRISO_DIR }}
-          CONFIGURE_ARGS="--disable-libreadline --disable-libacl --disable-xattr"
-          if [ -n "${{ matrix.host }}" ]; then
-            CONFIGURE_ARGS="--host=${{ matrix.host }} $CONFIGURE_ARGS"
-            export XORRISO_ASSUME_ICONV=yes
-          fi
-          ./configure $CONFIGURE_ARGS
+          ./configure --disable-libreadline --disable-libacl --disable-xattr
           make -j$NPROC
-          ${{ matrix.strip }} xorriso/xorriso${{ matrix.ext }}
+          strip xorriso/xorriso
+
+      - name: Build xorriso (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cd xorriso-${{ env.XORRISO_DIR }}
+          ./configure --disable-libreadline --disable-libacl --disable-xattr
+          make -j$(nproc)
+          strip xorriso/xorriso.exe
 
       - name: Package (tar.gz)
-        if: matrix.ext == ''
+        if: runner.os != 'Windows'
         run: |
           mkdir -p pkg/xorriso
           cp xorriso-${{ env.XORRISO_DIR }}/xorriso/xorriso pkg/xorriso/
           tar czf xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.tar.gz -C pkg xorriso
 
       - name: Package (zip)
-        if: matrix.ext == '.exe'
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          mkdir -p pkg/xorriso
-          cp xorriso-${{ env.XORRISO_DIR }}/xorriso/xorriso.exe pkg/xorriso/
-          cd pkg && zip -r ../xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.zip xorriso
+          New-Item -ItemType Directory -Force -Path pkg/xorriso
+          Copy-Item xorriso-${{ env.XORRISO_DIR }}/xorriso/xorriso.exe pkg/xorriso/
+          # Bundle MSYS2 runtime DLLs needed by xorriso
+          $msysRoot = "C:\msys64\usr\bin"
+          Copy-Item "$msysRoot\msys-2.0.dll" pkg/xorriso/
+          Copy-Item "$msysRoot\msys-intl-8.dll" pkg/xorriso/
+          Copy-Item "$msysRoot\msys-iconv-2.dll" pkg/xorriso/
+          Compress-Archive -Path pkg/xorriso -DestinationPath xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.zip
 
       - uses: actions/upload-artifact@v4
         with:
