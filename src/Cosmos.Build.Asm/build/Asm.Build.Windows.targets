@@ -9,11 +9,8 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="YasmPaths" />
     </Exec>
 
-    <!-- ARM64: Use aarch64-none-elf-as or aarch64-elf-as from GCC cross-toolchain -->
-    <Exec Command="where.exe aarch64-none-elf-as" IgnoreExitCode="true" StandardOutputImportance="Low" ConsoleToMsBuild="true" Condition="'$(TargetArchitecture)' == 'arm64'">
-      <Output TaskParameter="ConsoleOutput" PropertyName="YasmPaths" />
-    </Exec>
-    <Exec Command="where.exe aarch64-elf-as" IgnoreExitCode="true" StandardOutputImportance="Low" ConsoleToMsBuild="true" Condition="'$(TargetArchitecture)' == 'arm64' and '$(YasmPaths)' == ''">
+    <!-- ARM64: Use clang integrated assembler -->
+    <Exec Command="where.exe clang" IgnoreExitCode="true" StandardOutputImportance="Low" ConsoleToMsBuild="true" Condition="'$(TargetArchitecture)' == 'arm64'">
       <Output TaskParameter="ConsoleOutput" PropertyName="YasmPaths" />
     </Exec>
 

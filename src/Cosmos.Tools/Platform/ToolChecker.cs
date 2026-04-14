@@ -98,8 +98,7 @@ public static class ToolChecker
             if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
             {
                 // Check Cosmos tools paths — installers place tools in subdirectories:
-                //   {tools}/yasm/yasm, {tools}/lld/ld.lld,
-                //   {tools}/x86_64-elf-tools/bin/x86_64-elf-gcc, etc.
+                //   {tools}/yasm/yasm, {tools}/llvm-tools/bin/clang, etc.
                 //   {tools}/bin/ contains symlinks (Linux/macOS)
                 string cosmosToolsPath = GetCosmosToolsPath();
                 string ext = PlatformInfo.CurrentOS == OSPlatform.Windows ? ".exe" : "";
@@ -110,12 +109,11 @@ public static class ToolChecker
                 AddPathVariants(possiblePaths, cosmosToolsPath, command, ext);
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "bin"), command, ext);
 
-                // Tool in its own subdirectory (yasm/yasm, lld/ld.lld, xorriso/xorriso)
+                // Tool in its own subdirectory (yasm/yasm, xorriso/xorriso)
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, command), command, ext);
 
-                // Cross-compiler toolchains have a bin/ subdirectory
-                AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "x86_64-elf-tools", "bin"), command, ext);
-                AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "aarch64-elf-tools", "bin"), command, ext);
+                // LLVM tools (clang, ld.lld)
+                AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "llvm-tools", "bin"), command, ext);
 
                 // QEMU
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "qemu"), command, ext);
@@ -241,11 +239,9 @@ public static class ToolChecker
             var paths = new List<string>
             {
                 Path.Combine(toolsBase, "bin"),
+                Path.Combine(toolsBase, "llvm-tools", "bin"),
                 Path.Combine(toolsBase, "yasm"),
                 Path.Combine(toolsBase, "xorriso"),
-                Path.Combine(toolsBase, "lld"),
-                Path.Combine(toolsBase, "x86_64-elf-tools", "bin"),
-                Path.Combine(toolsBase, "aarch64-elf-tools", "bin"),
                 Path.Combine(toolsBase, "qemu"),
                 Path.Combine(toolsBase, "gdb", "bin"),
                 Path.Combine(toolsBase, "gdb")

@@ -82,6 +82,21 @@ public static class ToolDefinitions
         MacOSInstall = new() { Method = "package", BrewPackages = ["dotnet-sdk"] }
     };
 
+    public static readonly CommandToolDefinition Clang = new()
+    {
+        Name = "clang",
+        DisplayName = "Clang Compiler",
+        Description = "LLVM C compiler for x64 and ARM64 bare-metal targets",
+        WindowsCommands = ["clang"],
+        LinuxCommands = ["clang"],
+        MacOSCommands = ["clang"],
+        VersionArg = "--version",
+        Required = true,
+        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
+        LinuxInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
+        MacOSInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" }
+    };
+
     public static readonly CommandToolDefinition LLD = new()
     {
         Name = "ld.lld",
@@ -92,9 +107,9 @@ public static class ToolDefinitions
         MacOSCommands = ["ld.lld", "lld"],
         VersionArg = "--version",
         Required = true,
-        WindowsInstall = new() { Method = "package", ChocoPackages = ["llvm"] },
-        LinuxInstall = new() { Method = "package", AptPackages = ["lld"], DnfPackages = ["lld"], PacmanPackages = ["lld"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["lld"] }
+        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
+        LinuxInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
+        MacOSInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" }
     };
 
     public static readonly CommandToolDefinition Xorriso = new()
@@ -125,51 +140,6 @@ public static class ToolDefinitions
         WindowsInstall = new() { Method = "package", ChocoPackages = ["yasm"] },
         LinuxInstall = new() { Method = "package", AptPackages = ["yasm"], DnfPackages = ["yasm"], PacmanPackages = ["yasm"] },
         MacOSInstall = new() { Method = "package", BrewPackages = ["yasm"] }
-    };
-
-    public static readonly CommandToolDefinition X64ElfGcc = new()
-    {
-        Name = "x86_64-elf-gcc",
-        DisplayName = "x64 Cross Compiler",
-        Description = "GCC cross-compiler for x64 bare-metal targets",
-        WindowsCommands = ["x86_64-elf-gcc"],
-        LinuxCommands = ["gcc"],
-        MacOSCommands = ["x86_64-elf-gcc"],
-        VersionArg = "--version",
-        Required = true,
-        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/lordmilko/i686-elf-tools/releases/download/13.2.0/x86_64-elf-tools-windows.zip" },
-        LinuxInstall = new() { Method = "package", AptPackages = ["gcc"], DnfPackages = ["gcc"], PacmanPackages = ["gcc"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["x86_64-elf-gcc"] }
-    };
-
-    public static readonly CommandToolDefinition Aarch64ElfGcc = new()
-    {
-        Name = "aarch64-elf-gcc",
-        DisplayName = "ARM64 Cross Compiler",
-        Description = "GCC cross-compiler for ARM64 bare-metal targets",
-        WindowsCommands = ["aarch64-none-elf-gcc"],
-        LinuxCommands = ["aarch64-linux-gnu-gcc"],
-        MacOSCommands = ["aarch64-elf-gcc"],
-        VersionArg = "--version",
-        Required = true,
-        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/mmozeiko/build-gcc-arm/releases/download/gcc-v15.2.0/gcc-v15.2.0-aarch64-none-elf.7z" },
-        LinuxInstall = new() { Method = "package", AptPackages = ["gcc-aarch64-linux-gnu", "binutils-aarch64-linux-gnu"], DnfPackages = ["gcc-aarch64-linux-gnu", "binutils-aarch64-linux-gnu"], PacmanPackages = ["aarch64-linux-gnu-gcc"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["aarch64-elf-gcc"] }
-    };
-
-    public static readonly CommandToolDefinition Aarch64ElfAs = new()
-    {
-        Name = "aarch64-elf-as",
-        DisplayName = "ARM64 Assembler",
-        Description = "GNU assembler for ARM64 architecture",
-        WindowsCommands = ["aarch64-none-elf-as"],
-        LinuxCommands = ["aarch64-linux-gnu-as"],
-        MacOSCommands = ["aarch64-elf-as"],
-        VersionArg = "--version",
-        Required = true,
-        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/mmozeiko/build-gcc-arm/releases/download/gcc-v15.2.0/gcc-v15.2.0-aarch64-none-elf.7z" },
-        LinuxInstall = new() { Method = "package", AptPackages = ["binutils-aarch64-linux-gnu"], DnfPackages = ["binutils-aarch64-linux-gnu"], PacmanPackages = ["aarch64-linux-gnu-binutils"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["aarch64-elf-binutils"] }
     };
 
     public static readonly CommandToolDefinition QemuX64 = new()
@@ -244,12 +214,10 @@ public static class ToolDefinitions
     public static IEnumerable<ToolDefinition> GetAllTools() =>
     [
         DotNetSdk,
+        Clang,
         LLD,
         Xorriso,
         Yasm,
-        X64ElfGcc,
-        Aarch64ElfGcc,
-        Aarch64ElfAs,
         QemuX64,
         QemuArm64,
         QemuEfiArm64,

@@ -803,10 +803,8 @@ public class InstallCommand : AsyncCommand<InstallSettings>
 
     internal static string GetBundleDirName(ToolDefinition tool) => tool.Name switch
     {
-        "x86_64-elf-gcc" => "x86_64-elf-tools",
-        "aarch64-elf-gcc" or "aarch64-elf-as" => "aarch64-elf-tools",
+        "clang" or "ld.lld" => "llvm-tools",
         "qemu-system-x86_64" or "qemu-system-aarch64" => "qemu",
-        "ld.lld" => "lld",
         "gdb-multiarch" => "gdb",
         _ => tool.Name
     };

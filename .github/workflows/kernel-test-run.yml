@@ -92,14 +92,20 @@ jobs:
           dotnet tool uninstall -g Cosmos.Tools 2>/dev/null || true
           dotnet tool install -g Cosmos.Tools --add-source artifacts/package/release
 
-      - name: 📥 Download Build Tools Cache
-        uses: actions/download-artifact@v4
-        with:
-          name: build-tools-cache
-          path: /tmp/build-tools-cache
-
       - name: 🔧 Restore Build Tools
-        run: sudo dpkg -i /tmp/build-tools-cache/*.deb
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cosmos/tools
+          key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
+          fail-on-cache-miss: true
+
+      - name: 🔗 Add Tools to PATH
+        run: |
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          echo "$TOOLS_DIR/llvm-tools/bin" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/xorriso" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/yasm" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/qemu" >> $GITHUB_PATH
 
       - name: 🔍 Verify Tools Installation
         run: cosmos check

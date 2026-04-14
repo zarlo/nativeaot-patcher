@@ -24,7 +24,7 @@
   <!-- ILC and build dependencies -->
   <PropertyGroup>
     <IlcDependsOn>RunPatcher;InstrumentCoverage;$(IlcDependsOn);PrepareForILLink</IlcDependsOn>
-    <LinkTargetDependsOn>CompileWithIlc;BuildYasm;BuildGCC;$(LinkTargetDependsOn)</LinkTargetDependsOn>
+    <LinkTargetDependsOn>CompileWithIlc;BuildYasm;BuildCC;$(LinkTargetDependsOn)</LinkTargetDependsOn>
   </PropertyGroup>
 
   <!-- Cosmos Feature Switches (defaults) -->
@@ -47,25 +47,8 @@
     <CosmosKernelClass Condition="'$(CosmosKernelClass)' == ''">$(AssemblyName).Kernel</CosmosKernelClass>
   </PropertyGroup>
 
-  <!-- GCC compiler flags for x64 -->
-  <PropertyGroup Condition="'$(DefineConstants)' != '' AND $(DefineConstants.Contains('ARCH_X64'))">
-    <GCCCompilerFlags Condition="'$(GCCCompilerFlags)' == ''">-O2 -fno-stack-protector -fno-builtin -m64 -mcmodel=kernel -fno-PIC -ffreestanding -nostdinc</GCCCompilerFlags>
-  </PropertyGroup>
-
-  <!-- GCC compiler flags for ARM64 -->
-  <PropertyGroup Condition="'$(DefineConstants)' != '' AND $(DefineConstants.Contains('ARCH_ARM64'))">
-    <GCCCompilerFlags Condition="'$(GCCCompilerFlags)' == ''">-O2 -fno-stack-protector -fno-builtin -ffreestanding -nostdinc</GCCCompilerFlags>
-  </PropertyGroup>
-
-  <!-- macOS toolchain preferences (Homebrew) -->
-  <PropertyGroup>
-    <YasmPath Condition="'$(RuntimeIdentifier)' == 'osx-arm64' and Exists('/opt/homebrew/bin/aarch64-elf-as')">/opt/homebrew/bin/aarch64-elf-as</YasmPath>
-    <YasmPath Condition="'$(RuntimeIdentifier)' == 'osx-x64' and Exists('/opt/homebrew/bin/yasm')">/opt/homebrew/bin/yasm</YasmPath>
-    <GCCPath Condition="'$(RuntimeIdentifier)' == 'osx-x64' and Exists('/opt/homebrew/bin/x86_64-elf-gcc')">/opt/homebrew/bin/x86_64-elf-gcc</GCCPath>
-    <GCCPath Condition="'$(RuntimeIdentifier)' == 'osx-arm64' and Exists('/opt/homebrew/bin/aarch64-elf-gcc')">/opt/homebrew/bin/aarch64-elf-gcc</GCCPath>
-    <!-- Drop unsupported -target flag for Homebrew aarch64 GCC on macOS -->
-    <GCCCompilerFlags Condition="'$(RuntimeIdentifier)' == 'osx-arm64' and '$(GCCCompilerFlags)' == ''">-O2 -fno-stack-protector -fno-builtin -ffreestanding -nostdinc -DARCH_ARM64 -march=armv8-a -mcmodel=large -fno-PIC</GCCCompilerFlags>
-  </PropertyGroup>
+  <!-- Compiler flags are set in Cosmos.Build.CC.targets based on TargetArchitecture.
+       Projects can override CCCompilerFlags to customize. -->
 
   <!-- ILC arguments -->
   <ItemGroup>
@@ -135,7 +118,7 @@
     <PackageReference Include="Cosmos.Build.Ilc" Version="@CosmosPackageVersion@" />
     <PackageReference Include="Cosmos.Build.Asm" Version="@CosmosPackageVersion@" />
     <PackageReference Include="Cosmos.Build.Patcher" Version="@CosmosPackageVersion@" />
-    <PackageReference Include="Cosmos.Build.GCC" Version="@CosmosPackageVersion@" />
+    <PackageReference Include="Cosmos.Build.CC" Version="@CosmosPackageVersion@" />
   </ItemGroup>
   <ItemGroup Condition="'$(ManagePackageVersionsCentrally)' == 'true'">
     <PackageReference Include="Cosmos.Kernel.SourceGenerators"/>
@@ -144,7 +127,7 @@
     <PackageReference Include="Cosmos.Build.Ilc" />
     <PackageReference Include="Cosmos.Build.Asm" />
     <PackageReference Include="Cosmos.Build.Patcher" />
-    <PackageReference Include="Cosmos.Build.GCC" />
+    <PackageReference Include="Cosmos.Build.CC" />
   </ItemGroup>
 
   <!-- Both arch packages installed; RuntimeIdentifier selects at build time -->

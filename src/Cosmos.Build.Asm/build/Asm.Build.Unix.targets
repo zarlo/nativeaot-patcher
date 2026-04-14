@@ -9,7 +9,8 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="YasmPaths" />
     </Exec>
 
-    <Exec Command="which aarch64-linux-gnu-as" IgnoreExitCode="true" StandardOutputImportance="Low" ConsoleToMsBuild="true" Condition="'$(TargetArchitecture)' == 'arm64'">
+    <!-- ARM64: use clang integrated assembler -->
+    <Exec Command="which clang" IgnoreExitCode="true" StandardOutputImportance="Low" ConsoleToMsBuild="true" Condition="'$(TargetArchitecture)' == 'arm64'">
       <Output TaskParameter="ConsoleOutput" PropertyName="YasmPaths" />
     </Exec>
 

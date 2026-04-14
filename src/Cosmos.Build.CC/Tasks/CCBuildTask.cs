@@ -4,11 +4,11 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Cosmos.Build.GCC.Tasks;
+namespace Cosmos.Build.CC.Tasks;
 
-public sealed class GCCBuildTask : ToolTask
+public sealed class CCBuildTask : ToolTask
 {
-    [Required] public string? GCCPath { get; set; }
+    [Required] public string? CCPath { get; set; }
     [Required] public string[]? SourceFiles { get; set; }
     [Required] public string? OutputPath { get; set; }
 
@@ -20,14 +20,14 @@ public sealed class GCCBuildTask : ToolTask
 
     protected override MessageImportance StandardErrorLoggingImportance => MessageImportance.Normal;
 
-    protected override string GenerateFullPathToTool() => GCCPath!;
+    protected override string GenerateFullPathToTool() => CCPath!;
 
     protected override string GenerateCommandLineCommands() => string.Empty;
 
     public override bool Execute()
     {
-        Log.LogMessage(MessageImportance.High, "Running Cosmos.GCC Build Task...");
-        Log.LogMessage(MessageImportance.High, $"Tool Path: {GCCPath}");
+        Log.LogMessage(MessageImportance.High, "Running Cosmos.CC Build Task...");
+        Log.LogMessage(MessageImportance.High, $"Tool Path: {CCPath}");
         Log.LogMessage(MessageImportance.High, $"Output Path: {OutputPath}");
 
         if (!Directory.Exists(OutputPath))
@@ -44,24 +44,24 @@ public sealed class GCCBuildTask : ToolTask
 
         Log.LogMessage(MessageImportance.Normal, $"Found {SourceFiles.Length} C files to compile");
 
-        // Get GCC's freestanding include directory
-        string? gccIncludePath = GetGCCIncludePath();
-        if (gccIncludePath != null)
+        // Get compiler's freestanding include directory
+        string? includePath = GetCompilerIncludePath();
+        if (includePath != null)
         {
-            Log.LogMessage(MessageImportance.Normal, $"Using GCC include path: {gccIncludePath}");
+            Log.LogMessage(MessageImportance.Normal, $"Using compiler include path: {includePath}");
         }
 
-        // Validate GCC path exists (once, before the loop)
+        // Validate compiler path exists (once, before the loop)
         string toolPath = GenerateFullPathToTool().Trim();
-        GCCPath = toolPath; // normalize for downstream checks
+        CCPath = toolPath; // normalize for downstream checks
 
-        if (!File.Exists(toolPath) && !TestGCCInPath())
+        if (!File.Exists(toolPath) && !TestCompilerInPath())
         {
-            Log.LogError($"GCC not found at {toolPath}. Ensure the cross-compiler is installed and on PATH.");
+            Log.LogError($"Compiler not found at {toolPath}. Ensure clang is installed and on PATH.");
             return false;
         }
 
-        // Execute the GCC command for each C file (with incremental support via content-hash filenames)
+        // Execute the compiler command for each C file (with incremental support via content-hash filenames)
         using SHA1? hasher = SHA1.Create();
         var validOutputFiles = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -102,10 +102,10 @@ public sealed class GCCBuildTask : ToolTask
                 sb.Append($" {CompilerFlags} ");
             }
 
-            // Add GCC's freestanding include directory for standard headers (stdint.h, stddef.h, etc.)
-            if (gccIncludePath != null)
+            // Add compiler's freestanding include directory for standard headers (stdint.h, stddef.h, etc.)
+            if (includePath != null)
             {
-                sb.Append($" -I{gccIncludePath} ");
+                sb.Append($" -I{includePath} ");
             }
 
             // Per-file include path: the directory containing this source file
@@ -114,7 +114,6 @@ public sealed class GCCBuildTask : ToolTask
 
             // Add the source file
             sb.Append($" {file} ");
-            // Execute GCC for this file
             string commandLineArguments = sb.ToString();
             Log.LogMessage(MessageImportance.Normal, $"Compiling {file} with args: {commandLineArguments}");
 
@@ -137,19 +136,19 @@ public sealed class GCCBuildTask : ToolTask
             }
         }
 
-        Log.LogMessage(MessageImportance.High, "GCCBuildTask completed successfully.");
+        Log.LogMessage(MessageImportance.High, "CCBuildTask completed successfully.");
         return true;
     }
 
-    protected override string ToolName => "Cosmos.GCC";
+    protected override string ToolName => "Cosmos.CC";
 
-    private string? GetGCCIncludePath()
+    private string? GetCompilerIncludePath()
     {
         try
         {
             var psi = new System.Diagnostics.ProcessStartInfo
             {
-                FileName = GCCPath,
+                FileName = CCPath,
                 Arguments = "--print-file-name=include",
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -175,13 +174,13 @@ public sealed class GCCBuildTask : ToolTask
         return null;
     }
 
-    private bool TestGCCInPath()
+    private bool TestCompilerInPath()
     {
         try
         {
             var psi = new System.Diagnostics.ProcessStartInfo
             {
-                FileName = GCCPath,
+                FileName = CCPath,
                 Arguments = "--version",
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -204,7 +203,6 @@ public sealed class GCCBuildTask : ToolTask
 
     private bool ExecuteCommand(string toolPath, string arguments)
     {
-        // Create process start info
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName = toolPath,
@@ -215,7 +213,6 @@ public sealed class GCCBuildTask : ToolTask
             RedirectStandardError = true
         };
 
-        // Start the process
         using var process = new System.Diagnostics.Process();
         process.StartInfo = psi;
         process.OutputDataReceived += (sender, e) =>
