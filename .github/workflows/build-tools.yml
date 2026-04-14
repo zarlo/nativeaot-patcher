@@ -203,45 +203,62 @@ jobs:
             target: linux-x64
           - os: macos-latest
             target: darwin-arm64
-          - os: windows-latest
-            target: win-x64
     steps:
-      - name: Clone yasm source
-        run: git clone --depth 1 --branch v${{ env.YASM_VERSION }} https://github.com/yasm/yasm.git
+      - name: Download yasm source tarball
+        run: |
+          curl -L -o yasm.tar.gz \
+            "https://github.com/yasm/yasm/releases/download/v${{ env.YASM_VERSION }}/yasm-${{ env.YASM_VERSION }}.tar.gz"
+          tar xzf yasm.tar.gz
 
-      - name: Build yasm (Unix)
-        if: runner.os != 'Windows'
+      - name: Build yasm
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
-          cmake -S yasm -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-          cmake --build build -j$NPROC
-          strip build/yasm
+          cd yasm-${{ env.YASM_VERSION }}
+          ./configure
+          make -j$NPROC
+          strip yasm
 
-      - name: Build yasm (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        run: |
-          cmake -S yasm -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --config Release
-
-      - name: Package (Unix)
-        if: runner.os != 'Windows'
+      - name: Package
         run: |
           mkdir -p pkg/yasm
-          cp build/yasm pkg/yasm/
+          cp yasm-${{ env.YASM_VERSION }}/yasm pkg/yasm/
           tar czf yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.tar.gz -C pkg yasm
-
-      - name: Package (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path pkg/yasm
-          Copy-Item build/Release/yasm.exe pkg/yasm/
-          Compress-Archive -Path pkg/yasm -DestinationPath yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.zip
 
       - uses: actions/upload-artifact@v4
         with:
           name: yasm-${{ matrix.target }}
+          path: yasm-*.*
+
+  build-yasm-win:
+    name: Yasm win-x64
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install mingw-w64
+        run: sudo apt-get update && sudo apt-get install -y mingw-w64
+
+      - name: Download yasm source tarball
+        run: |
+          curl -L -o yasm.tar.gz \
+            "https://github.com/yasm/yasm/releases/download/v${{ env.YASM_VERSION }}/yasm-${{ env.YASM_VERSION }}.tar.gz"
+          tar xzf yasm.tar.gz
+
+      - name: Cross-compile yasm for Windows
+        run: |
+          cd yasm-${{ env.YASM_VERSION }}
+          ./configure --host=x86_64-w64-mingw32
+          make -j$(nproc)
+          x86_64-w64-mingw32-strip yasm.exe
+
+      - name: Package
+        run: |
+          mkdir -p pkg/yasm
+          cp yasm-${{ env.YASM_VERSION }}/yasm.exe pkg/yasm/
+          cd pkg && zip -r ../yasm-${{ env.YASM_VERSION }}-win-x64.zip yasm
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yasm-win-x64
           path: yasm-*.*
 
   # ═══════════════════════════════════════════════════════════════════════
@@ -581,6 +598,7 @@ jobs:
       - build-xorriso
       - build-xorriso-win
       - build-yasm
+      - build-yasm-win
       - build-gcc-x64
       - build-gcc-x64-win
       - build-gcc-arm64
