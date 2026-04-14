@@ -13,8 +13,8 @@ on:
         default: false
 
 env:
-  LLD_VERSION: "22.1.0"
-  LLVM_TAG: "llvmorg-22.1.0"
+  LLD_VERSION: "22.1.3"
+  LLVM_TAG: "llvmorg-22.1.3"
   XORRISO_VERSION: "1.5.8.pl01"
   YASM_VERSION: "1.3.0"
   GCC_VERSION: "15.2.0"
@@ -47,25 +47,21 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install cmake ninja
 
-      - name: Download LLVM + LLD source tarballs
+      - name: Download LLVM source
         shell: bash
         run: |
-          for pkg in llvm lld cmake; do
-            curl -L -o ${pkg}.tar.xz \
-              "https://github.com/llvm/llvm-project/releases/download/${{ env.LLVM_TAG }}/${pkg}-${{ env.LLD_VERSION }}.src.tar.xz"
-            tar xf ${pkg}.tar.xz
-          done
-          # Arrange directory layout expected by LLVM's cmake
-          mv llvm-${{ env.LLD_VERSION }}.src llvm
-          mv lld-${{ env.LLD_VERSION }}.src llvm/tools/lld
-          mv cmake-${{ env.LLD_VERSION }}.src cmake
+          curl -L -o llvm-project.tar.xz \
+            "https://github.com/llvm/llvm-project/releases/download/${{ env.LLVM_TAG }}/llvm-project-${{ env.LLD_VERSION }}.src.tar.xz"
+          tar xf llvm-project.tar.xz
+          mv llvm-project-${{ env.LLD_VERSION }}.src llvm-project
 
       - name: Configure & build LLD (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          cmake -S llvm -B build -G Ninja \
+          cmake -S llvm-project/llvm -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_ENABLE_PROJECTS="lld" \
             -DLLVM_TARGETS_TO_BUILD="X86;AArch64" \
             -DLLVM_INCLUDE_TESTS=OFF \
             -DLLVM_INCLUDE_BENCHMARKS=OFF \
@@ -79,10 +75,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          cmake -S llvm -B build -G Ninja ^
+          cmake -S llvm-project/llvm -B build -G Ninja ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DCMAKE_C_COMPILER=cl ^
             -DCMAKE_CXX_COMPILER=cl ^
+            -DLLVM_ENABLE_PROJECTS="lld" ^
             -DLLVM_TARGETS_TO_BUILD="X86;AArch64" ^
             -DLLVM_INCLUDE_TESTS=OFF ^
             -DLLVM_INCLUDE_BENCHMARKS=OFF ^
