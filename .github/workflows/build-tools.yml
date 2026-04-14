@@ -1,6 +1,9 @@
 name: Build Tools
 
 on:
+  push:
+    branches: [feature/buildTools]
+    paths: [.github/workflows/build-tools.yml]
   workflow_dispatch:
     inputs:
       create_release:
