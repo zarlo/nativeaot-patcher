@@ -332,11 +332,47 @@ jobs:
           sed -i '' 's|^#define fdopen(fd,mode) NULL|#ifndef fdopen\n#define fdopen(fd,mode) NULL /* No fdopen() */\n#endif|' \
             gcc-${{ env.GCC_VERSION }}/zlib/zutil.h
 
+      - name: Build native cross tools (for Windows cross-compilation)
+        if: matrix.host != ''
+        shell: bash
+        run: |
+          NPROC=$(nproc)
+          NATIVE_PREFIX=$(pwd)/native-tools
+          mkdir -p "$NATIVE_PREFIX"
+          # Native binutils
+          mkdir build-binutils-native && cd build-binutils-native
+          ../binutils-${{ env.BINUTILS_VERSION }}/configure \
+            --target=${{ env.TARGET }} \
+            --prefix="$NATIVE_PREFIX" \
+            --with-sysroot \
+            --disable-nls \
+            --disable-werror
+          make -j$NPROC
+          make install
+          cd ..
+          # Native gcc (compiler only, no libgcc needed)
+          export PATH="$NATIVE_PREFIX/bin:$PATH"
+          mkdir build-gcc-native && cd build-gcc-native
+          ../gcc-${{ env.GCC_VERSION }}/configure \
+            --target=${{ env.TARGET }} \
+            --prefix="$NATIVE_PREFIX" \
+            --disable-nls \
+            --enable-languages=c,c++ \
+            --without-headers \
+            --disable-hosted-libstdcxx
+          make -j$NPROC all-gcc
+          make install-gcc
+          cd ..
+
       - name: Build binutils
         shell: bash
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
+          # Ensure native cross tools are on PATH for Windows builds
+          if [ -d "$(pwd)/native-tools/bin" ]; then
+            export PATH="$(pwd)/native-tools/bin:$PATH"
+          fi
           HOST_ARG=""
           if [ -n "${{ matrix.host }}" ]; then
             HOST_ARG="--host=${{ matrix.host }}"
@@ -358,6 +394,10 @@ jobs:
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           export PATH="$PREFIX/bin:$PATH"
+          # Ensure native cross tools are on PATH for Windows builds
+          if [ -d "$(pwd)/native-tools/bin" ]; then
+            export PATH="$(pwd)/native-tools/bin:$PATH"
+          fi
           HOST_ARG=""
           if [ -n "${{ matrix.host }}" ]; then
             HOST_ARG="--host=${{ matrix.host }}"
@@ -462,11 +502,47 @@ jobs:
           sed -i '' 's|^#define fdopen(fd,mode) NULL|#ifndef fdopen\n#define fdopen(fd,mode) NULL /* No fdopen() */\n#endif|' \
             gcc-${{ env.GCC_VERSION }}/zlib/zutil.h
 
+      - name: Build native cross tools (for Windows cross-compilation)
+        if: matrix.host != ''
+        shell: bash
+        run: |
+          NPROC=$(nproc)
+          NATIVE_PREFIX=$(pwd)/native-tools
+          mkdir -p "$NATIVE_PREFIX"
+          # Native binutils
+          mkdir build-binutils-native && cd build-binutils-native
+          ../binutils-${{ env.BINUTILS_VERSION }}/configure \
+            --target=${{ env.TARGET }} \
+            --prefix="$NATIVE_PREFIX" \
+            --with-sysroot \
+            --disable-nls \
+            --disable-werror
+          make -j$NPROC
+          make install
+          cd ..
+          # Native gcc (compiler only, no libgcc needed)
+          export PATH="$NATIVE_PREFIX/bin:$PATH"
+          mkdir build-gcc-native && cd build-gcc-native
+          ../gcc-${{ env.GCC_VERSION }}/configure \
+            --target=${{ env.TARGET }} \
+            --prefix="$NATIVE_PREFIX" \
+            --disable-nls \
+            --enable-languages=c,c++ \
+            --without-headers \
+            --disable-hosted-libstdcxx
+          make -j$NPROC all-gcc
+          make install-gcc
+          cd ..
+
       - name: Build binutils
         shell: bash
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
+          # Ensure native cross tools are on PATH for Windows builds
+          if [ -d "$(pwd)/native-tools/bin" ]; then
+            export PATH="$(pwd)/native-tools/bin:$PATH"
+          fi
           HOST_ARG=""
           if [ -n "${{ matrix.host }}" ]; then
             HOST_ARG="--host=${{ matrix.host }}"
@@ -488,6 +564,10 @@ jobs:
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           export PATH="$PREFIX/bin:$PATH"
+          # Ensure native cross tools are on PATH for Windows builds
+          if [ -d "$(pwd)/native-tools/bin" ]; then
+            export PATH="$(pwd)/native-tools/bin:$PATH"
+          fi
           HOST_ARG=""
           if [ -n "${{ matrix.host }}" ]; then
             HOST_ARG="--host=${{ matrix.host }}"
