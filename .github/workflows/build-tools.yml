@@ -213,7 +213,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
-          cmake -S yasm -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -S yasm -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
           cmake --build build -j$NPROC
           strip build/yasm
 
