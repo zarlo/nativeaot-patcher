@@ -72,6 +72,10 @@ jobs:
           cmake --build build --target lld -- -j$NPROC
           strip build/bin/ld.lld
 
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Configure & build LLD (Windows)
         if: runner.os == 'Windows'
         shell: cmd
