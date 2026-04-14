@@ -127,40 +127,22 @@ jobs:
         include:
           - os: ubuntu-latest
             target: linux-x64
+            host: ""
+            ext: ""
+            strip: strip
           - os: macos-latest
             target: darwin-arm64
-    steps:
-      - name: Download xorriso source
-        run: |
-          curl -L -o xorriso.tar.gz \
-            "https://www.gnu.org/software/xorriso/xorriso-${{ env.XORRISO_VERSION }}.tar.gz"
-          tar xzf xorriso.tar.gz
-
-      - name: Build xorriso (native)
-        run: |
-          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
-          cd xorriso-${{ env.XORRISO_VERSION }}
-          ./configure --disable-libreadline --disable-libacl --disable-xattr
-          make -j$NPROC
-          strip xorriso/xorriso
-
-      - name: Package
-        run: |
-          mkdir -p pkg/xorriso
-          cp xorriso-${{ env.XORRISO_VERSION }}/xorriso/xorriso pkg/xorriso/
-          tar czf xorriso-${XORRISO_VERSION}-${{ matrix.target }}.tar.gz -C pkg xorriso
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: xorriso-${{ matrix.target }}
-          path: xorriso-*.*
-
-  build-xorriso-win:
-    name: xorriso win-x64
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+            host: ""
+            ext: ""
+            strip: strip
+          - os: ubuntu-latest
+            target: win-x64
+            host: x86_64-w64-mingw32
+            ext: .exe
+            strip: x86_64-w64-mingw32-strip
     steps:
       - name: Install mingw-w64
+        if: matrix.host != ''
         run: sudo apt-get update && sudo apt-get install -y mingw-w64
 
       - name: Download xorriso source
@@ -169,24 +151,37 @@ jobs:
             "https://www.gnu.org/software/xorriso/xorriso-${{ env.XORRISO_VERSION }}.tar.gz"
           tar xzf xorriso.tar.gz
 
-      - name: Cross-compile xorriso for Windows
+      - name: Build xorriso
+        shell: bash
         run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           cd xorriso-${{ env.XORRISO_VERSION }}
-          ./configure --host=x86_64-w64-mingw32 \
-            --disable-libreadline --disable-libacl --disable-xattr
-          make -j$(nproc)
-          x86_64-w64-mingw32-strip xorriso/xorriso.exe
+          CONFIGURE_ARGS="--disable-libreadline --disable-libacl --disable-xattr"
+          if [ -n "${{ matrix.host }}" ]; then
+            CONFIGURE_ARGS="--host=${{ matrix.host }} $CONFIGURE_ARGS"
+          fi
+          ./configure $CONFIGURE_ARGS
+          make -j$NPROC
+          ${{ matrix.strip }} xorriso/xorriso${{ matrix.ext }}
 
-      - name: Package
+      - name: Package (tar.gz)
+        if: matrix.ext == ''
+        run: |
+          mkdir -p pkg/xorriso
+          cp xorriso-${{ env.XORRISO_VERSION }}/xorriso/xorriso pkg/xorriso/
+          tar czf xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.tar.gz -C pkg xorriso
+
+      - name: Package (zip)
+        if: matrix.ext == '.exe'
         run: |
           mkdir -p pkg/xorriso
           cp xorriso-${{ env.XORRISO_VERSION }}/xorriso/xorriso.exe pkg/xorriso/
-          cd pkg && zip -r ../xorriso-${XORRISO_VERSION}-win-x64.zip xorriso
+          cd pkg && zip -r ../xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.zip xorriso
 
       - uses: actions/upload-artifact@v4
         with:
-          name: xorriso-win-x64
-          path: xorriso-*.*
+          name: xorriso-${{ matrix.target }}
+          path: xorriso-${{ env.XORRISO_VERSION }}-*.*
 
   # ═══════════════════════════════════════════════════════════════════════
   #  Yasm — cmake build from source
@@ -592,7 +587,6 @@ jobs:
     needs:
       - build-lld
       - build-xorriso
-      - build-xorriso-win
       - build-yasm
       - build-gcc-x64
       - build-gcc-x64-win
