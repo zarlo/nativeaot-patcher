@@ -366,7 +366,8 @@ jobs:
             --enable-slirp \
             --enable-sdl \
             --disable-docs
-          make -j$NPROC
+          # Build only the binaries we need (skip tests — broken on Windows mingw)
+          ninja -C build -j$NPROC qemu-system-x86_64 qemu-system-aarch64 qemu-img
 
       - name: Build QEMU (Windows)
         if: runner.os == 'Windows'
@@ -378,7 +379,8 @@ jobs:
             --enable-slirp \
             --enable-sdl \
             --disable-docs
-          make -j$(nproc)
+          # Build only the binaries we need (skip tests — broken on Windows mingw)
+          ninja -C build -j$(nproc) qemu-system-x86_64.exe qemu-system-aarch64.exe qemu-img.exe
 
       - name: Package (Linux/macOS)
         if: runner.os != 'Windows'
