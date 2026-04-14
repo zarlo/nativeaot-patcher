@@ -554,11 +554,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential python3 python3-venv \
             ninja-build pkg-config libglib2.0-dev libpixman-1-dev \
-            libslirp-dev libsdl2-dev flex bison
+            libslirp-dev libsdl2-dev libfdt-dev flex bison
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install glib pixman ninja python pkg-config libslirp sdl2
+        run: brew install glib pixman ninja python pkg-config libslirp sdl2 dtc
 
       - name: Setup MSYS2 (Windows)
         if: runner.os == 'Windows'
@@ -575,7 +575,8 @@ jobs:
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-meson
             mingw-w64-x86_64-SDL2
-            make flex bison diffutils
+            mingw-w64-x86_64-dtc
+            make flex bison diffutils git
 
       - name: Download QEMU source
         if: runner.os != 'Windows'
@@ -622,13 +623,17 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
+          BUILD_DIR="qemu-${{ env.QEMU_VERSION }}/build"
           mkdir -p pkg/qemu/share/qemu
-          cp qemu-${{ env.QEMU_VERSION }}/build/qemu-system-x86_64 pkg/qemu/
-          cp qemu-${{ env.QEMU_VERSION }}/build/qemu-system-aarch64 pkg/qemu/
-          cp qemu-${{ env.QEMU_VERSION }}/build/qemu-img pkg/qemu/ 2>/dev/null || true
+          # Find binaries (meson may place them in build/ or build/system/)
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img' -type f | head -1 | xargs -I{} cp {} pkg/qemu/ 2>/dev/null || true
           strip pkg/qemu/qemu-system-* pkg/qemu/qemu-img 2>/dev/null || true
+          # Verify binaries exist
+          ls -la pkg/qemu/qemu-system-*
           # Copy firmware files
-          cp -r qemu-${{ env.QEMU_VERSION }}/build/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
           cp qemu-${{ env.QEMU_VERSION }}/pc-bios/edk2-*.fd pkg/qemu/share/qemu/ 2>/dev/null || true
           tar czf qemu-${{ env.QEMU_VERSION }}-${{ matrix.target }}.tar.gz -C pkg qemu
 
@@ -636,13 +641,17 @@ jobs:
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
+          BUILD_DIR="qemu-${{ env.QEMU_VERSION }}/build"
           mkdir -p pkg/qemu/share/qemu
-          cp qemu-${{ env.QEMU_VERSION }}/build/qemu-system-x86_64.exe pkg/qemu/
-          cp qemu-${{ env.QEMU_VERSION }}/build/qemu-system-aarch64.exe pkg/qemu/
-          cp qemu-${{ env.QEMU_VERSION }}/build/qemu-img.exe pkg/qemu/ 2>/dev/null || true
+          # Find binaries
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/ 2>/dev/null || true
           strip pkg/qemu/*.exe 2>/dev/null || true
+          # Verify binaries exist
+          ls -la pkg/qemu/qemu-system-*
           # Copy firmware files
-          cp -r qemu-${{ env.QEMU_VERSION }}/build/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
           cp qemu-${{ env.QEMU_VERSION }}/pc-bios/edk2-*.fd pkg/qemu/share/qemu/ 2>/dev/null || true
           # Bundle MINGW64 runtime DLLs
           MINGW_BIN="/mingw64/bin"
