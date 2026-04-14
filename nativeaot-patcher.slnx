@@ -5,6 +5,8 @@
     <Folder Name="/src/">
         <Project Path="src/Cosmos.Kernel.Boot.Limine/Cosmos.Kernel.Boot.Limine.csproj"/>
         <Project Path="src/Cosmos.Kernel.Core/Cosmos.Kernel.Core.csproj"/>
+        <Project Path="src/Cosmos.Kernel.Core.X64/Cosmos.Kernel.Core.X64.csproj"/>
+        <Project Path="src/Cosmos.Kernel.Core.ARM64/Cosmos.Kernel.Core.ARM64.csproj"/>
         <Project Path="src/Cosmos.Kernel.Debug/Cosmos.Kernel.Debug.csproj"/>
         <Project Path="src/Cosmos.Kernel.HAL.ARM64/Cosmos.Kernel.HAL.ARM64.csproj"/>
         <Project Path="src/Cosmos.Kernel.HAL.X64/Cosmos.Kernel.HAL.X64.csproj"/>

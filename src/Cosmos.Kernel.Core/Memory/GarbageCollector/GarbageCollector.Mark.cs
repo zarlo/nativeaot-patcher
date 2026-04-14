@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.Bridge;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Scheduler;
@@ -99,7 +100,7 @@ public static unsafe partial class GarbageCollector
         }
         else
         {
-            nuint rsp = ContextSwitch.GetRsp();
+            nuint rsp = ContextSwitchNative.GetSp();
             nuint stackEnd = rsp + Scheduler.Thread.DefaultStackSize;
             ScanMemoryRange((nint*)rsp, (nint*)stackEnd);
         }
@@ -185,7 +186,7 @@ public static unsafe partial class GarbageCollector
         {
             // For the currently running thread, thread.StackPointer is stale (saved
             // during the last context switch). Use the actual RSP instead.
-            stackStart = ContextSwitch.GetRsp();
+            stackStart = ContextSwitchNative.GetSp();
 
             if (thread.StackBase != 0 && thread.StackSize != 0)
             {

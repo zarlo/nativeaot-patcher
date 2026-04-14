@@ -1,7 +1,7 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.Bridge;
 
 namespace Cosmos.Kernel.HAL;
 
@@ -9,8 +9,9 @@ namespace Cosmos.Kernel.HAL;
 /// C# bridge to native ACPI MCFG discovery (acpi_wrapper.c in MultiArch).
 /// The native code is called during early boot (kmain) and parses the MCFG
 /// table to extract the PCI ECAM base address. This class just retrieves the result.
+/// Native import lives in Cosmos.Kernel.Core/Bridge/Import/AcpiNative.cs.
 /// </summary>
-public static unsafe partial class Acpi
+public static unsafe class AcpiMcfg
 {
     /// <summary>
     /// Mirrors the C struct acpi_mcfg_info_t from ACPI/acpi_wrapper.c.
@@ -28,17 +29,13 @@ public static unsafe partial class Acpi
         public ulong BaseAddress;  // ECAM physical base
     }
 
-    [LibraryImport("*", EntryPoint = "acpi_get_mcfg_info")]
-    [SuppressGCTransition]
-    private static partial McfgInfo* NativeGetMcfgInfo();
-
     /// <summary>
     /// Gets MCFG information discovered from ACPI during early boot.
     /// Returns null if ACPI was not available or MCFG table wasn't found.
     /// </summary>
     public static McfgInfo* GetMcfgInfo()
     {
-        return NativeGetMcfgInfo();
+        return (McfgInfo*)AcpiMcfgNative.GetMcfgInfo();
     }
 
     /// <summary>
@@ -47,7 +44,7 @@ public static unsafe partial class Acpi
     /// </summary>
     public static ulong GetEcamBase()
     {
-        McfgInfo* mcfg = NativeGetMcfgInfo();
+        McfgInfo* mcfg = (McfgInfo*)AcpiMcfgNative.GetMcfgInfo();
         if (mcfg != null && mcfg->Found != 0)
         {
             return mcfg->BaseAddress;

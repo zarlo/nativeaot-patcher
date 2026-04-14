@@ -1,5 +1,6 @@
 using Cosmos.Kernel;
 using Cosmos.Kernel.Core;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Memory;
 using Cosmos.Kernel.Core.Memory.GarbageCollector;
@@ -7,7 +8,6 @@ using Cosmos.Kernel.Core.Runtime;
 using Cosmos.Kernel.Core.Scheduler;
 using Cosmos.Kernel.Core.Scheduler.Stride;
 using Cosmos.Kernel.HAL;
-using Cosmos.Kernel.HAL.Cpu;
 using Cosmos.Kernel.HAL.Pci;
 
 namespace Internal.Runtime.CompilerHelpers
@@ -50,7 +50,7 @@ namespace Internal.Runtime.CompilerHelpers
                 {
                     // Initialize PCI (requires interrupts for MSI/MSI-X)
                     Serial.WriteString("[KERNEL]   - Initializing PCI...\n");
-                    ulong ecamBase = Acpi.GetEcamBase();
+                    ulong ecamBase = AcpiMcfg.GetEcamBase();
                     initializer.PreparePciMapping(ecamBase);
                     PciDevice.SetEcamBase(ecamBase);
                     PciManager.Setup();

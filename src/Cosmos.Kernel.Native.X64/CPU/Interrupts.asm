@@ -284,34 +284,34 @@ _native_x64_test_int32:
     int 32
     ret
 
-; void _native_x64_set_context_switch_rsp(nuint newRsp)
-; Sets the target RSP for context switch. Called from managed code
+; void _native_set_context_switch_sp(nuint newSp)
+; Sets the target SP for context switch. Called from managed code
 ; during timer interrupt to request a context switch.
 ; rdi = new RSP to switch to (pointing to saved context)
-global _native_x64_set_context_switch_rsp
-_native_x64_set_context_switch_rsp:
+global _native_set_context_switch_sp
+_native_set_context_switch_sp:
     mov [rel _context_switch_target_rsp], rdi
     ret
 
-; nuint _native_x64_get_context_switch_rsp()
-; Gets the current context switch target RSP (for debugging)
-global _native_x64_get_context_switch_rsp
-_native_x64_get_context_switch_rsp:
+; nuint _native_get_context_switch_sp()
+; Gets the current context switch target SP (for debugging)
+global _native_get_context_switch_sp
+_native_get_context_switch_sp:
     mov rax, [rel _context_switch_target_rsp]
     ret
 
-; nuint _native_x64_get_rsp()
-; Gets the current RSP value
-global _native_x64_get_rsp
-_native_x64_get_rsp:
+; nuint _native_get_sp()
+; Gets the current SP value
+global _native_get_sp
+_native_get_sp:
     mov rax, rsp
     ret
 
-; void _native_x64_set_context_switch_new_thread(int isNew)
+; void _native_set_context_switch_new_thread(int isNew)
 ; Sets whether the target thread is NEW (1) or RESUMED (0)
 ; rdi = isNew flag
-global _native_x64_set_context_switch_new_thread
-_native_x64_set_context_switch_new_thread:
+global _native_set_context_switch_new_thread
+_native_set_context_switch_new_thread:
     mov [rel _context_switch_is_new_thread], rdi
     ret
 

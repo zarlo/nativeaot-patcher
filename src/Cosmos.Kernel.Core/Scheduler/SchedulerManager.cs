@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Cosmos.Kernel.Core.Bridge;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Memory.GarbageCollector;
@@ -117,6 +118,96 @@ public static class SchedulerManager
     /// Allocates a new unique thread ID.
     /// </summary>
     public static uint AllocateThreadId() => _nextThreadId++;
+
+    // ========== Thread Entry Dispatch ==========
+
+    /// <summary>
+    /// Entry body for newly scheduled threads. Called from
+    /// <see cref="Cosmos.Kernel.Core.Bridge.ThreadNative.EntryPointStub"/>,
+    /// whose address is passed as the initial RIP / PC to the context-switch
+    /// assembly by whoever creates the thread (e.g. ThreadPlug).
+    ///
+    /// Reads the entry delegate off the current thread's <c>StartDelegate</c>
+    /// field, clears it so the reference can be collected, invokes it, handles
+    /// exceptions, marks the thread as exited, and halts. The scheduler will
+    /// never re-pick a halted thread; the halt loop is a safety net in case
+    /// the exit path ever races with a context switch.
+    /// </summary>
+    public static void InvokeCurrentThreadStart()
+    {
+        PerCpuState? cpuState = GetCpuState(0);
+        Thread? currentThread = cpuState?.CurrentThread;
+
+        if (currentThread == null)
+        {
+            Panic.Halt("No current thread in InvokeCurrentThreadStart");
+        }
+
+        uint threadId = currentThread.Id;
+        Serial.WriteString("[SCHED] Running thread ");
+        Serial.WriteNumber(threadId);
+        Serial.WriteString("\n");
+
+        // Consume the entry delegate. Capture and clear in one critical section
+        // so neither the GC nor a concurrent reader sees a half-torn state.
+        Action? start;
+        using (InternalCpu.DisableInterruptsScope())
+        {
+            start = currentThread.StartDelegate;
+            currentThread.StartDelegate = null;
+        }
+
+        int exitCode = 0;
+        if (start != null)
+        {
+            try
+            {
+                Serial.WriteString("[SCHED] Invoking thread entry\n");
+                start();
+                Serial.WriteString("[SCHED] Thread entry completed\n");
+            }
+            catch (Exception ex)
+            {
+                exitCode = 1;
+                // Re-query thread ID — locals may be clobbered across the catch funclet.
+                PerCpuState? exCpuState = GetCpuState(0);
+                uint exThreadId = exCpuState?.CurrentThread?.Id ?? 0;
+                Serial.WriteString("[SCHED] Thread ");
+                Serial.WriteNumber(exThreadId);
+                Serial.WriteString(" threw exception: ");
+                Serial.WriteString(ex.Message ?? "Unknown error");
+                Serial.WriteString("\n");
+            }
+        }
+        else
+        {
+            Serial.WriteString("[SCHED] No entry delegate on thread ");
+            Serial.WriteNumber(threadId);
+            Serial.WriteString("\n");
+        }
+
+        // Re-query current thread for exit — locals may be corrupted after the catch funclet.
+        PerCpuState? exitCpuState = GetCpuState(0);
+        Thread? exitThread = exitCpuState?.CurrentThread;
+        uint exitThreadId = exitThread?.Id ?? 0;
+
+        Serial.WriteString("[SCHED] Thread ");
+        Serial.WriteNumber(exitThreadId);
+        Serial.WriteString(" exiting with code ");
+        Serial.WriteNumber((uint)exitCode);
+        Serial.WriteString("\n");
+
+        if (exitThread != null)
+        {
+            ExitThread(0, exitThread);
+        }
+
+        // Halt forever — scheduler should not pick this thread again.
+        while (true)
+        {
+            InternalCpu.Halt();
+        }
+    }
 
     // ========== Thread Registry (for GC stack scanning) ==========
 
@@ -442,8 +533,8 @@ public static class SchedulerManager
             next.LastScheduledAt = GetTimestamp();
 
             // Request context switch - set new thread flag and target RSP
-            ContextSwitch.SetContextSwitchNewThread(isNewThread ? 1 : 0);
-            ContextSwitch.SetContextSwitchRsp(next.StackPointer);
+            ContextSwitchNative.SetContextSwitchNewThread(isNewThread ? 1 : 0);
+            ContextSwitchNative.SetContextSwitchSp(next.StackPointer);
         }
     }
 
@@ -464,7 +555,7 @@ public static class SchedulerManager
         }
 
         next.State = ThreadState.Running;
-        ContextSwitch.SetContextSwitchRsp(next.StackPointer);
+        ContextSwitchNative.SetContextSwitchSp(next.StackPointer);
     }
 
     private static ulong GetTimestamp()

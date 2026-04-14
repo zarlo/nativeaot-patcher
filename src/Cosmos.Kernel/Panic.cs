@@ -1,6 +1,5 @@
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
-using Cosmos.Kernel.HAL.Cpu.Data;
 using CorePanic = Cosmos.Kernel.Core.Panic;
 
 namespace Cosmos.Kernel;
