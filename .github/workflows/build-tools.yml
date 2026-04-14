@@ -138,7 +138,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
-          install: make gcc pkg-config
+          install: make gcc pkg-config libiconv-devel
 
       - name: Download xorriso source (Unix)
         if: runner.os != 'Windows'
