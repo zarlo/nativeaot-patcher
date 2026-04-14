@@ -52,7 +52,7 @@ jobs:
         run: |
           curl -L -o llvm-project.tar.xz \
             "https://github.com/llvm/llvm-project/releases/download/${{ env.LLVM_TAG }}/llvm-project-${{ env.LLD_VERSION }}.src.tar.xz"
-          tar xf llvm-project.tar.xz
+          tar xf llvm-project.tar.xz 2>/dev/null || true
           mv llvm-project-${{ env.LLD_VERSION }}.src llvm-project
 
       - name: Configure & build LLD (Unix)
@@ -68,7 +68,8 @@ jobs:
             -DLLVM_INCLUDE_EXAMPLES=OFF \
             -DLLVM_INCLUDE_DOCS=OFF \
             -DLLVM_PARALLEL_LINK_JOBS=1
-          cmake --build build --target lld -- -j$(nproc)
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+          cmake --build build --target lld -- -j$NPROC
           strip build/bin/ld.lld
 
       - name: Configure & build LLD (Windows)
@@ -133,9 +134,10 @@ jobs:
 
       - name: Build xorriso (native)
         run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           cd xorriso-${{ env.XORRISO_VERSION }}
           ./configure --disable-libreadline --disable-libacl --disable-xattr
-          make -j$(nproc)
+          make -j$NPROC
           strip xorriso/xorriso
 
       - name: Package
@@ -206,8 +208,9 @@ jobs:
       - name: Build yasm (Unix)
         if: runner.os != 'Windows'
         run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           cmake -S yasm -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -j$(nproc)
+          cmake --build build -j$NPROC
           strip build/yasm
 
       - name: Build yasm (Windows)
@@ -283,6 +286,7 @@ jobs:
       - name: Build binutils
         shell: bash
         run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           mkdir build-binutils && cd build-binutils
           ../binutils-${{ env.BINUTILS_VERSION }}/configure \
@@ -291,12 +295,13 @@ jobs:
             --with-sysroot \
             --disable-nls \
             --disable-werror
-          make -j$(nproc)
+          make -j$NPROC
           make install
 
       - name: Build GCC
         shell: bash
         run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           export PATH="$PREFIX/bin:$PATH"
           mkdir build-gcc && cd build-gcc
@@ -307,7 +312,7 @@ jobs:
             --enable-languages=c,c++ \
             --without-headers \
             --disable-hosted-libstdcxx
-          make -j$(nproc) all-gcc all-target-libgcc
+          make -j$NPROC all-gcc all-target-libgcc
           make install-gcc install-target-libgcc
 
       - name: Strip binaries
@@ -444,6 +449,7 @@ jobs:
       - name: Build binutils
         shell: bash
         run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           mkdir build-binutils && cd build-binutils
           ../binutils-${{ env.BINUTILS_VERSION }}/configure \
@@ -452,12 +458,13 @@ jobs:
             --with-sysroot \
             --disable-nls \
             --disable-werror
-          make -j$(nproc)
+          make -j$NPROC
           make install
 
       - name: Build GCC
         shell: bash
         run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           export PREFIX=$(pwd)/output
           export PATH="$PREFIX/bin:$PATH"
           mkdir build-gcc && cd build-gcc
@@ -468,7 +475,7 @@ jobs:
             --enable-languages=c,c++ \
             --without-headers \
             --disable-hosted-libstdcxx
-          make -j$(nproc) all-gcc all-target-libgcc
+          make -j$NPROC all-gcc all-target-libgcc
           make install-gcc install-target-libgcc
 
       - name: Strip binaries
