@@ -15,24 +15,23 @@ public class CommandToolDefinition : ToolDefinition
     public string[]? MacOSCommands { get; init; }
     public string? VersionArg { get; init; } = "--version";
 
+    /// <summary>
+    /// Asset name prefix in the tools-latest GitHub release (e.g., "llvm-tools", "xorriso", "yasm", "qemu").
+    /// If null, the tool is not distributed via the release (e.g., .NET SDK — user installs it manually).
+    /// </summary>
+    public string? ReleaseAsset { get; init; }
+
+    /// <summary>
+    /// Manual installation instructions for tools not in the release (e.g., .NET SDK).
+    /// </summary>
+    public string? ManualInstructions { get; init; }
+
     public string[] GetCommands(OSPlatform platform) => platform switch
     {
         OSPlatform.Windows => WindowsCommands ?? [],
         OSPlatform.Linux => LinuxCommands ?? [],
         OSPlatform.MacOS => MacOSCommands ?? [],
         _ => []
-    };
-
-    public InstallInfo? WindowsInstall { get; init; }
-    public InstallInfo? LinuxInstall { get; init; }
-    public InstallInfo? MacOSInstall { get; init; }
-
-    public InstallInfo? GetInstallInfo(OSPlatform platform) => platform switch
-    {
-        OSPlatform.Windows => WindowsInstall,
-        OSPlatform.Linux => LinuxInstall,
-        OSPlatform.MacOS => MacOSInstall,
-        _ => null
     };
 }
 
@@ -51,20 +50,6 @@ public class FileToolDefinition : ToolDefinition
     };
 }
 
-public class InstallInfo
-{
-    public required string Method { get; init; } // "package", "download", "build", "manual"
-    public string? PackageName { get; init; }
-    public string? DownloadUrl { get; init; }
-    public string? BuildScript { get; init; }
-    public string? ManualInstructions { get; init; }
-    public string[]? AptPackages { get; init; }
-    public string[]? DnfPackages { get; init; }
-    public string[]? PacmanPackages { get; init; }
-    public string[]? BrewPackages { get; init; }
-    public string[]? ChocoPackages { get; init; }
-}
-
 public static class ToolDefinitions
 {
     public static readonly CommandToolDefinition DotNetSdk = new()
@@ -77,9 +62,7 @@ public static class ToolDefinitions
         MacOSCommands = ["dotnet"],
         VersionArg = "--version",
         Required = true,
-        WindowsInstall = new() { Method = "manual", ManualInstructions = "Download from https://dot.net/download" },
-        LinuxInstall = new() { Method = "manual", ManualInstructions = "Download from https://dot.net/download or use package manager" },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["dotnet-sdk"] }
+        ManualInstructions = "Download from https://dot.net/download"
     };
 
     public static readonly CommandToolDefinition Clang = new()
@@ -92,9 +75,7 @@ public static class ToolDefinitions
         MacOSCommands = ["clang"],
         VersionArg = "--version",
         Required = true,
-        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
-        LinuxInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
-        MacOSInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" }
+        ReleaseAsset = "llvm-tools"
     };
 
     public static readonly CommandToolDefinition LLD = new()
@@ -107,9 +88,7 @@ public static class ToolDefinitions
         MacOSCommands = ["ld.lld", "lld"],
         VersionArg = "--version",
         Required = true,
-        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
-        LinuxInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" },
-        MacOSInstall = new() { Method = "download", DownloadUrl = "https://github.com/llvm/llvm-project/releases" }
+        ReleaseAsset = "llvm-tools"
     };
 
     public static readonly CommandToolDefinition Xorriso = new()
@@ -122,9 +101,7 @@ public static class ToolDefinitions
         MacOSCommands = ["xorriso"],
         VersionArg = "--version",
         Required = true,
-        WindowsInstall = new() { Method = "download", DownloadUrl = "https://github.com/PeyTy/xorriso-exe-for-windows.git" },
-        LinuxInstall = new() { Method = "package", AptPackages = ["xorriso"], DnfPackages = ["xorriso"], PacmanPackages = ["libisoburn"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["xorriso"] }
+        ReleaseAsset = "xorriso"
     };
 
     public static readonly CommandToolDefinition Yasm = new()
@@ -137,9 +114,7 @@ public static class ToolDefinitions
         MacOSCommands = ["yasm"],
         VersionArg = "--version",
         Required = true,
-        WindowsInstall = new() { Method = "package", ChocoPackages = ["yasm"] },
-        LinuxInstall = new() { Method = "package", AptPackages = ["yasm"], DnfPackages = ["yasm"], PacmanPackages = ["yasm"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["yasm"] }
+        ReleaseAsset = "yasm"
     };
 
     public static readonly CommandToolDefinition QemuX64 = new()
@@ -152,9 +127,7 @@ public static class ToolDefinitions
         MacOSCommands = ["qemu-system-x86_64"],
         VersionArg = "--version",
         Required = false,
-        WindowsInstall = new() { Method = "package", ChocoPackages = ["qemu"] },
-        LinuxInstall = new() { Method = "package", AptPackages = ["qemu-system-x86"], DnfPackages = ["qemu-system-x86"], PacmanPackages = ["qemu-system-x86"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["qemu"] }
+        ReleaseAsset = "qemu"
     };
 
     public static readonly CommandToolDefinition QemuArm64 = new()
@@ -167,48 +140,27 @@ public static class ToolDefinitions
         MacOSCommands = ["qemu-system-aarch64"],
         VersionArg = "--version",
         Required = false,
-        WindowsInstall = new() { Method = "package", ChocoPackages = ["qemu"] },
-        LinuxInstall = new() { Method = "package", AptPackages = ["qemu-system-arm", "qemu-efi-aarch64"], DnfPackages = ["qemu-system-arm", "edk2-aarch64"], PacmanPackages = ["qemu-system-aarch64", "edk2-aarch64"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["qemu"] }
-    };
-
-    // Portable gdb-multiarch built with libexpat (XML target description support).
-    // Required for QEMU system-mode kernel debugging — without expat, GDB falls back
-    // to a hardcoded register layout and rejects QEMU's extended register set with
-    // "remote 'g' packet reply is too long" or "Truncated register" errors.
-    // Linux: ships in apt as gdb-multiarch (with expat).
-    // Windows: bundled cross-elf GDBs from lordmilko/mmozeiko lack expat — use
-    // grumpycoder's purpose-built portable gdb-multiarch zip (~28 MB, includes all
-    // required DLLs, hosted on Compiler Explorer's CDN).
-    public static readonly CommandToolDefinition GdbMultiarch = new()
-    {
-        Name = "gdb-multiarch",
-        DisplayName = "GDB (multiarch)",
-        Description = "Multi-architecture GDB debugger for x64 and ARM64 kernels",
-        WindowsCommands = ["gdb-multiarch"],
-        LinuxCommands = ["gdb-multiarch"],
-        MacOSCommands = ["gdb-multiarch", "x86_64-elf-gdb", "aarch64-elf-gdb"],
-        VersionArg = "--version",
-        Required = false,
-        WindowsInstall = new() { Method = "download", DownloadUrl = "https://static.grumpycoder.net/pixel/gdb-multiarch-windows/gdb-multiarch-16.3.zip" },
-        LinuxInstall = new() { Method = "package", AptPackages = ["gdb-multiarch"], DnfPackages = ["gdb"], PacmanPackages = ["gdb"] },
-        MacOSInstall = new() { Method = "package", BrewPackages = ["x86_64-elf-gdb"] }
+        ReleaseAsset = "qemu"
     };
 
     public static readonly FileToolDefinition QemuEfiArm64 = new()
     {
         Name = "QEMU EFI (ARM64)",
         DisplayName = "QEMU UEFI Firmware",
-        Description = "UEFI firmware for ARM64 QEMU",
+        Description = "UEFI firmware for ARM64 QEMU — bundled with QEMU",
         Required = false,
         WindowsPaths = [
-            @"C:\Program Files\qemu\share\edk2-aarch64-code.fd",
-            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\edk2-aarch64-code.fd",
-            @"C:\Program Files\qemu\share\qemu\edk2-aarch64-code.fd",
-            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\qemu\edk2-aarch64-code.fd"
+            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\qemu\edk2-aarch64-code.fd",
+            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\edk2-aarch64-code.fd"
         ],
-        LinuxPaths = ["/usr/share/qemu-efi-aarch64/QEMU_EFI.fd"],
-        MacOSPaths = ["/opt/homebrew/share/qemu/edk2-aarch64-code.fd"]
+        LinuxPaths = [
+            "~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd",
+            "~/.cosmos/tools/qemu/share/edk2-aarch64-code.fd"
+        ],
+        MacOSPaths = [
+            "~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd",
+            "~/.cosmos/tools/qemu/share/edk2-aarch64-code.fd"
+        ]
     };
 
     public static IEnumerable<ToolDefinition> GetAllTools() =>
@@ -220,7 +172,6 @@ public static class ToolDefinitions
         Yasm,
         QemuX64,
         QemuArm64,
-        QemuEfiArm64,
-        GdbMultiarch
+        QemuEfiArm64
     ];
 }

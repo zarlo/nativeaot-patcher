@@ -13,7 +13,7 @@ public class UninstallSettings : CommandSettings
     public bool Auto { get; set; }
 
     [CommandOption("--tools")]
-    [Description("Only remove system tools (QEMU, lld, xorriso, yasm, cross-compilers)")]
+    [Description("Only remove system tools (QEMU, clang, lld, xorriso, yasm)")]
     public bool Tools { get; set; }
 
     [CommandOption("--packages")]
@@ -42,56 +42,32 @@ public class UninstallCommand : AsyncCommand<UninstallSettings>
         bool removeTools = !settings.Packages || settings.Tools;
         bool removePackages = !settings.Tools || settings.Packages;
 
-        // Remove system tools
+        // Remove system tools — delete each bundle directory under ~/.cosmos/tools/
         if (removeTools)
         {
             string toolsPath = ToolChecker.GetCosmosToolsPath();
-            string packageManager = PlatformInfo.GetPackageManager();
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var tool in ToolDefinitions.GetAllTools())
             {
-                if (tool is not CommandToolDefinition cmdTool)
+                if (tool is not CommandToolDefinition cmdTool || cmdTool.ReleaseAsset == null)
                 {
                     continue;
                 }
 
-                var info = cmdTool.GetInstallInfo(PlatformInfo.CurrentOS);
-                if (info == null)
+                if (!processed.Add(cmdTool.ReleaseAsset))
                 {
                     continue;
                 }
 
-                string bundleDir = InstallCommand.GetBundleDirName(tool);
-                string dedupKey = info.DownloadUrl != null
-                    ? $"dl:{bundleDir}"
-                    : $"pkg:{string.Join(",", InstallCommand.GetPackagesForManager(info, packageManager) ?? [])}";
-                if (!processed.Add(dedupKey))
+                string targetDir = Path.Combine(toolsPath, cmdTool.ReleaseAsset);
+                AnsiConsole.Markup($"  {tool.DisplayName} -> remove {cmdTool.ReleaseAsset}/ ... ");
+                bool ok = false;
+                if (Directory.Exists(targetDir))
                 {
-                    continue;
+                    try { Directory.Delete(targetDir, true); ok = true; } catch { }
                 }
-
-                if (info.Method == "package")
-                {
-                    var pkgs = InstallCommand.GetPackagesForManager(info, packageManager);
-                    if (pkgs != null)
-                    {
-                        AnsiConsole.Markup($"  {tool.DisplayName} -> {packageManager} uninstall ... ");
-                        bool ok = await UninstallPackageAsync(packageManager, pkgs);
-                        AnsiConsole.MarkupLine(ok ? "[green]OK[/]" : "[dim]not installed[/]");
-                    }
-                }
-                else if (info.DownloadUrl != null)
-                {
-                    string targetDir = Path.Combine(toolsPath, bundleDir);
-                    AnsiConsole.Markup($"  {tool.DisplayName} -> remove {bundleDir}/ ... ");
-                    bool ok = false;
-                    if (Directory.Exists(targetDir))
-                    {
-                        try { Directory.Delete(targetDir, true); ok = true; } catch { }
-                    }
-                    AnsiConsole.MarkupLine(ok ? "[green]OK[/]" : "[dim]not found[/]");
-                }
+                AnsiConsole.MarkupLine(ok ? "[green]OK[/]" : "[dim]not found[/]");
             }
 
             // On Windows, remove downloaded tool dirs from user PATH
@@ -146,32 +122,6 @@ public class UninstallCommand : AsyncCommand<UninstallSettings>
             {
                 FileName = fileName,
                 Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            });
-            if (proc == null)
-            {
-                return false;
-            }
-
-            await proc.StandardOutput.ReadToEndAsync();
-            await proc.WaitForExitAsync();
-            return proc.ExitCode == 0;
-        }
-        catch { return false; }
-    }
-
-    private static async Task<bool> UninstallPackageAsync(string packageManager, IEnumerable<string> packages)
-    {
-        try
-        {
-            var (command, args) = InstallCommand.GetPackageManagerUninstallCommand(packageManager, packages);
-            using var proc = Process.Start(new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = args,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
