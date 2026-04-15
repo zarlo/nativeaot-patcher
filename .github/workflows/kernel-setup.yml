@@ -52,10 +52,9 @@ jobs:
         run: |
           TOOLS_DIR="$HOME/.cosmos/tools"
           mkdir -p "$TOOLS_DIR"
-          TAG=$(gh release list --limit 20 --json tagName -q '[.[] | select(.tagName | startswith("tools-"))][0].tagName')
-          echo "Downloading tools from release: $TAG"
+          echo "Downloading tools from release: tools-latest"
           for asset in llvm-tools xorriso yasm qemu; do
-            gh release download "$TAG" --pattern "${asset}-*-linux-x64.tar.gz" --dir /tmp/cosmos-tools
+            gh release download tools-latest --pattern "${asset}-*-linux-x64.tar.gz" --dir /tmp/cosmos-tools
             tar xzf /tmp/cosmos-tools/${asset}-*-linux-x64.tar.gz -C "$TOOLS_DIR"
           done
 

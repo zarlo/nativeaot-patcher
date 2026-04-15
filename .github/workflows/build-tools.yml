@@ -1,16 +1,7 @@
 name: Build Tools
 
 on:
-  push:
-    branches: [feature/buildTools]
-    paths: [.github/workflows/build-tools.yml]
   workflow_dispatch:
-    inputs:
-      create_release:
-        description: 'Create a GitHub release with the built tools'
-        required: false
-        type: boolean
-        default: false
 
 env:
   LLVM_VERSION: "22.1.3"
@@ -452,7 +443,6 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════
   release:
     name: Create Release
-    if: inputs.create_release
     needs:
       - build-llvm
       - build-xorriso
@@ -470,10 +460,16 @@ jobs:
       - name: List artifacts
         run: find artifacts -type f | sort
 
+      - name: Delete previous release (if exists)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete tools-latest --yes --cleanup-tag --repo ${{ github.repository }} 2>/dev/null || true
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: tools-v${{ github.run_number }}
+          tag_name: tools-latest
           name: "Cosmos Tools (LLVM ${{ env.LLVM_VERSION }}, QEMU ${{ env.QEMU_VERSION }}, Yasm ${{ env.YASM_VERSION }}, xorriso ${{ env.XORRISO_VERSION }})"
           body: |
             Pre-built development tools for Cosmos kernel development.
@@ -490,8 +486,6 @@ jobs:
             - `linux-x64` — .tar.gz archives
             - `darwin-arm64` — .tar.gz archives
             - `win-x64` — .zip archives
-
-            Install with: `cosmos install --auto --tools`
           files: artifacts/*
           draft: false
           prerelease: false
