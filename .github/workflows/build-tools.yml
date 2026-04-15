@@ -105,11 +105,12 @@ jobs:
           mkdir -p pkg/llvm-tools/bin
           cp build/bin/clang pkg/llvm-tools/bin/
           cp build/bin/ld.lld pkg/llvm-tools/bin/
-          # Copy freestanding headers (stdint.h, stddef.h, etc.)
-          CLANG_VER=$(build/bin/clang --version | grep -oP '\d+\.\d+\.\d+' | head -1)
-          if [ -d "build/lib/clang/$CLANG_VER/include" ]; then
+          # Copy freestanding headers — find any lib/clang/*/include directory
+          CLANG_INCLUDE=$(find build/lib/clang -maxdepth 2 -type d -name include 2>/dev/null | head -1)
+          if [ -n "$CLANG_INCLUDE" ]; then
+            CLANG_VER=$(basename "$(dirname "$CLANG_INCLUDE")")
             mkdir -p "pkg/llvm-tools/lib/clang/$CLANG_VER"
-            cp -r "build/lib/clang/$CLANG_VER/include" "pkg/llvm-tools/lib/clang/$CLANG_VER/"
+            cp -r "$CLANG_INCLUDE" "pkg/llvm-tools/lib/clang/$CLANG_VER/"
           fi
           tar czf llvm-tools-${{ env.LLVM_VERSION }}-${{ matrix.target }}.tar.gz -C pkg llvm-tools
 
