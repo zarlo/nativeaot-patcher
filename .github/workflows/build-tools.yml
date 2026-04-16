@@ -421,9 +421,13 @@ jobs:
             chmod +x "pkg/qemu/$bin"
           done
 
-          # Copy firmware files
+          # Copy firmware files from build dir (directories) and source tree (BIOS binaries)
           cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/share/qemu/ 2>/dev/null || true
           cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
+          echo "=== Firmware files packaged ==="
+          ls pkg/qemu/share/qemu/*.bin pkg/qemu/share/qemu/*.fd 2>/dev/null || echo "WARNING: no firmware files found"
           tar czf qemu-${{ env.QEMU_VERSION }}-${{ matrix.target }}.tar.gz -C pkg qemu
 
       - name: Package (Windows)
@@ -439,8 +443,10 @@ jobs:
           strip pkg/qemu/*.exe 2>/dev/null || true
           # Verify binaries exist
           ls -la pkg/qemu/qemu-system-*
-          # Copy firmware files
+          # Copy firmware files from build dir (directories) and source tree (BIOS binaries)
           cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/share/qemu/ 2>/dev/null || true
           cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
           # Bundle MINGW64 runtime DLLs
           MINGW_BIN="/mingw64/bin"
