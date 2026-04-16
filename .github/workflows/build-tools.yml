@@ -415,6 +415,7 @@ jobs:
               echo '#!/bin/sh'
               echo 'DIR="$(cd "$(dirname "$0")" && pwd)"'
               echo "export ${LIB_VAR}=\"\$DIR/lib\${${LIB_VAR}:+:\$${LIB_VAR}}\""
+              echo 'export QEMU_DATADIR="$DIR/share/qemu"'
               echo 'exec "$DIR/$(basename "$0").real" "$@"'
             } > "pkg/qemu/$bin"
             chmod +x "pkg/qemu/$bin"
