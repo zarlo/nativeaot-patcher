@@ -318,6 +318,14 @@ jobs:
             "https://download.qemu.org/qemu-${{ env.QEMU_VERSION }}.tar.xz"
           tar xf qemu.tar.xz 2>/dev/null || true
 
+      - name: Download UEFI firmware
+        shell: bash
+        run: |
+          mkdir -p firmware
+          curl -L -o firmware/edk2-aarch64-code.fd.bz2 \
+            "https://github.com/qemu/qemu/raw/v${{ env.QEMU_VERSION }}/pc-bios/edk2-aarch64-code.fd.bz2"
+          bunzip2 firmware/edk2-aarch64-code.fd.bz2
+
       - name: Build QEMU (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
@@ -363,7 +371,7 @@ jobs:
           ls -la pkg/qemu/qemu-system-*
           # Copy firmware files
           cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
-          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/edk2-*.fd pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
           tar czf qemu-${{ env.QEMU_VERSION }}-${{ matrix.target }}.tar.gz -C pkg qemu
 
       - name: Package (Windows)
@@ -381,7 +389,7 @@ jobs:
           ls -la pkg/qemu/qemu-system-*
           # Copy firmware files
           cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
-          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/edk2-*.fd pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
           # Bundle MINGW64 runtime DLLs
           MINGW_BIN="/mingw64/bin"
           for dll in libglib-2.0-0.dll libgthread-2.0-0.dll libintl-8.dll libiconv-2.dll \
