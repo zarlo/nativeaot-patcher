@@ -57,6 +57,10 @@ public static class ToolChecker
         foreach (string filePath in paths)
         {
             string expanded = Environment.ExpandEnvironmentVariables(filePath);
+            if (expanded.StartsWith("~/"))
+            {
+                expanded = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), expanded.Substring(2));
+            }
             if (File.Exists(expanded))
             {
                 return new ToolStatus
