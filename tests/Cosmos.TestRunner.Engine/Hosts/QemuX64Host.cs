@@ -94,6 +94,9 @@ public class QemuX64Host : IQemuHost
 
             process.Start();
 
+            // Capture stderr asynchronously for diagnostics
+            var stderrTask = process.StandardError.ReadToEndAsync();
+
             // Monitor UART log for TestSuiteEnd while waiting for process
             var monitorTask = MonitorUartLogForTestEndAsync(uartLogPath, cts.Token);
             var processTask = process.WaitForExitAsync(cts.Token);
@@ -131,6 +134,13 @@ public class QemuX64Host : IQemuHost
             if (tcpServer != null)
             {
                 await tcpServer.StopAsync();
+            }
+
+            // Log stderr for diagnostics
+            string stderr = await stderrTask;
+            if (!string.IsNullOrWhiteSpace(stderr))
+            {
+                Console.WriteLine($"[QEMU stderr] {stderr.Trim()}");
             }
 
             // Read UART log
