@@ -18,109 +18,72 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════
   build-llvm:
     name: LLVM ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            target: linux-x64
-          - os: macos-latest
-            target: darwin-arm64
-          - os: windows-latest
-            target: win-x64
+          - target: linux-x64
+          - target: darwin-arm64
+          - target: win-x64
     steps:
-      - name: Install build tools (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
-
-      - name: Install build tools (macOS)
-        if: runner.os == 'macOS'
-        run: brew install cmake ninja
-
-      - name: Download LLVM source
+      - name: Download & repackage LLVM
         shell: bash
         run: |
-          curl -L -o llvm-project.tar.xz \
-            "https://github.com/llvm/llvm-project/releases/download/${{ env.LLVM_TAG }}/llvm-project-${{ env.LLVM_VERSION }}.src.tar.xz"
-          tar xf llvm-project.tar.xz 2>/dev/null || true
-          mv llvm-project-${{ env.LLVM_VERSION }}.src llvm-project
+          # Map target to official LLVM pre-built release archive
+          case "${{ matrix.target }}" in
+            linux-x64)    ARCHIVE="LLVM-${LLVM_VERSION}-Linux-X64.tar.xz" ; EXT="" ;;
+            darwin-arm64) ARCHIVE="LLVM-${LLVM_VERSION}-macOS-ARM64.tar.xz" ; EXT="" ;;
+            win-x64)      ARCHIVE="clang+llvm-${LLVM_VERSION}-x86_64-pc-windows-msvc.tar.xz" ; EXT=".exe" ;;
+          esac
 
-      - name: Configure & build LLVM (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          cmake -S llvm-project/llvm -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLLVM_ENABLE_PROJECTS="clang;lld" \
-            -DLLVM_TARGETS_TO_BUILD="X86;AArch64" \
-            -DLLVM_INCLUDE_TESTS=OFF \
-            -DLLVM_INCLUDE_BENCHMARKS=OFF \
-            -DLLVM_INCLUDE_EXAMPLES=OFF \
-            -DLLVM_INCLUDE_DOCS=OFF \
-            -DLLVM_PARALLEL_LINK_JOBS=1 \
-            -DCLANG_INCLUDE_TESTS=OFF \
-            -DCLANG_INCLUDE_DOCS=OFF
-          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
-          cmake --build build -- clang lld -j$NPROC
-          strip build/bin/clang build/bin/ld.lld
+          echo "Downloading ${ARCHIVE}..."
+          curl -L -o llvm-prebuilt.tar.xz \
+            "https://github.com/llvm/llvm-project/releases/download/${LLVM_TAG}/${ARCHIVE}"
 
-      - name: Setup MSVC (Windows)
-        if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+          echo "Extracting..."
+          tar xf llvm-prebuilt.tar.xz
+          LLVM_DIR=$(ls -d */ | head -1)
+          echo "Extracted to ${LLVM_DIR}"
 
-      - name: Configure & build LLVM (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        run: |
-          cmake -S llvm-project/llvm -B build -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DCMAKE_C_COMPILER=cl ^
-            -DCMAKE_CXX_COMPILER=cl ^
-            -DLLVM_ENABLE_PROJECTS="clang;lld" ^
-            -DLLVM_TARGETS_TO_BUILD="X86;AArch64" ^
-            -DLLVM_INCLUDE_TESTS=OFF ^
-            -DLLVM_INCLUDE_BENCHMARKS=OFF ^
-            -DLLVM_INCLUDE_EXAMPLES=OFF ^
-            -DLLVM_INCLUDE_DOCS=OFF ^
-            -DLLVM_PARALLEL_LINK_JOBS=1 ^
-            -DCLANG_INCLUDE_TESTS=OFF ^
-            -DCLANG_INCLUDE_DOCS=OFF
-          cmake --build build -- clang lld
-
-      - name: Package (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
+          # Copy clang + lld binaries (dereference symlinks with -L)
           mkdir -p pkg/llvm-tools/bin
-          cp build/bin/clang pkg/llvm-tools/bin/
-          cp build/bin/ld.lld pkg/llvm-tools/bin/
-          # Copy freestanding headers — find any lib/clang/*/include directory
-          CLANG_INCLUDE=$(find build/lib/clang -maxdepth 2 -type d -name include 2>/dev/null | head -1)
+          cp -L "${LLVM_DIR}bin/clang${EXT}" pkg/llvm-tools/bin/
+
+          # lld may be named ld.lld or lld — handle both
+          if [ -f "${LLVM_DIR}bin/ld.lld${EXT}" ]; then
+            cp -L "${LLVM_DIR}bin/ld.lld${EXT}" pkg/llvm-tools/bin/
+          elif [ -f "${LLVM_DIR}bin/lld${EXT}" ]; then
+            cp -L "${LLVM_DIR}bin/lld${EXT}" pkg/llvm-tools/bin/ld.lld${EXT}
+          fi
+
+          # Copy freestanding headers
+          CLANG_INCLUDE=$(find "${LLVM_DIR}" -path "*/lib/clang/*/include" -type d | head -1)
           if [ -n "$CLANG_INCLUDE" ]; then
             CLANG_VER=$(basename "$(dirname "$CLANG_INCLUDE")")
             mkdir -p "pkg/llvm-tools/lib/clang/$CLANG_VER"
             cp -r "$CLANG_INCLUDE" "pkg/llvm-tools/lib/clang/$CLANG_VER/"
           fi
-          tar czf llvm-tools-${{ env.LLVM_VERSION }}-${{ matrix.target }}.tar.gz -C pkg llvm-tools
 
-      - name: Package (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path pkg/llvm-tools/bin
-          Copy-Item build/bin/clang.exe pkg/llvm-tools/bin/
-          Copy-Item build/bin/ld.lld.exe pkg/llvm-tools/bin/
-          # Copy freestanding headers
-          $clangVer = (& build/bin/clang.exe --version | Select-String -Pattern '\d+\.\d+\.\d+' | ForEach-Object { $_.Matches[0].Value } | Select-Object -First 1)
-          $includeDir = "build/lib/clang/$clangVer/include"
-          if (Test-Path $includeDir) {
-            $destDir = "pkg/llvm-tools/lib/clang/$clangVer"
-            New-Item -ItemType Directory -Force -Path $destDir
-            Copy-Item -Recurse $includeDir $destDir/
-          }
-          Compress-Archive -Path pkg/llvm-tools -DestinationPath llvm-tools-${{ env.LLVM_VERSION }}-${{ matrix.target }}.zip
+          # Strip binaries when possible (only native linux-x64)
+          if [ "${{ matrix.target }}" = "linux-x64" ]; then
+            strip pkg/llvm-tools/bin/clang pkg/llvm-tools/bin/ld.lld 2>/dev/null || true
+          fi
+
+          # Free disk space before packaging
+          rm -rf "${LLVM_DIR}" llvm-prebuilt.tar.xz
+
+          # Verify
+          ls -la pkg/llvm-tools/bin/
+          find pkg/llvm-tools/lib -type f | head -20 || true
+
+          # Package
+          if [ "${{ matrix.target }}" = "win-x64" ]; then
+            cd pkg && zip -r ../llvm-tools-${LLVM_VERSION}-${{ matrix.target }}.zip llvm-tools
+          else
+            tar czf llvm-tools-${LLVM_VERSION}-${{ matrix.target }}.tar.gz -C pkg llvm-tools
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
