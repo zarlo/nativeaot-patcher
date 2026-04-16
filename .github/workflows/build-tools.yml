@@ -369,6 +369,57 @@ jobs:
           strip pkg/qemu/qemu-system-* pkg/qemu/qemu-img 2>/dev/null || true
           # Verify binaries exist
           ls -la pkg/qemu/qemu-system-*
+
+          # Bundle shared libraries so QEMU runs without system deps
+          mkdir -p pkg/qemu/lib
+          collect_deps() {
+            local binary="$1"
+            if [ "${{ runner.os }}" = "Linux" ]; then
+              ldd "$binary" 2>/dev/null | grep "=> /" | awk '{print $3}' || true
+            else
+              otool -L "$binary" 2>/dev/null | awk '/\/opt\/homebrew|\/usr\/local/{print $1}' || true
+            fi
+          }
+          SKIP_LIBS="libc.so|libm.so|libdl.so|libpthread.so|librt.so|ld-linux|libSystem.B"
+          copy_deps() {
+            local binary="$1"
+            collect_deps "$binary" | while read -r lib; do
+              if ! echo "$lib" | grep -qE "$SKIP_LIBS"; then
+                cp -n "$lib" pkg/qemu/lib/ 2>/dev/null || true
+              fi
+            done || true
+          }
+          # Pass 1: direct deps of QEMU binaries
+          for bin in pkg/qemu/qemu-system-x86_64 pkg/qemu/qemu-system-aarch64 pkg/qemu/qemu-img; do
+            [ -f "$bin" ] || continue
+            copy_deps "$bin"
+          done
+          # Pass 2: transitive deps of bundled libs
+          for lib in pkg/qemu/lib/*; do
+            [ -f "$lib" ] || continue
+            copy_deps "$lib"
+          done
+          echo "Bundled shared libraries:"
+          ls -la pkg/qemu/lib/ || echo "(no libraries bundled)"
+
+          # Create wrapper scripts that set library path
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            LIB_VAR="LD_LIBRARY_PATH"
+          else
+            LIB_VAR="DYLD_LIBRARY_PATH"
+          fi
+          for bin in qemu-system-x86_64 qemu-system-aarch64 qemu-img; do
+            [ -f "pkg/qemu/$bin" ] || continue
+            mv "pkg/qemu/$bin" "pkg/qemu/$bin.real"
+            {
+              echo '#!/bin/sh'
+              echo 'DIR="$(cd "$(dirname "$0")" && pwd)"'
+              echo "export ${LIB_VAR}=\"\$DIR/lib\${${LIB_VAR}:+:\$${LIB_VAR}}\""
+              echo 'exec "$DIR/$(basename "$0").real" "$@"'
+            } > "pkg/qemu/$bin"
+            chmod +x "pkg/qemu/$bin"
+          done
+
           # Copy firmware files
           cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
           cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
