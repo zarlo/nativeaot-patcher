@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Namespace Cosmos.Kernel.HAL.ARM64.Acpi | Cosmos Gen 3 </title>
+      <title>Delegate InterruptManager.IrqDelegate | Cosmos Gen 3 </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Namespace Cosmos.Kernel.HAL.ARM64.Acpi | Cosmos Gen 3 ">
+      <meta name="title" content="Delegate InterruptManager.IrqDelegate | Cosmos Gen 3 ">
       
-      
+      <meta name="description" content="Interrupt delegate signature.">
       <link rel="icon" href="../favicon.ico">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
@@ -84,32 +84,44 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="Cosmos.Kernel.HAL.ARM64.Acpi">
+        <article data-uid="Cosmos.Kernel.Core.CPU.InterruptManager.IrqDelegate">
 
-  <h1 id="Cosmos_Kernel_HAL_ARM64_Acpi" data-uid="Cosmos.Kernel.HAL.ARM64.Acpi" class="text-break">Namespace Cosmos.Kernel.HAL.ARM64.Acpi</h1>
-  <div class="markdown level0 summary"></div>
-  <div class="markdown level0 conceptual"></div>
-  <div class="markdown level0 remarks"></div>
 
-    <h3 id="classes">
-Classes
-</h3>
-    <dl class="jumplist">
-      <dt><a class="xref" href="Cosmos.Kernel.HAL.ARM64.Acpi.AcpiGIC.html">AcpiGIC</a></dt>
-      <dd><p>C# bridge to native ACPI GIC discovery (acpi_wrapper.c in MultiArch).
-The native code is called during early boot (kmain) and parses the MADT
-to extract GICD/GICR/GICC addresses. This class just retrieves the result.</p>
+
+  <h1 id="Cosmos_Kernel_Core_CPU_InterruptManager_IrqDelegate" data-uid="Cosmos.Kernel.Core.CPU.InterruptManager.IrqDelegate" class="text-break">
+Delegate InterruptManager.IrqDelegate  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="Cosmos.html">Cosmos</a>.<a class="xref" href="Cosmos.Kernel.html">Kernel</a>.<a class="xref" href="Cosmos.Kernel.Core.html">Core</a>.<a class="xref" href="Cosmos.Kernel.Core.CPU.html">CPU</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>Cosmos.Kernel.Core.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Interrupt delegate signature.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public delegate void InterruptManager.IrqDelegate(ref IRQContext context)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>context</code> <a class="xref" href="Cosmos.Kernel.Core.CPU.IRQContext.html">IRQContext</a></dt>
+    <dd><p>The interrupt context captured by the CPU.</p>
 </dd>
-    </dl>
-    <h3 id="structs">
-Structs
-</h3>
-    <dl class="jumplist">
-      <dt><a class="xref" href="Cosmos.Kernel.HAL.ARM64.Acpi.AcpiGIC.GicInfo.html">AcpiGIC.GicInfo</a></dt>
-      <dd><p>Mirrors the C struct acpi_gic_info_t from ACPI/acpi_wrapper.c.
-Must match the native layout exactly.</p>
-</dd>
-    </dl>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
 
 
 </article>

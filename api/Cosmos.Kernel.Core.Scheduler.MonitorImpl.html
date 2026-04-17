@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class Acpi | Cosmos Gen 3 </title>
+      <title>Class MonitorImpl | Cosmos Gen 3 </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class Acpi | Cosmos Gen 3 ">
+      <meta name="title" content="Class MonitorImpl | Cosmos Gen 3 ">
       
-      <meta name="description" content="ACPI subsystem interface">
+      <meta name="description" content="Provides Monitor.Enter/Exit semantics using a hash table keyed by object address. Supports reentrancy (same thread can acquire the same lock multiple times). Used as the backing implementation for the C# lock keyword.">
       <link rel="icon" href="../favicon.ico">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
@@ -84,25 +84,27 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="Cosmos.Kernel.HAL.Acpi.Acpi">
+        <article data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl">
 
 
 
-  <h1 id="Cosmos_Kernel_HAL_Acpi_Acpi" data-uid="Cosmos.Kernel.HAL.Acpi.Acpi" class="text-break">
-Class Acpi  
+  <h1 id="Cosmos_Kernel_Core_Scheduler_MonitorImpl" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl" class="text-break">
+Class MonitorImpl  
   </h1>
 
   <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="Cosmos.html">Cosmos</a>.<a class="xref" href="Cosmos.Kernel.html">Kernel</a>.<a class="xref" href="Cosmos.Kernel.HAL.html">HAL</a>.<a class="xref" href="Cosmos.Kernel.HAL.Acpi.html">Acpi</a></dd></dl>
-  <dl><dt>Assembly</dt><dd>Cosmos.Kernel.HAL.X64.dll</dd></dl>
+    <dl><dt>Namespace</dt><dd><a class="xref" href="Cosmos.html">Cosmos</a>.<a class="xref" href="Cosmos.Kernel.html">Kernel</a>.<a class="xref" href="Cosmos.Kernel.Core.html">Core</a>.<a class="xref" href="Cosmos.Kernel.Core.Scheduler.html">Scheduler</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>Cosmos.Kernel.Core.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>ACPI subsystem interface</p>
+  <div class="markdown summary"><p>Provides Monitor.Enter/Exit semantics using a hash table keyed by object address.
+Supports reentrancy (same thread can acquire the same lock multiple times).
+Used as the backing implementation for the C# lock keyword.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static class Acpi</code></pre>
+    <pre><code class="lang-csharp hljs">public static class MonitorImpl</code></pre>
   </div>
 
 
@@ -112,7 +114,7 @@ Class Acpi
     <dt>Inheritance</dt>
     <dd>
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
-      <div><span class="xref">Acpi</span></div>
+      <div><span class="xref">MonitorImpl</span></div>
     </dd>
   </dl>
 
@@ -153,27 +155,26 @@ Class Acpi
 </h2>
 
 
-  <a id="Cosmos_Kernel_HAL_Acpi_Acpi_DisplayMadtInfo_" data-uid="Cosmos.Kernel.HAL.Acpi.Acpi.DisplayMadtInfo*"></a>
+  <a id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_Enter_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.Enter*"></a>
 
-  <h3 id="Cosmos_Kernel_HAL_Acpi_Acpi_DisplayMadtInfo" data-uid="Cosmos.Kernel.HAL.Acpi.Acpi.DisplayMadtInfo">
-  DisplayMadtInfo()
+  <h3 id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_Enter_System_Object_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.Enter(System.Object)">
+  Enter(object)
   
   </h3>
 
-  <div class="markdown level1 summary"><p>Get and display MADT information</p>
+  <div class="markdown level1 summary"><p>Acquires the monitor for the specified object. Blocks until acquired.
+Supports reentrancy.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static bool DisplayMadtInfo()</code></pre>
+    <pre><code class="lang-csharp hljs">public static void Enter(object obj)</code></pre>
   </div>
 
-
-  <h4 class="section">Returns</h4>
+  <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
-    <dd><p>True if MADT was found and parsed successfully during early boot</p>
-</dd>
+    <dt><code>obj</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
   </dl>
 
 
@@ -186,28 +187,101 @@ Class Acpi
 
 
 
-  <a id="Cosmos_Kernel_HAL_Acpi_Acpi_GetMadtInfoPtr_" data-uid="Cosmos.Kernel.HAL.Acpi.Acpi.GetMadtInfoPtr*"></a>
 
-  <h3 id="Cosmos_Kernel_HAL_Acpi_Acpi_GetMadtInfoPtr" data-uid="Cosmos.Kernel.HAL.Acpi.Acpi.GetMadtInfoPtr">
-  GetMadtInfoPtr()
+  <a id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_Exit_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.Exit*"></a>
+
+  <h3 id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_Exit_System_Object_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.Exit(System.Object)">
+  Exit(object)
   
   </h3>
 
-  <div class="markdown level1 summary"><p>Get MADT (Multiple APIC Description Table) information
-NOTE: ACPI is initialized early in C code, this just retrieves the data</p>
+  <div class="markdown level1 summary"><p>Releases the monitor for the specified object.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static MadtInfo* GetMadtInfoPtr()</code></pre>
+    <pre><code class="lang-csharp hljs">public static void Exit(object obj)</code></pre>
   </div>
 
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>obj</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_IsEntered_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.IsEntered*"></a>
+
+  <h3 id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_IsEntered_System_Object_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.IsEntered(System.Object)">
+  IsEntered(object)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Checks if the current thread holds the monitor for the specified object.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool IsEntered(object obj)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>obj</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
 
   <h4 class="section">Returns</h4>
   <dl class="parameters">
-    <dt><a class="xref" href="Cosmos.Kernel.HAL.Acpi.MadtInfo.html">MadtInfo</a>*</dt>
-    <dd><p>Pointer to MADT info if found, null otherwise</p>
-</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_TryEnter_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.TryEnter*"></a>
+
+  <h3 id="Cosmos_Kernel_Core_Scheduler_MonitorImpl_TryEnter_System_Object_" data-uid="Cosmos.Kernel.Core.Scheduler.MonitorImpl.TryEnter(System.Object)">
+  TryEnter(object)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attempts to acquire the monitor without blocking.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryEnter(object obj)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>obj</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
   </dl>
 
 
