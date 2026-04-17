@@ -45,34 +45,34 @@ public static class Serial
     #region ARM64 PL011 UART Constants
 
     // PL011 UART0 base address (QEMU virt machine)
-    internal const ulong PL011_BASE = 0x09000000;
+    private const ulong PL011_BASE = 0x09000000;
 
     // Register offsets from base
-    internal const ulong PL011_DR = 0x00;         // Data Register
-    internal const ulong PL011_FR = 0x18;         // Flag Register
-    internal const ulong PL011_IBRD = 0x24;       // Integer Baud Rate Divisor
-    internal const ulong PL011_FBRD = 0x28;       // Fractional Baud Rate Divisor
-    internal const ulong PL011_LCR_H = 0x2C;      // Line Control Register
-    internal const ulong PL011_CR = 0x30;         // Control Register
-    internal const ulong PL011_IMSC = 0x38;       // Interrupt Mask Set/Clear
+    private const ulong PL011_DR = 0x00;         // Data Register
+    private const ulong PL011_FR = 0x18;         // Flag Register
+    private const ulong PL011_IBRD = 0x24;       // Integer Baud Rate Divisor
+    private const ulong PL011_FBRD = 0x28;       // Fractional Baud Rate Divisor
+    private const ulong PL011_LCR_H = 0x2C;      // Line Control Register
+    private const ulong PL011_CR = 0x30;         // Control Register
+    private const ulong PL011_IMSC = 0x38;       // Interrupt Mask Set/Clear
 
     // Flag Register bits
-    internal const uint FR_TXFF = 1 << 5;         // TX FIFO Full
-    internal const uint FR_RXFF = 1 << 4;
+    private const uint FR_TXFF = 1 << 5;         // TX FIFO Full
+    private const uint FR_RXFF = 1 << 4;
 
     // Line Control Register bits
-    internal const uint LCR_H_FEN = 1 << 4;       // FIFO Enable
-    internal const uint LCR_H_WLEN_8 = 3 << 5;    // 8-bit word length
+    private const uint LCR_H_FEN = 1 << 4;       // FIFO Enable
+    private const uint LCR_H_WLEN_8 = 3 << 5;    // 8-bit word length
 
     // Control Register bits
-    internal const uint CR_UARTEN = 1 << 0;       // UART Enable
-    internal const uint CR_TXE = 1 << 8;          // Transmit Enable
-    internal const uint CR_RXE = 1 << 9;          // Receive Enable
+    private const uint CR_UARTEN = 1 << 0;       // UART Enable
+    private const uint CR_TXE = 1 << 8;          // Transmit Enable
+    private const uint CR_RXE = 1 << 9;          // Receive Enable
 
     // Baud rate divisor for 115200 baud (24MHz clock)
     // Divisor = 24000000 / (16 * 115200) = 13.02
-    internal const uint PL011_IBRD_115200 = 13;
-    internal const uint PL011_FBRD_115200 = 1;
+    private const uint PL011_IBRD_115200 = 13;
+    private const uint PL011_FBRD_115200 = 1;
 
     #endregion
 
