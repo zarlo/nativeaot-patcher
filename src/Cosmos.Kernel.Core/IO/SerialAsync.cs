@@ -59,7 +59,7 @@ public static partial class SerialAsync
     public static void ReadAsync(byte[] buffer, KernelAsyncCallback callback)
     {
         int index = 0;
-        ReadHandler handler = null;
+        ReadHandler handler = null!;
         handler = b =>
         {
             try
@@ -67,12 +67,11 @@ public static partial class SerialAsync
                 buffer[index++] = b;
                 if (index == buffer.Length)
                 {
-
                     ReadEvent -= handler;
                     callback(null);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 ReadEvent -= handler;
                 callback(e);
@@ -112,7 +111,6 @@ public static partial class SerialAsync
                 ReadEvent -= handler;
                 callback(e, string.Empty);
             }
-
         };
 
         ReadEvent += handler;
@@ -120,23 +118,17 @@ public static partial class SerialAsync
 
     public static void StartThread()
     {
-
-        if (s_sendThread is not null)
+        if (s_sendThread is null)
         {
-            return;
+            s_sendThread = new Thread(SendProcess);
+            s_sendThread.Start();
         }
 
-        s_sendThread = new Thread(SendProcess);
-        s_sendThread.Start();
-
-        if (s_receiveThread is not null)
+        if (s_receiveThread is null)
         {
-            return;
+            s_receiveThread = new Thread(ReceiveProcess);
+            s_receiveThread.Start();
         }
-
-        s_receiveThread = new Thread(ReceiveProcess);
-        s_receiveThread.Start();
-
     }
 
     // Declare the delegate (if using non-generic pattern).
@@ -157,6 +149,7 @@ public static partial class SerialAsync
             callback();
             return;
         }
+
         lock (s_queueLock)
         {
             s_queue.Enqueue(callback);
@@ -194,8 +187,8 @@ public static partial class SerialAsync
                 {
                     item = s_queue.Dequeue();
                 }
-
             }
+
             if (item is not null)
             {
                 try

@@ -6,8 +6,6 @@ namespace Cosmos.Kernel.Core.IO;
 
 public static partial class SerialAsync
 {
-
-
     public static void ComWrite(byte value) =>
         RunAsync(() => Serial.ComWrite(value), (_) => { });
 
@@ -40,5 +38,4 @@ public static partial class SerialAsync
 
     public static void Write(object?[] args) =>
         RunAsync(() => Serial.Write(args), (_) => { });
-
 }

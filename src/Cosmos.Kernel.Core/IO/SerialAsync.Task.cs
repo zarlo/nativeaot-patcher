@@ -6,7 +6,6 @@ namespace Cosmos.Kernel.Core.IO;
 
 public static partial class SerialAsync
 {
-
     private static Task RunAsTask(Action<KernelAsyncCallback> invokeWithCallback)
     {
         var tcs = new TaskCompletionSource();
@@ -20,7 +19,6 @@ public static partial class SerialAsync
             {
                 tcs.SetResult();
             }
-
         });
         return tcs.Task;
     }
@@ -59,7 +57,7 @@ public static partial class SerialAsync
         RunAsTask(cb => WriteAsync(args, cb));
 
     public static Task ReadAsync(byte[] buffer) =>
-         RunAsTask(cb => ReadAsync(buffer, cb));
+        RunAsTask(cb => ReadAsync(buffer, cb));
 
     public static Task<string> ReadAsync()
     {
@@ -74,9 +72,7 @@ public static partial class SerialAsync
             {
                 tcs.SetResult(s);
             }
-
         });
         return tcs.Task;
     }
-
 }
