@@ -118,6 +118,10 @@ public static partial class SerialAsync
 
     public static void StartThread()
     {
+        if (!CosmosFeatures.UARTEnabled)
+        {
+            return;
+        }
         if (s_sendThread is null)
         {
             s_sendThread = new Thread(SendProcess);
@@ -144,6 +148,11 @@ public static partial class SerialAsync
 
     private static void Enqueue(Action callback)
     {
+        if (!CosmosFeatures.UARTEnabled)
+        {
+            return;
+        }
+
         if (s_sendThread is null || !CosmosFeatures.InterruptsEnabled)
         {
             callback();
