@@ -24,7 +24,7 @@
   </Target>
 
   <PropertyGroup>
-    <XorrisoBinary>xorriso</XorrisoBinary>
+    <XorrisoBinary>$(LOCALAPPDATA)\Cosmos\Tools\xorriso\xorriso.exe</XorrisoBinary>
   </PropertyGroup>
 
 </Project>

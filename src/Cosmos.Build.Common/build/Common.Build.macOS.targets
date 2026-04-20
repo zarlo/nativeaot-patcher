@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <XorrisoBinary>xorriso</XorrisoBinary>
+    <XorrisoBinary>$(HOME)/.cosmos/tools/xorriso/xorriso</XorrisoBinary>
     <FinalIsoRoot>$(IsoRoot)</FinalIsoRoot>
   </PropertyGroup>
 
@@ -9,12 +9,5 @@
       <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld</LdLinkerPath>
       <LdLinkerPath>$(LdLinkerPath.Trim())</LdLinkerPath>
     </PropertyGroup>
-  </Target>
-
-  <Target Name="CheckXorriso" BeforeTargets="BuildISO">
-    <Exec Command="which xorriso" IgnoreExitCode="true" ConsoleToMsBuild="true" StandardOutputImportance="Low">
-      <Output TaskParameter="ConsoleOutput" PropertyName="XorrisoPath"/>
-    </Exec>
-    <Error Condition="'$(XorrisoPath.Trim())' == ''" Text="xorriso not found. Install it with: brew install xorriso"/>
   </Target>
 </Project>

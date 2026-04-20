@@ -17,10 +17,19 @@ public class QemuX64Host : IQemuHost
     private readonly string _qemuBinary;
     private readonly int _memoryMb;
 
-    public QemuX64Host(string qemuBinary = "qemu-system-x86_64", int memoryMb = 512)
+    public QemuX64Host(string? qemuBinary = null, int memoryMb = 512)
     {
-        _qemuBinary = qemuBinary;
+        _qemuBinary = qemuBinary ?? ResolveQemuBinaryPath();
         _memoryMb = memoryMb;
+    }
+
+    private static string ResolveQemuBinaryPath()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cosmos", "Tools", "qemu", "qemu-system-x86_64.exe");
+        }
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "qemu-system-x86_64");
     }
 
     public async Task<QemuRunResult> RunKernelAsync(string isoPath, string uartLogPath, int timeoutSeconds = 30, bool showDisplay = false, bool enableNetworkTesting = false)

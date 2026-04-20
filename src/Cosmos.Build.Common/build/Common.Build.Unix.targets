@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <XorrisoBinary>xorriso</XorrisoBinary>
+    <XorrisoBinary>$(HOME)/.cosmos/tools/xorriso/xorriso</XorrisoBinary>
     <FinalIsoRoot>$(IsoRoot)</FinalIsoRoot>
   </PropertyGroup>
 

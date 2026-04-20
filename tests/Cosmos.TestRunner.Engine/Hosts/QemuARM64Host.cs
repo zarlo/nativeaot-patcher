@@ -19,13 +19,22 @@ public class QemuARM64Host : IQemuHost
     private readonly int _memoryMb;
 
     public QemuARM64Host(
-        string qemuBinary = "qemu-system-aarch64",
+        string? qemuBinary = null,
         string? uefiFirmwarePath = null,
         int memoryMb = 512)
     {
-        _qemuBinary = qemuBinary;
+        _qemuBinary = qemuBinary ?? ResolveQemuBinaryPath();
         _uefiFirmwarePath = uefiFirmwarePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "share", "qemu", "edk2-aarch64-code.fd");
         _memoryMb = memoryMb;
+    }
+
+    private static string ResolveQemuBinaryPath()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cosmos", "Tools", "qemu", "qemu-system-aarch64.exe");
+        }
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "qemu-system-aarch64");
     }
 
     public async Task<QemuRunResult> RunKernelAsync(string isoPath, string uartLogPath, int timeoutSeconds = 30, bool showDisplay = false, bool enableNetworkTesting = false)
