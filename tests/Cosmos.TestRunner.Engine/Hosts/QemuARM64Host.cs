@@ -20,11 +20,11 @@ public class QemuARM64Host : IQemuHost
 
     public QemuARM64Host(
         string qemuBinary = "qemu-system-aarch64",
-        string uefiFirmwarePath = "/usr/share/qemu-efi-aarch64/QEMU_EFI.fd",
+        string? uefiFirmwarePath = null,
         int memoryMb = 512)
     {
         _qemuBinary = qemuBinary;
-        _uefiFirmwarePath = uefiFirmwarePath;
+        _uefiFirmwarePath = uefiFirmwarePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "share", "qemu", "edk2-aarch64-code.fd");
         _memoryMb = memoryMb;
     }
 
@@ -44,7 +44,7 @@ public class QemuARM64Host : IQemuHost
             return new QemuRunResult
             {
                 ExitCode = -1,
-                ErrorMessage = $"UEFI firmware not found: {_uefiFirmwarePath}. Install qemu-efi-aarch64 package."
+                ErrorMessage = $"UEFI firmware not found: {_uefiFirmwarePath}. Please ensure Cosmos Tools are correctly installed."
             };
         }
 
