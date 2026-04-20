@@ -94,7 +94,7 @@ public sealed class CCBuildTask : ToolTask
             // Compile to object file, not a shared library
             sb.Append(" -c ");
             // Add output flag
-            sb.Append($" -o {outputPath} ");
+            sb.Append($" -o \"{outputPath}\" ");
 
             // Add any user-provided compiler flags
             if (!string.IsNullOrEmpty(CompilerFlags))
@@ -105,15 +105,15 @@ public sealed class CCBuildTask : ToolTask
             // Add compiler's freestanding include directory for standard headers (stdint.h, stddef.h, etc.)
             if (includePath != null)
             {
-                sb.Append($" -I{includePath} ");
+                sb.Append($" -I\"{includePath}\" ");
             }
 
             // Per-file include path: the directory containing this source file
             string fileDir = Path.GetDirectoryName(file)!;
-            sb.Append($" -I{fileDir} ");
+            sb.Append($" -I\"{fileDir}\" ");
 
             // Add the source file
-            sb.Append($" {file} ");
+            sb.Append($" \"{file}\" ");
             string commandLineArguments = sb.ToString();
             Log.LogMessage(MessageImportance.Normal, $"Compiling {file} with args: {commandLineArguments}");
 

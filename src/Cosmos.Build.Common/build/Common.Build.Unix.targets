@@ -5,8 +5,9 @@
   </PropertyGroup>
 
     <Target Name="GetLinker">
-        <Exec Command="which ld.lld" IgnoreExitCode="true" ConsoleToMsBuild="true" StandardOutputImportance="Low">            <!-- Ignore error code for now. We will make the build error out later  -->
-            <Output TaskParameter="ConsoleOutput" PropertyName="LdLinkerPath" />
-        </Exec>
+        <PropertyGroup>
+            <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld</LdLinkerPath>
+            <LdLinkerPath>$(LdLinkerPath.Trim())</LdLinkerPath>
+        </PropertyGroup>
     </Target>
 </Project>

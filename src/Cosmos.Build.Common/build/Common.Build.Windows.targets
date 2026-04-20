@@ -18,10 +18,9 @@
   </PropertyGroup>
 
   <Target Name="GetLinker">
-    <Exec Command="where ld.lld" IgnoreExitCode="true" StandardOutputImportance="Low" ConsoleToMsBuild="true"
-          Condition="$(LdLinkerPath) ==''">
-      <Output TaskParameter="ConsoleOutput" PropertyName="LdLinkerPath" />
-    </Exec>
+    <PropertyGroup>
+      <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\ld.lld</LdLinkerPath>
+    </PropertyGroup>
   </Target>
 
   <PropertyGroup>

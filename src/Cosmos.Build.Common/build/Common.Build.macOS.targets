@@ -5,26 +5,8 @@
   </PropertyGroup>
 
   <Target Name="GetLinker">
-    <!-- Check Homebrew LLD paths (separate 'lld' formula since 2024) -->
     <PropertyGroup>
-      <!-- Apple Silicon: lld formula path -->
-      <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('/opt/homebrew/opt/lld/bin/ld.lld')">/opt/homebrew/opt/lld/bin/ld.lld</LdLinkerPath>
-      <!-- Intel Mac: lld formula path -->
-      <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('/usr/local/opt/lld/bin/ld.lld')">/usr/local/opt/lld/bin/ld.lld</LdLinkerPath>
-      <!-- Legacy: Apple Silicon llvm path (older Homebrew) -->
-      <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('/opt/homebrew/opt/llvm/bin/ld.lld')">/opt/homebrew/opt/llvm/bin/ld.lld</LdLinkerPath>
-      <!-- Legacy: Intel Mac llvm path (older Homebrew) -->
-      <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('/usr/local/opt/llvm/bin/ld.lld')">/usr/local/opt/llvm/bin/ld.lld</LdLinkerPath>
-    </PropertyGroup>
-
-    <!-- Fallback to 'which' -->
-    <Exec Command="which ld.lld" IgnoreExitCode="true" ConsoleToMsBuild="true" StandardOutputImportance="Low"
-          Condition="'$(LdLinkerPath)' == ''">
-      <Output TaskParameter="ConsoleOutput" PropertyName="LdLinkerPath"/>
-    </Exec>
-
-    <!-- Trim any whitespace from the result -->
-    <PropertyGroup>
+      <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld</LdLinkerPath>
       <LdLinkerPath>$(LdLinkerPath.Trim())</LdLinkerPath>
     </PropertyGroup>
   </Target>

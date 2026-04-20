@@ -2,8 +2,9 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <!-- Default to 'clang' on PATH — same binary name on all platforms -->
-    <CCPath Condition="'$(CCPath)' == ''">clang</CCPath>
+    <!-- Single source of truth for Clang path -->
+    <CCPath Condition="'$(CCPath)' == '' AND '$(OS)' == 'Windows_NT'">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\clang</CCPath>
+    <CCPath Condition="'$(CCPath)' == '' AND '$(OS)' != 'Windows_NT'">$(HOME)/.cosmos/tools/llvm-tools/bin/clang</CCPath>
   </PropertyGroup>
 
   <PropertyGroup>

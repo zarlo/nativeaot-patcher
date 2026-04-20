@@ -130,23 +130,23 @@
     <PackageReference Include="Cosmos.Build.CC" />
   </ItemGroup>
 
-  <!-- Both arch packages installed; RuntimeIdentifier selects at build time -->
+  <!-- Architecture-specific kernel packages -->
   <ItemGroup Condition="'$(ManagePackageVersionsCentrally)' != 'true'">
-    <PackageReference Include="Cosmos.Kernel.Native.X64" Version="@CosmosPackageVersion@" />
-    <PackageReference Include="Cosmos.Kernel.Native.ARM64" Version="@CosmosPackageVersion@" />
+    <PackageReference Include="Cosmos.Kernel.Native.X64" Version="@CosmosPackageVersion@" Condition="'$(CosmosArch)' == 'x64'" />
+    <PackageReference Include="Cosmos.Kernel.Native.ARM64" Version="@CosmosPackageVersion@" Condition="'$(CosmosArch)' == 'arm64'" />
     <PackageReference Include="Cosmos.Kernel.Native.MultiArch" Version="@CosmosPackageVersion@" />
-    <PackageReference Include="Cosmos.Kernel.Core.X64" Version="@CosmosPackageVersion@" />
-    <PackageReference Include="Cosmos.Kernel.Core.ARM64" Version="@CosmosPackageVersion@" />
-    <PackageReference Include="Cosmos.Kernel.HAL.X64" Version="@CosmosPackageVersion@" />
-    <PackageReference Include="Cosmos.Kernel.HAL.ARM64" Version="@CosmosPackageVersion@" />
+    <PackageReference Include="Cosmos.Kernel.Core.X64" Version="@CosmosPackageVersion@" Condition="'$(CosmosArch)' == 'x64'" />
+    <PackageReference Include="Cosmos.Kernel.Core.ARM64" Version="@CosmosPackageVersion@" Condition="'$(CosmosArch)' == 'arm64'" />
+    <PackageReference Include="Cosmos.Kernel.HAL.X64" Version="@CosmosPackageVersion@" Condition="'$(CosmosArch)' == 'x64'" />
+    <PackageReference Include="Cosmos.Kernel.HAL.ARM64" Version="@CosmosPackageVersion@" Condition="'$(CosmosArch)' == 'arm64'" />
   </ItemGroup>
   <ItemGroup Condition="'$(ManagePackageVersionsCentrally)' == 'true'">
-    <PackageReference Include="Cosmos.Kernel.Native.X64" />
-    <PackageReference Include="Cosmos.Kernel.Native.ARM64" />
+    <PackageReference Include="Cosmos.Kernel.Native.X64" Condition="'$(CosmosArch)' == 'x64'" />
+    <PackageReference Include="Cosmos.Kernel.Native.ARM64" Condition="'$(CosmosArch)' == 'arm64'" />
     <PackageReference Include="Cosmos.Kernel.Native.MultiArch" />
-    <PackageReference Include="Cosmos.Kernel.Core.X64" />
-    <PackageReference Include="Cosmos.Kernel.Core.ARM64" />
-    <PackageReference Include="Cosmos.Kernel.HAL.X64" />
-    <PackageReference Include="Cosmos.Kernel.HAL.ARM64" />
+    <PackageReference Include="Cosmos.Kernel.Core.X64" Condition="'$(CosmosArch)' == 'x64'" />
+    <PackageReference Include="Cosmos.Kernel.Core.ARM64" Condition="'$(CosmosArch)' == 'arm64'" />
+    <PackageReference Include="Cosmos.Kernel.HAL.X64" Condition="'$(CosmosArch)' == 'x64'" />
+    <PackageReference Include="Cosmos.Kernel.HAL.ARM64" Condition="'$(CosmosArch)' == 'arm64'" />
   </ItemGroup>
 </Project>
