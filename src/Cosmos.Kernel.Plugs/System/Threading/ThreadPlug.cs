@@ -6,6 +6,10 @@ using Cosmos.Kernel.Core.Scheduler;
 using Cosmos.Kernel.System.Timer;
 using SysThread = System.Threading.Thread;
 using SchedThread = Cosmos.Kernel.Core.Scheduler.Thread;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+
+
 #if ARCH_X64
 using Cosmos.Kernel.Core.X64.Cpu;
 #endif
@@ -15,57 +19,30 @@ namespace Cosmos.Kernel.Plugs.System.Threading;
 [Plug(typeof(SysThread))]
 public static unsafe class ThreadPlug
 {
-    // Pending ThreadStart delegates queued between Ctor and StartCore.
-    // Per-thread entry storage lives in SchedulerManager (see RegisterThreadStart).
-    private static readonly Queue<ThreadStart> _pendingDelegates = new();
-
-    [PlugMember(".ctor")]
-    public static void Ctor(SysThread aThis, ThreadStart start)
+    [PlugMember("JoinInternal")]    
+    private static bool JoinInternal(SysThread aThis, int millisecondsTimeout)
     {
-        Serial.WriteString("[ThreadPlug] Ctor(ThreadStart)\n");
-
-        // Only disable interrupts if scheduler is running (to avoid issues during early boot)
-        if (SchedulerManager.Enabled)
+        if (millisecondsTimeout > 0)
         {
-            using (InternalCpu.DisableInterruptsScope())
-            {
-                _pendingDelegates.Enqueue(start);
-            }
+            TimerManager.Wait((uint)millisecondsTimeout);
         }
+        
+        // This method assumes the thread has been started
+        //Serial.WriteString($"[ThreadPlug] JoinInternal(timeout={millisecondsTimeout})\n");
+        return false;
     }
 
-    [PlugMember(".ctor")]
-    public static void Ctor(SysThread aThis, ThreadStart start, int maxStackSize)
+    [PlugMember]
+    public static bool CreateThread(SysThread aThis, GCHandle<SysThread> thisThreadHandle)
     {
-        Serial.WriteString("[ThreadPlug] Ctor(ThreadStart, maxStackSize)\n");
+        Serial.WriteString("[ThreadPlug] CreateThread(GCHandle<Thread>)\n");
 
-        // Only disable interrupts if scheduler is running (to avoid issues during early boot)
-        if (SchedulerManager.Enabled)
-        {
-            using (InternalCpu.DisableInterruptsScope())
-            {
-                _pendingDelegates.Enqueue(start);
-            }
-        }
-    }
-
-    [PlugMember("StartCore")]
-    public static void StartCore(SysThread aThis)
-    {
-        Serial.WriteString("[ThreadPlug] StartCore()\n");
+        _stopped(aThis) = new ManualResetEvent(false);
 
         if (SchedulerManager.Enabled)
         {
             using (InternalCpu.DisableInterruptsScope())
             {
-                if (_pendingDelegates.Count == 0)
-                {
-                    Serial.WriteString("[ThreadPlug] No delegate found\n");
-                    return;
-                }
-
-                ThreadStart start = _pendingDelegates.Dequeue();
-
                 // Create scheduler thread with its entry delegate attached.
                 // SchedulerManager.InvokeCurrentThreadStart reads it back off
                 // the thread when it first runs.
@@ -74,7 +51,7 @@ public static unsafe class ThreadPlug
                     Id = SchedulerManager.AllocateThreadId(),
                     CpuId = 0,
                     State = Cosmos.Kernel.Core.Scheduler.ThreadState.Created,
-                    StartDelegate = start.Invoke
+                    ManagedThreadHandle = GCHandle<SysThread>.ToIntPtr(thisThreadHandle)
                 };
 
                 Serial.WriteString("[ThreadPlug] Thread ");
@@ -101,6 +78,8 @@ public static unsafe class ThreadPlug
                 Serial.WriteString(" scheduled for execution\n");
             }
         }
+
+        return true;
     }
 
     [PlugMember]
@@ -126,4 +105,7 @@ public static unsafe class ThreadPlug
     {
         for (int i = 0; i < iterations; i++) { }
     }
+
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_stopped")]
+    private static extern ref ManualResetEvent _stopped(SysThread aThis);
 }

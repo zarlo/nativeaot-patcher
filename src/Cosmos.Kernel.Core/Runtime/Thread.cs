@@ -1,5 +1,7 @@
 using System.Runtime;
+using System.Runtime.InteropServices.Marshalling;
 using Cosmos.Kernel.Core.Bridge;
+using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Scheduler;
 
 namespace Cosmos.Kernel.Core.Runtime;
@@ -28,5 +30,23 @@ public class Thread
     {
         pStackLow = (nint)ContextSwitchNative.GetSp();
         pStackHigh = pStackLow + (nint)Scheduler.Thread.DefaultStackSize;
+    }
+
+    [RuntimeExport("RhSetCurrentThreadName")]
+    internal static unsafe void RhSetCurrentThreadName(ushort* name)
+    {
+        // Do nothing, the managed thread holds the string on a field.
+        var managedName =  Utf8StringMarshaller.ConvertToManaged((byte*)name);
+
+        Serial.WriteString($"[Thread] Setting current thread name to '{managedName}'\n");
+    }
+    
+    [RuntimeExport("RhSetThreadExitCallback")]
+    static void RhSetThreadExitCallback(IntPtr callback)
+    {
+        if(CosmosFeatures.SchedulerEnabled)
+        {
+            SchedulerManager.OnThreadExitCallback = callback;
+        }
     }
 }

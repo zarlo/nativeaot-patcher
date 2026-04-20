@@ -277,9 +277,6 @@ namespace Cosmos.Kernel.Core.Runtime
             }
         }
 
-        [RuntimeExport("RhSetThreadExitCallback")]
-        internal static void RhSetThreadExitCallback(IntPtr callback) { }
-
         [RuntimeExport("RhCompatibleReentrantWaitAny")]
         internal static uint RhCompatibleReentrantWaitAny(int alertable, uint timeout, uint handleCount, IntPtr pHandles)
         {

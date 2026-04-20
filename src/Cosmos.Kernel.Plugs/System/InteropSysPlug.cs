@@ -3,6 +3,13 @@
 using System;
 using System.Diagnostics;
 using Cosmos.Build.API.Attributes;
+using Cosmos.Kernel.Core;
+#if ARCH_X64
+using Cosmos.Kernel.HAL.X64.Devices.Clock;
+#elif ARCH_ARM64
+using Cosmos.Kernel.HAL.ARM64.Devices.Clock;
+#endif
+
 
 namespace Cosmos.Kernel.Plugs.System;
 
@@ -50,6 +57,24 @@ public static class InteropSysPlug
         GetNonCryptographicallySecureRandomBytes(buffer, length);
     }
 
+    [PlugMember]
+    public static long GetLowResolutionTimestamp()
+    {
+        
+        if (CosmosFeatures.TimerEnabled)
+        {
+            if (RTC.Instance == null)
+            {
+                return 0;
+            }
+
+            return RTC.Instance.GetCurrentTicks();
+        }
+        else
+        {
+            return 0;
+        }        
+    }
 
     [PlugMember]
     public static int GetErrNo()

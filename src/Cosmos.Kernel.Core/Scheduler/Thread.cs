@@ -27,14 +27,13 @@ public unsafe class Thread : SchedulerExtensible
     public ulong LastScheduledAt { get; set; }
     public ulong WakeupTime { get; set; }
 
+    // Pointer to the managed Thread object (GCHandle) for this thread, used for initialization.
     /// <summary>
-    /// Managed entry delegate executed the first time this thread is scheduled.
-    /// Set by the thread creator (e.g. ThreadPlug.StartCore) before handing the
-    /// thread to the scheduler; invoked and cleared by
-    /// <see cref="SchedulerManager.InvokeCurrentThreadStart"/>.
-    /// Null for the idle thread and any thread whose entry is native.
+    /// Holds a GCHandle to the managed Thread object associated with this thread.
+    /// Set by the thread creator (e.g. ThreadPlug.CreateThread) before handing the
+    /// thread to the scheduler; invoked by <see cref="SchedulerManager.InvokeCurrentThreadStart"/>.
     /// </summary>
-    public Action? StartDelegate { get; set; }
+    public IntPtr ManagedThreadHandle { get; set; }
 
     // ===== GC Allocation Context (TLAB) =====
     public AllocContext AllocContext;

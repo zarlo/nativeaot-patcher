@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Cosmos.Kernel.Core.Bridge;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Memory.GarbageCollector;
+using SysThread = System.Threading.Thread;
 
 namespace Cosmos.Kernel.Core.Scheduler;
 
@@ -120,6 +122,8 @@ public static class SchedulerManager
     public static uint AllocateThreadId() => _nextThreadId++;
 
     // ========== Thread Entry Dispatch ==========
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "StartThread")]
+    private static extern void StartThread(SysThread aThis, IntPtr parameter);
 
     /// <summary>
     /// Entry body for newly scheduled threads. Called from
@@ -150,20 +154,19 @@ public static class SchedulerManager
 
         // Consume the entry delegate. Capture and clear in one critical section
         // so neither the GC nor a concurrent reader sees a half-torn state.
-        Action? start;
+        IntPtr managedHandle;
         using (InternalCpu.DisableInterruptsScope())
         {
-            start = currentThread.StartDelegate;
-            currentThread.StartDelegate = null;
+            managedHandle = currentThread.ManagedThreadHandle;
         }
 
         int exitCode = 0;
-        if (start != null)
+        if (managedHandle != IntPtr.Zero)
         {
             try
             {
                 Serial.WriteString("[SCHED] Invoking thread entry\n");
-                start();
+                StartThread(null!, managedHandle);
                 Serial.WriteString("[SCHED] Thread entry completed\n");
             }
             catch (Exception ex)
@@ -199,8 +202,33 @@ public static class SchedulerManager
 
         if (exitThread != null)
         {
+            
+            nint managedCallback = OnThreadExitCallback;
+            if (managedCallback != IntPtr.Zero)
+            {
+                Serial.WriteString("[ThreadPlug] Invoking managed thread exit callback for thread ");
+                Serial.WriteNumber(exitThreadId);
+                Serial.WriteString("\n");
+                unsafe
+                {            
+                    var callback = (delegate* unmanaged<void>)managedCallback;
+                    callback();
+                }
+                
+            }
+            
+            // var rsp = exitThread.StackPointer;
             ExitThread(0, exitThread);
+            
+            // Serial.WriteString("[SCHED] Thread Moving to idle thread\n");
+            
+            // var next = (_currentScheduler!.PickNext(exitCpuState!) ?? exitCpuState!.IdleThread)!;
+            // next.State = ThreadState.Running;
+            // ContextSwitch.Switch(rsp, null, next);
+            // ContextSwitchNative.SetContextSwitchSp(next.StackPointer);
         }
+
+        // Panic.Halt("Thread exited but failed to switch to idle thread");
 
         // Halt forever — scheduler should not pick this thread again.
         while (true)
@@ -220,6 +248,18 @@ public static class SchedulerManager
     /// Returns the number of registered threads. Safe to call from GC.
     /// </summary>
     public static int ThreadCount => _allThreadCount;
+
+    public static nint OnThreadExitCallback
+    {
+        get;
+        internal set
+        {
+            Serial.WriteString("[SCHED] Setting thread exit callback: ");
+            Serial.WriteHexWithPrefix((ulong)value);
+            Serial.WriteString("\n");
+            field = value;
+        }
+    }
 
     /// <summary>
     /// Registers a thread in the global registry. Called during thread creation.
