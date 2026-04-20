@@ -15,16 +15,18 @@
 
     <!-- Add cygdrive prefix -->
     <FinalIsoRoot>/cygdrive/$(IsoRootSlashes)</FinalIsoRoot>
-  </PropertyGroup>
-
-  <Target Name="GetLinker">
-    <PropertyGroup>
-      <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\ld.lld</LdLinkerPath>
-    </PropertyGroup>
-  </Target>
-
-  <PropertyGroup>
     <XorrisoBinary>$(LOCALAPPDATA)\Cosmos\Tools\xorriso\xorriso.exe</XorrisoBinary>
   </PropertyGroup>
+
+<Target Name="ValidateCommonTools" BeforeTargets="GetLinker">
+  <Error Condition="!Exists('$(XorrisoBinary)')" Text="Cosmos Xorriso not found at $(XorrisoBinary). Please install Cosmos Tools using 'cosmos install'." />
+</Target>
+
+<Target Name="GetLinker">
+  <PropertyGroup>
+    <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\ld.lld</LdLinkerPath>
+  </PropertyGroup>
+  <Error Condition="!Exists('$(LdLinkerPath)')" Text="Cosmos LdLinker not found at $(LdLinkerPath). Please install Cosmos Tools using 'cosmos install'." />
+</Target>
 
 </Project>

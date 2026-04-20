@@ -4,10 +4,15 @@
     <FinalIsoRoot>$(IsoRoot)</FinalIsoRoot>
   </PropertyGroup>
 
+  <Target Name="ValidateCommonTools" BeforeTargets="GetLinker">
+    <Error Condition="!Exists('$(XorrisoBinary)')" Text="Cosmos Xorriso not found at $(XorrisoBinary). Please install Cosmos Tools using 'cosmos install'." />
+  </Target>
+
   <Target Name="GetLinker">
     <PropertyGroup>
       <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld</LdLinkerPath>
       <LdLinkerPath>$(LdLinkerPath.Trim())</LdLinkerPath>
     </PropertyGroup>
+    <Error Condition="!Exists('$(LdLinkerPath)')" Text="Cosmos LdLinker not found at $(LdLinkerPath). Please install Cosmos Tools using 'cosmos install'." />
   </Target>
 </Project>

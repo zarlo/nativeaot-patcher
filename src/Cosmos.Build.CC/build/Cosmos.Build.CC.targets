@@ -26,6 +26,8 @@
 
   <!-- Target to compile C files with Clang -->
   <Target Name="BuildCC" AfterTargets="BuildYasm" DependsOnTargets="FindCSourceFilesForCC">
+    <Error Condition="!Exists('$(CCPath)')" Text="Cosmos CC not found at $(CCPath). Please install Cosmos Tools using 'cosmos install'." />
+
     <PropertyGroup>
       <CCOutputPath>$(IntermediateOutputPath)cosmos/cobj/</CCOutputPath>
       <!-- Default compiler flags -->

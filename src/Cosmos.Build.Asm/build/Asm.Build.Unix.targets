@@ -11,5 +11,7 @@
       <YasmPath Condition="'$(YasmPath)' == '' AND '$(TargetArchitecture)' == 'arm64'">$(HOME)/.cosmos/tools/llvm-tools/bin/clang</YasmPath>
       <YasmPath>$(YasmPath.Trim())</YasmPath>
     </PropertyGroup>
+
+    <Error Condition="!Exists('$(YasmPath)')" Text="Cosmos Yasm not found at $(YasmPath). Please install Cosmos Tools using 'cosmos install'." />
   </Target>
 </Project>
