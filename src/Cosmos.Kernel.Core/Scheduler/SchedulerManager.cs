@@ -202,7 +202,7 @@ public static class SchedulerManager
 
         if (exitThread != null)
         {
-            
+
             nint managedCallback = OnThreadExitCallback;
             if (managedCallback != IntPtr.Zero)
             {
@@ -210,13 +210,13 @@ public static class SchedulerManager
                 Serial.WriteNumber(exitThreadId);
                 Serial.WriteString("\n");
                 unsafe
-                {            
+                {
                     var callback = (delegate* unmanaged<void>)managedCallback;
                     callback();
                 }
-                
+
             }
-            
+
             ExitThread(0, exitThread);
         }
 

@@ -36,15 +36,15 @@ public class Thread
     internal static unsafe void RhSetCurrentThreadName(ushort* name)
     {
         // Do nothing, the managed thread holds the string on a field.
-        var managedName =  Utf8StringMarshaller.ConvertToManaged((byte*)name);
+        var managedName = Utf8StringMarshaller.ConvertToManaged((byte*)name);
 
         Serial.WriteString($"[Thread] Setting current thread name to '{managedName}'\n");
     }
-    
+
     [RuntimeExport("RhSetThreadExitCallback")]
     static void RhSetThreadExitCallback(IntPtr callback)
     {
-        if(CosmosFeatures.SchedulerEnabled)
+        if (CosmosFeatures.SchedulerEnabled)
         {
             SchedulerManager.OnThreadExitCallback = callback;
         }

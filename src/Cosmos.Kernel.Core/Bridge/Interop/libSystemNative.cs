@@ -18,7 +18,7 @@ internal static class libSystemNative
         // TODO: Implement actual CPU utilization calculation.
         return 50.0;
     }
-    
+
     [UnmanagedCallersOnly(EntryPoint = "SystemNative_SchedGetCpu")]
     internal static int SystemNative_SchedGetCpu()
     {

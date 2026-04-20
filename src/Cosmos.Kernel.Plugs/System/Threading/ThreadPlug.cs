@@ -19,7 +19,7 @@ namespace Cosmos.Kernel.Plugs.System.Threading;
 [Plug(typeof(SysThread))]
 public static unsafe class ThreadPlug
 {
-    [PlugMember("JoinInternal")]    
+    [PlugMember("JoinInternal")]
     private static bool JoinInternal(SysThread aThis, int millisecondsTimeout)
     {
         if (millisecondsTimeout > 0)
@@ -27,8 +27,6 @@ public static unsafe class ThreadPlug
             TimerManager.Wait((uint)millisecondsTimeout);
         }
         
-        // This method assumes the thread has been started
-        //Serial.WriteString($"[ThreadPlug] JoinInternal(timeout={millisecondsTimeout})\n");
         return false;
     }
 

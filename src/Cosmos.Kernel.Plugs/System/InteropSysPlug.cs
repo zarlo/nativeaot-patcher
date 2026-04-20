@@ -60,7 +60,7 @@ public static class InteropSysPlug
     [PlugMember]
     public static long GetLowResolutionTimestamp()
     {
-        
+
         if (CosmosFeatures.TimerEnabled)
         {
             if (RTC.Instance == null)
@@ -73,7 +73,7 @@ public static class InteropSysPlug
         else
         {
             return 0;
-        }        
+        }
     }
 
     [PlugMember]
