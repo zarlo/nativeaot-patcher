@@ -217,18 +217,8 @@ public static class SchedulerManager
                 
             }
             
-            // var rsp = exitThread.StackPointer;
             ExitThread(0, exitThread);
-            
-            // Serial.WriteString("[SCHED] Thread Moving to idle thread\n");
-            
-            // var next = (_currentScheduler!.PickNext(exitCpuState!) ?? exitCpuState!.IdleThread)!;
-            // next.State = ThreadState.Running;
-            // ContextSwitch.Switch(rsp, null, next);
-            // ContextSwitchNative.SetContextSwitchSp(next.StackPointer);
         }
-
-        // Panic.Halt("Thread exited but failed to switch to idle thread");
 
         // Halt forever — scheduler should not pick this thread again.
         while (true)
