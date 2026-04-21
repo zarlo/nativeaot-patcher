@@ -6,12 +6,14 @@
 
     <PropertyGroup>
       <!-- x64: Use YASM from Cosmos Tools -->
-      <YasmPath Condition="'$(YasmPath)' == '' AND ('$(TargetArchitecture)' == 'x64' or '$(TargetArchitecture)' == '')">$(LOCALAPPDATA)\Cosmos\Tools\yasm\yasm.exe</YasmPath>
+      <YasmPath Condition="'$(YasmPath)' == '' AND ('$(TargetArchitecture)' == 'x64' or '$(TargetArchitecture)' == '') AND Exists('$(LOCALAPPDATA)\Cosmos\Tools\yasm\yasm.exe')">$(LOCALAPPDATA)\Cosmos\Tools\yasm\yasm.exe</YasmPath>
+      <YasmPath Condition="'$(YasmPath)' == '' AND ('$(TargetArchitecture)' == 'x64' or '$(TargetArchitecture)' == '')">yasm</YasmPath>
+      
       <!-- ARM64: Use clang integrated assembler from Cosmos Tools -->
-      <YasmPath Condition="'$(YasmPath)' == '' AND '$(TargetArchitecture)' == 'arm64'">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\clang.exe</YasmPath>
+      <YasmPath Condition="'$(YasmPath)' == '' AND '$(TargetArchitecture)' == 'arm64' AND Exists('$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\clang.exe')">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\clang.exe</YasmPath>
+      <YasmPath Condition="'$(YasmPath)' == '' AND '$(TargetArchitecture)' == 'arm64'">clang</YasmPath>
+      
       <YasmPath>$(YasmPath.Trim())</YasmPath>
     </PropertyGroup>
-
-    <Error Condition="!Exists('$(YasmPath)')" Text="Cosmos Yasm not found at $(YasmPath). Please install Cosmos Tools using 'cosmos install'." />
   </Target>
 </Project>
