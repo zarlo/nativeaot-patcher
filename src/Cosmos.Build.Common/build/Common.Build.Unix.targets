@@ -1,18 +1,15 @@
 <Project>
   <PropertyGroup>
-    <XorrisoBinary>$(HOME)/.cosmos/tools/xorriso/xorriso</XorrisoBinary>
+    <XorrisoBinary Condition="'$(XorrisoBinary)' == '' AND Exists('$(HOME)/.cosmos/tools/xorriso/xorriso')">$(HOME)/.cosmos/tools/xorriso/xorriso</XorrisoBinary>
+    <XorrisoBinary Condition="'$(XorrisoBinary)' == ''">xorriso</XorrisoBinary>
     <FinalIsoRoot>$(IsoRoot)</FinalIsoRoot>
   </PropertyGroup>
 
-    <Target Name="ValidateCommonTools" BeforeTargets="GetLinker">
-        <Error Condition="!Exists('$(XorrisoBinary)')" Text="Cosmos Xorriso not found at $(XorrisoBinary). Please install Cosmos Tools using 'cosmos install'." />
-    </Target>
-
     <Target Name="GetLinker">
         <PropertyGroup>
-            <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld</LdLinkerPath>
+            <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld')">$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld</LdLinkerPath>
+            <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">ld.lld</LdLinkerPath>
             <LdLinkerPath>$(LdLinkerPath.Trim())</LdLinkerPath>
         </PropertyGroup>
-        <Error Condition="!Exists('$(LdLinkerPath)')" Text="Cosmos LdLinker not found at $(LdLinkerPath). Please install Cosmos Tools using 'cosmos install'." />
     </Target>
 </Project>
