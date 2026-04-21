@@ -140,7 +140,7 @@
 // │ RhpReversePInvoke                                 │ Std │  1 │   0 │ stub │   *   │  33  │  50  │
 // │ RhpReversePInvokeReturn                           │ Std │  1 │   0 │ stub │   *   │  33  │  50  │
 // │ RhpStackProbe                                     │ Std │  0 │   0 │ stub │   1   │  —   │  50  │
-// │ RhSetThreadExitCallback                           │ Std │  1 │   0 │ stub │   1   │  33  │  50  │
+// │ RhSetThreadExitCallback                           │ Std │  1 │   0 │ real │   1   │  33  │  50  │
 // │ RhSpinWait                                        │ Std │  1 │   0 │ real │   1   │  33  │  50  │
 // │ RhYield                                           │ Std │  0 │   1 │ stub │   1   │  —   │ 100  │
 // │ NativeRuntimeEventSource_LogContentionLockCreated │ Std │  4 │   0 │ stub │   *   │  33  │  50  │
@@ -1403,7 +1403,7 @@ public unsafe class Kernel : Sys.Kernel
     // -- RhSetThreadExitCallback --
     private static void Test_RhSetThreadExitCallback_Smoke()
     {
-        StartupCodeHelpers.RhSetThreadExitCallback(nint.Zero);
+        global::Cosmos.Kernel.Core.Runtime.Thread.RhSetThreadExitCallback(nint.Zero);
         Assert.True(true, "RhSetThreadExitCallback no-op returned");
     }
 

@@ -42,7 +42,7 @@ public class Thread
     }
 
     [RuntimeExport("RhSetThreadExitCallback")]
-    static void RhSetThreadExitCallback(IntPtr callback)
+    internal static void RhSetThreadExitCallback(IntPtr callback)
     {
         if (CosmosFeatures.SchedulerEnabled)
         {
