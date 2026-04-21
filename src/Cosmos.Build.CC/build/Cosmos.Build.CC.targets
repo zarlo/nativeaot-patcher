@@ -1,4 +1,15 @@
 <Project>
+  <!-- Platform detection -->
+  <PropertyGroup>
+    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <IsMacOS Condition="'$(OS)' != 'Windows_NT' AND $([MSBuild]::IsOSPlatform('OSX'))">true</IsMacOS>
+    <IsLinux Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' != 'true'">true</IsLinux>
+  </PropertyGroup>
+
+  <Import Project="CC.Build.Unix.targets" Condition="'$(IsLinux)' == 'true'"/>
+  <Import Project="CC.Build.macOS.targets" Condition="'$(IsMacOS)' == 'true'"/>
+  <Import Project="CC.Build.Windows.targets" Condition="'$(IsWindows)' == 'true'"/>
+
   <Target Name="FindCSourceFilesForCC" BeforeTargets="BuildCC">
     <PropertyGroup>
       <!-- Derive architecture from RID first, then fall back to CosmosArch -->
@@ -25,9 +36,7 @@
   </Target>
 
   <!-- Target to compile C files with Clang -->
-  <Target Name="BuildCC" AfterTargets="BuildYasm" DependsOnTargets="FindCSourceFilesForCC">
-    <Error Condition="!Exists('$(CCPath)')" Text="Cosmos CC not found at $(CCPath). Please install Cosmos Tools using 'cosmos install'." />
-
+  <Target Name="BuildCC" AfterTargets="BuildYasm" DependsOnTargets="FindCSourceFilesForCC; GetCC">
     <PropertyGroup>
       <CCOutputPath>$(IntermediateOutputPath)cosmos/cobj/</CCOutputPath>
       <!-- Default compiler flags -->

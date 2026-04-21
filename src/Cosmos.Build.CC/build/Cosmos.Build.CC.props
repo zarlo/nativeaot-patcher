@@ -2,12 +2,6 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <!-- Single source of truth for Clang path -->
-    <CCPath Condition="'$(CCPath)' == '' AND '$(OS)' == 'Windows_NT'">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\clang</CCPath>
-    <CCPath Condition="'$(CCPath)' == '' AND '$(OS)' != 'Windows_NT'">$(HOME)/.cosmos/tools/llvm-tools/bin/clang</CCPath>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <CosmosCCTasksAssembly
       Condition="'$(CosmosCCTasksAssembly)' == '' OR !Exists('$(CosmosCCTasksAssembly)')">$(MSBuildThisFileDirectory)\..\tasks\netstandard2.0\Cosmos.Build.CC.dll</CosmosCCTasksAssembly>
   </PropertyGroup>
