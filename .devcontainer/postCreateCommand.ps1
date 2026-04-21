@@ -14,7 +14,7 @@ Write-Host "=== Starting postCreate setup (multi-arch) ===" -ForegroundColor Cya
 if (-not $env:VersionPrefix) {
     $baseTag = $null
     try {
-        $gitTag = git describe --tags --abbrev=0 2>$null
+        $gitTag = git describe --tags --match "v*" --abbrev=0 2>$null
         if ($LASTEXITCODE -eq 0 -and $gitTag) {
             $baseTag = $gitTag.Trim().TrimStart('v')
         }

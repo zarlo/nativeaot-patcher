@@ -13,7 +13,7 @@ echo "=== Starting postCreate setup (multi-arch) ==="
 # If none of these resolve a 3-component base version, we bail out loudly
 # rather than silently building broken packages with a hardcoded literal.
 if [[ -z "${VersionPrefix:-}" ]]; then
-  BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+  BASE_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || true)
   BASE_TAG="${BASE_TAG#v}"
   if [[ -z "$BASE_TAG" ]]; then
     BASE_TAG=$(sed -nE 's/.*"Cosmos\.Sdk"[[:space:]]*:[[:space:]]*"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' global.json | head -n1)
