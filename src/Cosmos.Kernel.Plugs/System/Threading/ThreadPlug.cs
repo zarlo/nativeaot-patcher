@@ -19,17 +19,6 @@ namespace Cosmos.Kernel.Plugs.System.Threading;
 [Plug(typeof(SysThread))]
 public static unsafe class ThreadPlug
 {
-    [PlugMember("JoinInternal")]
-    private static bool JoinInternal(SysThread aThis, int millisecondsTimeout)
-    {
-        if (millisecondsTimeout > 0)
-        {
-            TimerManager.Wait((uint)millisecondsTimeout);
-        }
-        
-        return false;
-    }
-
     [PlugMember]
     public static bool CreateThread(SysThread aThis, GCHandle<SysThread> thisThreadHandle)
     {
