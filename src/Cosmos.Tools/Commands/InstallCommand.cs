@@ -106,32 +106,40 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         }
 
         // Download each unique release asset (dedupe by asset name — llvm-tools covers clang+lld, qemu covers x64+arm64)
-        var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         bool anyDownloaded = false;
 
-        foreach (var tool in ToolDefinitions.GetAllTools())
+        var groups = ToolDefinitions.GetAllTools()
+            .OfType<CommandToolDefinition>()
+            .Where(t => t.ReleaseAsset != null)
+            .GroupBy(t => t.ReleaseAsset!);
+
+        foreach (var group in groups)
         {
-            if (tool is not CommandToolDefinition cmdTool || cmdTool.ReleaseAsset == null)
+            string releaseAsset = group.Key;
+            bool allFound = true;
+
+            foreach (var tool in group)
             {
-                continue;
+                var status = await ToolChecker.CheckToolAsync(tool);
+                if (status.Found)
+                {
+                    string ver = status.Version != null ? $" (v{status.Version})" : "";
+                    AnsiConsole.MarkupLine($"  [dim]{tool.DisplayName}{ver} found at {status.Path}[/]");
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine($"  [dim]{tool.DisplayName} not found.[/]");
+                    allFound = false;
+                }
             }
 
-            if (!processed.Add(cmdTool.ReleaseAsset))
+            if (allFound)
             {
-                continue;
-            }
-
-            // Check if already present on PATH or in cosmos tools dir
-            var status = await ToolChecker.CheckToolAsync(tool);
-            if (status.Found)
-            {
-                string ver = status.Version != null ? $" (v{status.Version})" : "";
-                AnsiConsole.MarkupLine($"  [dim]{tool.DisplayName}{ver} found at {status.Path}[/]");
                 continue;
             }
 
             // Find the matching asset for this platform
-            string pattern = $"{cmdTool.ReleaseAsset}-";
+            string pattern = $"{releaseAsset}-";
             string suffix = $"-{platform}.{ext}";
             var asset = assets.FirstOrDefault(a =>
                 a.Name.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) &&
@@ -139,11 +147,11 @@ public class InstallCommand : AsyncCommand<InstallSettings>
 
             if (asset == null)
             {
-                AnsiConsole.MarkupLine($"  [red]{tool.DisplayName}:[/] no asset matching [white]{pattern}*{suffix}[/] in release '{ToolsReleaseTag}'");
+                AnsiConsole.MarkupLine($"  [red]{releaseAsset}:[/] no asset matching [white]{pattern}*{suffix}[/] in release '{ToolsReleaseTag}'");
                 continue;
             }
 
-            AnsiConsole.Markup($"  {tool.DisplayName} -> {cmdTool.ReleaseAsset}/ ... ");
+            AnsiConsole.Markup($"  Downloading {releaseAsset} ... ");
             bool ok = await DownloadAndExtractAsync(asset.DownloadUrl, toolsPath, ext);
             AnsiConsole.MarkupLine(ok ? "[green]OK[/]" : "[red]FAILED[/]");
             if (ok)
