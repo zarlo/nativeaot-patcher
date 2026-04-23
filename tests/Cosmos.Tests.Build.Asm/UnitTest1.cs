@@ -18,18 +18,30 @@ public class UnitTest1
             .Callback<BuildErrorEventArgs>(e => errors.Add(e));
     }
 
-    [Theory]
-    [InlineData("/usr/bin/yasm", PlatformID.Unix)]
-    public void Test1(string path, PlatformID platform)
+    private static string GetYasmPath()
     {
-        if (Environment.OSVersion.Platform != platform)
+        var paths = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator);
+        if (paths != null)
         {
-            throw SkipException.ForSkip("skiping this test");
+            string exeName = Environment.OSVersion.Platform == PlatformID.Win32NT ? "yasm.exe" : "yasm";
+            foreach (var p in paths)
+            {
+                var fullPath = Path.Combine(p, exeName);
+                if (File.Exists(fullPath))
+                {
+                    return fullPath;
+                }
+            }
         }
+        return "yasm";
+    }
 
+    [Fact]
+    public void Test1()
+    {
         YasmBuildTask yasm = new()
         {
-            YasmPath = path,
+            YasmPath = GetYasmPath(),
             SourceFiles = ["./asm/test.asm"],
             OutputPath = "./output",
             BuildEngine = buildEngine.Object
