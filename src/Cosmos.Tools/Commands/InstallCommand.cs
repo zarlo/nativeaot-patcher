@@ -49,8 +49,14 @@ public class InstallCommand : AsyncCommand<InstallSettings>
 
         if (installTools)
         {
-            await InstallToolsFromReleaseAsync();
+            bool toolsInstalled = await InstallToolsFromReleaseAsync();
             await PropagateToolPathsForCIAsync();
+            if (!toolsInstalled)
+            {
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine("  [red]Installation failed: required build tools are still missing.[/]");
+                return 1;
+            }
         }
 
         if (installPackages)
@@ -74,7 +80,7 @@ public class InstallCommand : AsyncCommand<InstallSettings>
     //  Tool installation — download from GitHub release `tools-latest`
     // ═══════════════════════════════════════════════════════════════════════
 
-    private static async Task InstallToolsFromReleaseAsync()
+    private static async Task<bool> InstallToolsFromReleaseAsync()
     {
         string platform = GetPlatformTarget();
         string ext = OperatingSystem.IsWindows() ? "zip" : "tar.gz";
@@ -102,7 +108,7 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         catch (Exception ex)
         {
             AnsiConsole.MarkupLine($"  [red]Failed to fetch release '{ToolsReleaseTag}' from {ToolsRepo}: {Markup.Escape(ex.Message)}[/]");
-            return;
+            return false;
         }
 
         // Download each unique release asset (dedupe by asset name — llvm-tools covers clang+lld, qemu covers x64+arm64)
@@ -167,6 +173,31 @@ public class InstallCommand : AsyncCommand<InstallSettings>
             bool pathOk = AddToolsToWindowsPath(toolsPath);
             AnsiConsole.MarkupLine(pathOk ? "[green]OK[/]" : "[yellow]SKIPPED[/]");
         }
+
+        List<CommandToolDefinition> requiredReleaseTools = ToolDefinitions.GetAllTools()
+            .OfType<CommandToolDefinition>()
+            .Where(static t => t.Required && t.ReleaseAsset != null)
+            .ToList();
+
+        List<CommandToolDefinition> missingRequired = new List<CommandToolDefinition>();
+        foreach (CommandToolDefinition tool in requiredReleaseTools)
+        {
+            ToolStatus status = await ToolChecker.CheckToolAsync(tool);
+            bool detected = status.Found && status.Version != null;
+            if (!detected)
+            {
+                missingRequired.Add(tool);
+            }
+        }
+
+        if (missingRequired.Count > 0)
+        {
+            string missingList = string.Join(", ", missingRequired.Select(static t => t.DisplayName));
+            AnsiConsole.MarkupLine($"  [red]Required tools still missing after install:[/] {Markup.Escape(missingList)}");
+            return false;
+        }
+
+        return true;
     }
 
     private static string GetPlatformTarget()
@@ -548,12 +579,30 @@ public class InstallCommand : AsyncCommand<InstallSettings>
     {
         var http = new HttpClient();
         http.DefaultRequestHeaders.Add("User-Agent", "Cosmos-Tools");
-        string? token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        string? token = GetGitHubToken();
         if (!string.IsNullOrEmpty(token))
         {
             http.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
         return http;
+    }
+
+    private static string? GetGitHubToken()
+    {
+        string? token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            return token;
+        }
+
+        token = Environment.GetEnvironmentVariable("GH_TOKEN");
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            return token;
+        }
+
+        token = Environment.GetEnvironmentVariable("GITHUB_API_TOKEN");
+        return string.IsNullOrWhiteSpace(token) ? null : token;
     }
 
     private static string? GetVSCodeCommand()

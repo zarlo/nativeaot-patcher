@@ -265,6 +265,8 @@ jobs:
 
       - name: 🔧 Install Build Tools
         run: cosmos install --tools --auto
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: 🔍 Verify Tools Installation
         run: cosmos check
@@ -327,6 +329,8 @@ jobs:
 
       - name: 🔧 Install Build Tools
         run: cosmos install --tools --auto
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: 🔍 Verify Tools Installation
         run: cosmos check
