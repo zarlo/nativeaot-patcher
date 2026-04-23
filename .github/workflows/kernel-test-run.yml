@@ -110,19 +110,6 @@ jobs:
       - name: 🔍 Verify Tools Installation
         run: cosmos check
 
-      - name: 🔍 Debug QEMU
-        run: |
-          echo "=== QEMU wrapper script ==="
-          cat "$(which qemu-system-x86_64)"
-          echo "=== QEMU binary ==="
-          file "$(dirname "$(which qemu-system-x86_64)")/qemu-system-x86_64.real" 2>/dev/null || file "$(which qemu-system-x86_64)"
-          echo "=== QEMU version ==="
-          qemu-system-x86_64 --version 2>&1 || true
-          echo "=== QEMU data dir contents ==="
-          ls "$(dirname "$(which qemu-system-x86_64)")/share/qemu/" 2>/dev/null | head -20 || echo "No share/qemu dir found"
-          echo "=== QEMU dry run ==="
-          qemu-system-x86_64 -display none -machine help 2>&1 | head -5 || true
-
       - name: 🔨 Build Test Runner Engine
         run: dotnet build tests/Cosmos.TestRunner.Engine/Cosmos.TestRunner.Engine.csproj -c Debug --verbosity normal
 
