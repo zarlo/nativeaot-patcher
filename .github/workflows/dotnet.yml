@@ -266,6 +266,9 @@ jobs:
       - name: 🔧 Install Build Tools
         run: cosmos install --tools --auto
 
+      - name: 🔍 Verify Tools Installation
+        run: cosmos check
+
       - name: Build ISO for ${{ matrix.arch }}
         shell: pwsh
         run: |
@@ -324,6 +327,9 @@ jobs:
 
       - name: 🔧 Install Build Tools
         run: cosmos install --tools --auto
+
+      - name: 🔍 Verify Tools Installation
+        run: cosmos check
 
       - name: Build ISO for ${{ matrix.arch }}
         run: |
