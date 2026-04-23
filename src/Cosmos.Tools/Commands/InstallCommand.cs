@@ -179,7 +179,7 @@ public class InstallCommand : AsyncCommand<InstallSettings>
             .Where(static t => t.Required && t.ReleaseAsset != null)
             .ToList();
 
-        List<CommandToolDefinition> missingRequired = [];
+        List<CommandToolDefinition> missingRequired = new List<CommandToolDefinition>();
         foreach (CommandToolDefinition tool in requiredReleaseTools)
         {
             ToolStatus status = await ToolChecker.CheckToolAsync(tool);
