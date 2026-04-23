@@ -134,8 +134,20 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: 🔗 Install Linking Tools
-        run: sudo apt-get update && sudo apt-get install -y yasm
+      - name: 🔧 Restore Build Tools
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cosmos/tools
+          key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
+          fail-on-cache-miss: true
+
+      - name: 🔗 Add Tools to PATH
+        run: |
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          echo "$TOOLS_DIR/llvm-tools/bin" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/xorriso" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/yasm" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/qemu" >> $GITHUB_PATH
 
       - name: 🔄 Restore Dependencies
         run: dotnet restore ./tests/Cosmos.Tests.Build.Asm/Cosmos.Tests.Build.Asm.csproj
@@ -186,8 +198,20 @@ jobs:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
           DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
 
-      - name: Install Build Tools
-        run: sudo apt-get update && sudo apt-get install -y yasm lld xorriso
+      - name: 🔧 Restore Build Tools
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cosmos/tools
+          key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
+          fail-on-cache-miss: true
+
+      - name: 🔗 Add Tools to PATH
+        run: |
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          echo "$TOOLS_DIR/llvm-tools/bin" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/xorriso" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/yasm" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/qemu" >> $GITHUB_PATH
 
       - name: Build Test Project
         run: dotnet build ./tests/Cosmos.Tests.BuildCache/Cosmos.Tests.BuildCache.csproj --configuration Debug
@@ -227,12 +251,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: 🛠️ Setup .NET
+      - name: 🛠️ Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: 🧹 Clear NuGet cache before building packages
+      - name: 🗑️ Clear NuGet Cache
         run: dotnet nuget locals all --clear
 
       - name: 🔄 Compile Packages (multi-arch)
@@ -240,7 +264,7 @@ jobs:
         run: ./.devcontainer/postCreateCommand.ps1
 
       - name: 🔧 Install Build Tools
-        run: cosmos install --auto
+        run: cosmos install --tools --auto
 
       - name: Build ISO for ${{ matrix.arch }}
         shell: pwsh
@@ -282,24 +306,24 @@ jobs:
           - arch: arm64
             rid: linux-arm64
     steps:
-      - name: 📥 Checkout Code
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: 🛠️ Setup .NET
+      - name: 🛠️ Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: 🧹 Clear NuGet cache before building packages
+      - name: 🗑️ Clear NuGet Cache
         run: dotnet nuget locals all --clear
 
       - name: 🔄 Compile Packages (multi-arch)
         run: ./.devcontainer/postCreateCommand.sh
 
       - name: 🔧 Install Build Tools
-        run: cosmos install --auto
+        run: cosmos install --tools --auto
 
       - name: Build ISO for ${{ matrix.arch }}
         run: |
