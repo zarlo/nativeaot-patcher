@@ -19,7 +19,7 @@ Run the script from the root of the repository:
 3. **Registers a local NuGet source** at `artifacts/package/release` so that locally built packages are preferred during restore.
 4. **Builds and packs every Cosmos package** in dependency order:
    - Base libraries (`Cosmos.Build.API`, `Cosmos.Build.Common`)
-   - Build tools (`Cosmos.Build.Asm`, `Cosmos.Build.GCC`, `Cosmos.Build.Ilc`, `Cosmos.Build.Patcher`, `Cosmos.Patcher`, `Cosmos.Tools`)
+   - Build tools (`Cosmos.Build.Asm`, `Cosmos.Build.CC`, `Cosmos.Build.Ilc`, `Cosmos.Build.Patcher`, `Cosmos.Patcher`, `Cosmos.Tools`)
    - Native runtime packages for x64 and ARM64 (`Cosmos.Kernel.Native.*`)
    - Architecture-independent kernel packages (`Cosmos.Kernel.HAL.Interfaces`, `Cosmos.Kernel.Debug`, `Cosmos.Kernel.Boot.Limine`)
    - Architecture-specific HAL packages (`Cosmos.Kernel.HAL.X64`, `Cosmos.Kernel.HAL.ARM64`)

@@ -27,12 +27,12 @@ public sealed class YasmBuildTask : ToolTask
         Log.LogMessage(MessageImportance.Low, $"[Debug] Generating command-line args for {FilePath} -> {FileName}");
         StringBuilder sb = new();
 
-        // Check if we're using GNU assembler for ARM64
-        bool isGnuAs = TargetArchitecture == "arm64" || YasmPath?.Contains("aarch64") == true || YasmPath?.EndsWith("-as") == true;
+        bool isArm64 = TargetArchitecture == "arm64";
 
-        if (isGnuAs)
+        if (isArm64)
         {
-            // GNU assembler command line for ARM64
+            // Clang integrated assembler for ARM64 .s files
+            sb.Append($" --target=aarch64-none-elf -c ");
             sb.Append($" -o {Path.Combine(OutputPath, FileName)} ");
             sb.Append($" {FilePath} ");
         }

@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="GetCC">
+    <PropertyGroup>
+      <CCPath Condition="'$(CCPath)' == '' AND Exists('$(HOME)/.cosmos/tools/llvm-tools/bin/clang')">$(HOME)/.cosmos/tools/llvm-tools/bin/clang</CCPath>
+      <CCPath Condition="'$(CCPath)' == ''">clang</CCPath>
+      <CCPath>$(CCPath.Trim())</CCPath>
+    </PropertyGroup>
+  </Target>
+</Project>

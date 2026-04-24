@@ -15,17 +15,17 @@
 
     <!-- Add cygdrive prefix -->
     <FinalIsoRoot>/cygdrive/$(IsoRootSlashes)</FinalIsoRoot>
+    
+    <XorrisoBinary Condition="'$(XorrisoBinary)' == '' AND Exists('$(LOCALAPPDATA)\Cosmos\Tools\xorriso\xorriso.exe')">$(LOCALAPPDATA)\Cosmos\Tools\xorriso\xorriso.exe</XorrisoBinary>
+    <XorrisoBinary Condition="'$(XorrisoBinary)' == ''">xorriso</XorrisoBinary>
   </PropertyGroup>
 
-  <Target Name="GetLinker">
-    <Exec Command="where ld.lld" IgnoreExitCode="true" StandardOutputImportance="Low" ConsoleToMsBuild="true"
-          Condition="$(LdLinkerPath) ==''">
-      <Output TaskParameter="ConsoleOutput" PropertyName="LdLinkerPath" />
-    </Exec>
-  </Target>
-
+<Target Name="GetLinker">
   <PropertyGroup>
-    <XorrisoBinary>xorriso</XorrisoBinary>
+    <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\ld.lld.exe')">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\ld.lld.exe</LdLinkerPath>
+    <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\ld.lld')">$(LOCALAPPDATA)\Cosmos\Tools\llvm-tools\bin\ld.lld</LdLinkerPath>
+    <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">ld.lld</LdLinkerPath>
   </PropertyGroup>
+</Target>
 
 </Project>

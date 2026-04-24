@@ -1,12 +1,15 @@
 <Project>
   <PropertyGroup>
-    <XorrisoBinary>xorriso</XorrisoBinary>
+    <XorrisoBinary Condition="'$(XorrisoBinary)' == '' AND Exists('$(HOME)/.cosmos/tools/xorriso/xorriso')">$(HOME)/.cosmos/tools/xorriso/xorriso</XorrisoBinary>
+    <XorrisoBinary Condition="'$(XorrisoBinary)' == ''">xorriso</XorrisoBinary>
     <FinalIsoRoot>$(IsoRoot)</FinalIsoRoot>
   </PropertyGroup>
 
     <Target Name="GetLinker">
-        <Exec Command="which ld.lld" IgnoreExitCode="true" ConsoleToMsBuild="true" StandardOutputImportance="Low">            <!-- Ignore error code for now. We will make the build error out later  -->
-            <Output TaskParameter="ConsoleOutput" PropertyName="LdLinkerPath" />
-        </Exec>
+        <PropertyGroup>
+            <LdLinkerPath Condition="'$(LdLinkerPath)' == '' AND Exists('$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld')">$(HOME)/.cosmos/tools/llvm-tools/bin/ld.lld</LdLinkerPath>
+            <LdLinkerPath Condition="'$(LdLinkerPath)' == ''">ld.lld</LdLinkerPath>
+            <LdLinkerPath>$(LdLinkerPath.Trim())</LdLinkerPath>
+        </PropertyGroup>
     </Target>
 </Project>

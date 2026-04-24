@@ -19,13 +19,22 @@ public class QemuARM64Host : IQemuHost
     private readonly int _memoryMb;
 
     public QemuARM64Host(
-        string qemuBinary = "qemu-system-aarch64",
-        string uefiFirmwarePath = "/usr/share/qemu-efi-aarch64/QEMU_EFI.fd",
+        string? qemuBinary = null,
+        string? uefiFirmwarePath = null,
         int memoryMb = 512)
     {
-        _qemuBinary = qemuBinary;
-        _uefiFirmwarePath = uefiFirmwarePath;
+        _qemuBinary = qemuBinary ?? ResolveQemuBinaryPath();
+        _uefiFirmwarePath = uefiFirmwarePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "share", "qemu", "edk2-aarch64-code.fd");
         _memoryMb = memoryMb;
+    }
+
+    private static string ResolveQemuBinaryPath()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cosmos", "Tools", "qemu", "qemu-system-aarch64.exe");
+        }
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "qemu-system-aarch64");
     }
 
     public async Task<QemuRunResult> RunKernelAsync(string isoPath, string uartLogPath, int timeoutSeconds = 30, bool showDisplay = false, bool enableNetworkTesting = false)
@@ -44,7 +53,7 @@ public class QemuARM64Host : IQemuHost
             return new QemuRunResult
             {
                 ExitCode = -1,
-                ErrorMessage = $"UEFI firmware not found: {_uefiFirmwarePath}. Install qemu-efi-aarch64 package."
+                ErrorMessage = $"UEFI firmware not found: {_uefiFirmwarePath}. Please ensure Cosmos Tools are correctly installed."
             };
         }
 
@@ -114,6 +123,9 @@ public class QemuARM64Host : IQemuHost
 
             process.Start();
 
+            // Capture stderr asynchronously for diagnostics
+            var stderrTask = process.StandardError.ReadToEndAsync();
+
             // Monitor UART log for TestSuiteEnd while waiting for process
             var monitorTask = MonitorUartLogForTestEndAsync(uartLogPath, cts.Token);
             var processTask = process.WaitForExitAsync(cts.Token);
@@ -151,6 +163,13 @@ public class QemuARM64Host : IQemuHost
             if (tcpServer != null)
             {
                 await tcpServer.StopAsync();
+            }
+
+            // Log stderr for diagnostics
+            string stderr = await stderrTask;
+            if (!string.IsNullOrWhiteSpace(stderr))
+            {
+                Console.WriteLine($"[QEMU stderr] {stderr.Trim()}");
             }
 
             // Read UART log

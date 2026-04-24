@@ -14,7 +14,7 @@ Write-Host "=== Starting postCreate setup (multi-arch) ===" -ForegroundColor Cya
 if (-not $env:VersionPrefix) {
     $baseTag = $null
     try {
-        $gitTag = git describe --tags --abbrev=0 2>$null
+        $gitTag = git describe --tags --match "v*" --abbrev=0 2>$null
         if ($LASTEXITCODE -eq 0 -and $gitTag) {
             $baseTag = $gitTag.Trim().TrimStart('v')
         }
@@ -78,7 +78,7 @@ dotnet build src/Cosmos.Build.Common/Cosmos.Build.Common.csproj -c Release --no-
 
 Write-Host "Building and packing build tools..." -ForegroundColor Cyan
 dotnet build src/Cosmos.Build.Asm/Cosmos.Build.Asm.csproj -c Release --no-incremental
-dotnet build src/Cosmos.Build.GCC/Cosmos.Build.GCC.csproj -c Release --no-incremental
+dotnet build src/Cosmos.Build.CC/Cosmos.Build.CC.csproj -c Release --no-incremental
 dotnet build src/Cosmos.Build.Ilc/Cosmos.Build.Ilc.csproj -c Release --no-incremental
 dotnet build src/Cosmos.Build.Patcher/Cosmos.Build.Patcher.csproj -c Release --no-incremental
 dotnet build src/Cosmos.Build.Analyzer.Patcher.Package/Cosmos.Build.Analyzer.Patcher.Package.csproj -c Release --no-incremental

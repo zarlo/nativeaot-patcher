@@ -17,10 +17,19 @@ public class QemuX64Host : IQemuHost
     private readonly string _qemuBinary;
     private readonly int _memoryMb;
 
-    public QemuX64Host(string qemuBinary = "qemu-system-x86_64", int memoryMb = 512)
+    public QemuX64Host(string? qemuBinary = null, int memoryMb = 512)
     {
-        _qemuBinary = qemuBinary;
+        _qemuBinary = qemuBinary ?? ResolveQemuBinaryPath();
         _memoryMb = memoryMb;
+    }
+
+    private static string ResolveQemuBinaryPath()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cosmos", "Tools", "qemu", "qemu-system-x86_64.exe");
+        }
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "qemu-system-x86_64");
     }
 
     public async Task<QemuRunResult> RunKernelAsync(string isoPath, string uartLogPath, int timeoutSeconds = 30, bool showDisplay = false, bool enableNetworkTesting = false)
@@ -94,6 +103,9 @@ public class QemuX64Host : IQemuHost
 
             process.Start();
 
+            // Capture stderr asynchronously for diagnostics
+            var stderrTask = process.StandardError.ReadToEndAsync();
+
             // Monitor UART log for TestSuiteEnd while waiting for process
             var monitorTask = MonitorUartLogForTestEndAsync(uartLogPath, cts.Token);
             var processTask = process.WaitForExitAsync(cts.Token);
@@ -131,6 +143,13 @@ public class QemuX64Host : IQemuHost
             if (tcpServer != null)
             {
                 await tcpServer.StopAsync();
+            }
+
+            // Log stderr for diagnostics
+            string stderr = await stderrTask;
+            if (!string.IsNullOrWhiteSpace(stderr))
+            {
+                Console.WriteLine($"[QEMU stderr] {stderr.Trim()}");
             }
 
             // Read UART log

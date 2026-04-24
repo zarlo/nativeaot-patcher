@@ -23,7 +23,7 @@
   <Target Name="ILLink" />
 
   <!-- Resolve Bootstrap from Cosmos.Kernel (project reference or package) -->
-  <Target Name="ResolveCosmosKernelBootstrap" BeforeTargets="BuildGCC">
+  <Target Name="ResolveCosmosKernelBootstrap" BeforeTargets="BuildCC">
     <ItemGroup>
       <!-- Find Cosmos.Kernel project reference -->
       <_CosmosKernelProjectRef Include="@(ProjectReference)" Condition="$([System.String]::Copy('%(Filename)').EndsWith('Cosmos.Kernel'))" />

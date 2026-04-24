@@ -61,9 +61,6 @@
   <!-- Target that invokes the YasmBuildTask to compile assembly source files -->
   <Target Name="BuildYasm" AfterTargets="Build" DependsOnTargets="FindSourceFilesForYasm; GetYasm">
     <PropertyGroup>
-      <!-- Yasm fallback paths - ONLY for x64 (yasm doesn't support ARM64) -->
-      <YasmPath Condition="'$(TargetArchitecture)' != 'arm64' and $(YasmPath) == '' and Exists('/opt/homebrew/bin/yasm')">/opt/homebrew/bin/yasm</YasmPath>
-      <YasmPath Condition="'$(TargetArchitecture)' != 'arm64' and $(YasmPath) == ''">/usr/bin/yasm</YasmPath>
       <!-- Adjust output path if needed -->
       <AsmOutputPath>$(IntermediateOutputPath)/cosmos/asm/</AsmOutputPath>
     </PropertyGroup>
