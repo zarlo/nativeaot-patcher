@@ -336,12 +336,6 @@ public class InstallCommand : AsyncCommand<InstallSettings>
     private static async Task<(string? url, string? name)> GetVSCodeExtensionInfoAsync()
     {
         using var http = CreateHttpClient();
-        string? token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        if (!string.IsNullOrEmpty(token))
-        {
-            http.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-        }
-
         string json = await http.GetStringAsync(
             "https://api.github.com/repos/valentinbreiz/CosmosVsCodeExtension/releases/latest");
         var release = JsonDocument.Parse(json);
