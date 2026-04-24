@@ -30,24 +30,24 @@ jobs:
     name: Build Packages
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Setup .NET
+      - name: 🛠️ Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Cache Build Tools
+      - name: 🔧 Cache Build Tools
         id: cache-tools
         uses: actions/cache@v4
         with:
           path: ~/.cosmos/tools
           key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
 
-      - name: Download Build Tools
+      - name: ⬇️ Download Build Tools
         if: steps.cache-tools.outputs.cache-hit != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -60,7 +60,7 @@ jobs:
             tar xzf /tmp/cosmos-tools/${asset}-*-linux-x64.tar.gz -C "$TOOLS_DIR"
           done
 
-      - name: Add Tools to PATH
+      - name: 🔗 Add Tools to PATH
         run: |
           TOOLS_DIR="$HOME/.cosmos/tools"
           echo "$TOOLS_DIR/llvm-tools/bin" >> $GITHUB_PATH
@@ -81,7 +81,7 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Using version: $version"
 
-      - name: Build packages
+      - name: 🔨 Build packages
         env:
           # Single source of truth: $(VersionPrefix) flows from this env var into
           # every Cosmos package via Directory.Build.props, Directory.Packages.props,
@@ -95,7 +95,7 @@ jobs:
           dotnet nuget locals all --clear
           ./.devcontainer/postCreateCommand.sh
 
-      - name: Upload packages
+      - name: 📤 Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: cosmos-packages

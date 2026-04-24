@@ -92,12 +92,25 @@ jobs:
           dotnet tool uninstall -g Cosmos.Tools 2>/dev/null || true
           dotnet tool install -g Cosmos.Tools --add-source artifacts/package/release
 
-      - name: 🔧 Restore Build Tools
-        uses: actions/cache/restore@v4
+      - name: 🔧 Cache Build Tools
+        id: cache-tools
+        uses: actions/cache@v4
         with:
           path: ~/.cosmos/tools
           key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
-          fail-on-cache-miss: true
+
+      - name: ⬇️ Download Build Tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          mkdir -p "$TOOLS_DIR"
+          echo "Downloading tools from release: tools-latest"
+          for asset in llvm-tools xorriso yasm qemu; do
+            gh release download tools-latest --pattern "${asset}-*-linux-x64.tar.gz" --dir /tmp/cosmos-tools
+            tar xzf /tmp/cosmos-tools/${asset}-*-linux-x64.tar.gz -C "$TOOLS_DIR"
+          done
 
       - name: 🔗 Add Tools to PATH
         run: |

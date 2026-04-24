@@ -134,12 +134,25 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: 🔧 Restore Build Tools
-        uses: actions/cache/restore@v4
+      - name: 🔧 Cache Build Tools
+        id: cache-tools
+        uses: actions/cache@v4
         with:
           path: ~/.cosmos/tools
           key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
-          fail-on-cache-miss: true
+
+      - name: ⬇️ Download Build Tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          mkdir -p "$TOOLS_DIR"
+          echo "Downloading tools from release: tools-latest"
+          for asset in llvm-tools xorriso yasm qemu; do
+            gh release download tools-latest --pattern "${asset}-*-linux-x64.tar.gz" --dir /tmp/cosmos-tools
+            tar xzf /tmp/cosmos-tools/${asset}-*-linux-x64.tar.gz -C "$TOOLS_DIR"
+          done
 
       - name: 🔗 Add Tools to PATH
         run: |
@@ -198,12 +211,25 @@ jobs:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
           DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
 
-      - name: 🔧 Restore Build Tools
-        uses: actions/cache/restore@v4
+      - name: 🔧 Cache Build Tools
+        id: cache-tools
+        uses: actions/cache@v4
         with:
           path: ~/.cosmos/tools
           key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
-          fail-on-cache-miss: true
+
+      - name: ⬇️ Download Build Tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          mkdir -p "$TOOLS_DIR"
+          echo "Downloading tools from release: tools-latest"
+          for asset in llvm-tools xorriso yasm qemu; do
+            gh release download tools-latest --pattern "${asset}-*-linux-x64.tar.gz" --dir /tmp/cosmos-tools
+            tar xzf /tmp/cosmos-tools/${asset}-*-linux-x64.tar.gz -C "$TOOLS_DIR"
+          done
 
       - name: 🔗 Add Tools to PATH
         run: |
