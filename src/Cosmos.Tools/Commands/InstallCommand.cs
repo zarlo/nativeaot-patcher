@@ -14,6 +14,10 @@ public class InstallSettings : CommandSettings
     [Description("Automatically install without prompting")]
     public bool Auto { get; set; }
 
+    [CommandOption("--setup <DIR>")]
+    [Description("Bundle all tools into DIR for offline installer packaging")]
+    public string? Setup { get; set; }
+
     [CommandOption("--tools")]
     [Description("Only install system tools (QEMU, clang, lld, xorriso, yasm) from the Cosmos tools release")]
     public bool Tools { get; set; }
@@ -30,7 +34,10 @@ public class InstallCommand : AsyncCommand<InstallSettings>
 
     public override async Task<int> ExecuteAsync(CommandContext context, InstallSettings settings)
     {
-        CommandHelper.PrintHeader("Cosmos Tools Installer", "Local install");
+        string mode = settings.Setup != null
+            ? $"Setup bundle -> {Path.GetFullPath(settings.Setup)}"
+            : "Local install";
+        CommandHelper.PrintHeader("Cosmos Tools Installer", mode);
 
         if (!settings.Auto)
         {
@@ -41,6 +48,11 @@ public class InstallCommand : AsyncCommand<InstallSettings>
                 return 0;
             }
             AnsiConsole.WriteLine();
+        }
+
+        if (settings.Setup != null)
+        {
+            return await BuildSetupAsync(settings);
         }
 
         // When neither --tools nor --packages is specified, install everything
@@ -348,6 +360,22 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         return (null, null);
     }
 
+    // Downloads the latest .vsix to destDir. Returns the written file path,
+    // or null if no asset was found. Caller prints context-appropriate output.
+    private static async Task<string?> DownloadVSCodeExtensionAsync(string destDir)
+    {
+        var (url, name) = await GetVSCodeExtensionInfoAsync();
+        if (url == null || name == null)
+        {
+            return null;
+        }
+        Directory.CreateDirectory(destDir);
+        string path = Path.Combine(destDir, name);
+        using var http = CreateHttpClient();
+        await File.WriteAllBytesAsync(path, await http.GetByteArrayAsync(url));
+        return path;
+    }
+
     private static async Task InstallVSCodeExtensionAsync()
     {
         string? codeCommand = GetVSCodeCommand();
@@ -360,19 +388,12 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         AnsiConsole.Markup("  Downloading extension from GitHub... ");
         try
         {
-            var (url, name) = await GetVSCodeExtensionInfoAsync();
-            if (url == null || name == null)
+            string? tempPath = await DownloadVSCodeExtensionAsync(Path.GetTempPath());
+            if (tempPath == null)
             {
                 AnsiConsole.MarkupLine("[yellow]SKIPPED (no .vsix found)[/]");
                 return;
             }
-            AnsiConsole.MarkupLine("[green]OK[/]");
-
-            AnsiConsole.Markup($"  Downloading {name}... ");
-            using var http = CreateHttpClient();
-            byte[] vsixBytes = await http.GetByteArrayAsync(url);
-            string tempPath = Path.Combine(Path.GetTempPath(), name);
-            await File.WriteAllBytesAsync(tempPath, vsixBytes);
             AnsiConsole.MarkupLine("[green]OK[/]");
 
             AnsiConsole.Markup("  Installing extension... ");
@@ -633,5 +654,102 @@ public class InstallCommand : AsyncCommand<InstallSettings>
             catch { }
         }
         return null;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  Setup bundle mode — downloads tools-latest Windows assets for the
+    //  offline installer, stages packages/extension, then runs Inno Setup.
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private static async Task<int> BuildSetupAsync(InstallSettings settings)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            AnsiConsole.MarkupLine("  [red]Setup mode is only supported on Windows.[/]");
+            return 1;
+        }
+
+        string baseDir = Path.GetFullPath(settings.Setup!);
+        string toolsDir = Path.Combine(baseDir, "tools", "windows");
+        Directory.CreateDirectory(toolsDir);
+
+        List<ReleaseAsset> assets = await FetchReleaseAssetsAsync(ToolsRepo, ToolsReleaseTag);
+        var releaseAssets = ToolDefinitions.GetAllTools()
+            .OfType<CommandToolDefinition>()
+            .Where(t => t.ReleaseAsset != null)
+            .Select(t => t.ReleaseAsset!)
+            .Distinct();
+
+        foreach (string releaseAsset in releaseAssets)
+        {
+            string suffix = $"-win-x64.zip";
+            var asset = assets.FirstOrDefault(a =>
+                a.Name.StartsWith($"{releaseAsset}-", StringComparison.OrdinalIgnoreCase) &&
+                a.Name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+            if (asset == null)
+            {
+                AnsiConsole.MarkupLine($"  [red]{releaseAsset}: no win-x64 asset in '{ToolsReleaseTag}'[/]");
+                continue;
+            }
+            AnsiConsole.Markup($"  {releaseAsset} -> tools/windows/{releaseAsset}/ ... ");
+            bool ok = await DownloadAndExtractAsync(asset.DownloadUrl, toolsDir, "zip");
+            AnsiConsole.MarkupLine(ok ? "[green]OK[/]" : "[red]FAILED[/]");
+        }
+
+        AnsiConsole.Markup("  VS Code Extension ... ");
+        string? vsix = await DownloadVSCodeExtensionAsync(Path.Combine(baseDir, "extensions"));
+        AnsiConsole.MarkupLine(vsix != null ? "[green]OK[/]" : "[yellow]SKIPPED (no .vsix found)[/]");
+
+        string issFile = Path.Combine(Path.GetDirectoryName(baseDir)!, "Cosmos.iss");
+        if (File.Exists(issFile))
+        {
+            AnsiConsole.Markup("  Windows installer -> iscc ... ");
+            bool ok = await BuildInnoSetupAsync(issFile, baseDir);
+            AnsiConsole.MarkupLine(ok ? "[green]OK[/]" : "[red]FAILED[/]");
+        }
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.WriteLine("  " + new string('-', 50));
+        AnsiConsole.MarkupLine("  [green]Setup bundle complete![/]");
+        AnsiConsole.WriteLine();
+        return 0;
+    }
+
+    private static async Task<bool> BuildInnoSetupAsync(string issFile, string baseDir)
+    {
+        string packagesDir = Path.Combine(baseDir, "packages");
+        string? version = null;
+        if (Directory.Exists(packagesDir))
+        {
+            var sdkPkg = Directory.GetFiles(packagesDir, "Cosmos.Sdk.*.nupkg").FirstOrDefault();
+            if (sdkPkg != null)
+            {
+                string name = Path.GetFileNameWithoutExtension(sdkPkg);
+                version = name["Cosmos.Sdk.".Length..];
+            }
+        }
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = "iscc",
+            Arguments = $"\"{issFile}\"",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        if (version != null)
+        {
+            psi.Environment["COSMOS_VERSION"] = version;
+        }
+
+        using var proc = Process.Start(psi);
+        if (proc == null)
+        {
+            return false;
+        }
+
+        await proc.StandardOutput.ReadToEndAsync();
+        await proc.WaitForExitAsync();
+        return proc.ExitCode == 0;
     }
 }

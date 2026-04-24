@@ -51,14 +51,12 @@ Source: "images\Cosmos.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; NuGet packages
 Source: "bundle\packages\*.nupkg"; DestDir: "{app}\Packages"; Flags: ignoreversion
 
-; Cross-compiler toolchains
-Source: "bundle\tools\windows\x86_64-elf-tools\*"; DestDir: "{app}\Tools\x86_64-elf-tools"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "bundle\tools\windows\aarch64-elf-tools\*"; DestDir: "{app}\Tools\aarch64-elf-tools"; Flags: ignoreversion recursesubdirs createallsubdirs
+; LLVM toolchain (clang + lld + freestanding headers — handles both x64 and ARM64)
+Source: "bundle\tools\windows\llvm-tools\*"; DestDir: "{app}\Tools\llvm-tools"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Build tools
 Source: "bundle\tools\windows\yasm\*"; DestDir: "{app}\Tools\yasm"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "bundle\tools\windows\xorriso\*"; DestDir: "{app}\Tools\xorriso"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "bundle\tools\windows\lld\*"; DestDir: "{app}\Tools\lld"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; QEMU emulator (x64 and ARM64)
 Source: "bundle\tools\windows\qemu\*"; DestDir: "{app}\Tools\qemu"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -68,9 +66,6 @@ Source: "bundle\tools\windows\gdb\*"; DestDir: "{app}\Tools\gdb"; Flags: ignorev
 
 ; VS Code extension
 Source: "bundle\extensions\*.vsix"; DestDir: "{app}\Extensions"; Flags: ignoreversion skipifsourcedoesntexist
-
-; dotnet tool packages
-Source: "bundle\dotnet-tools\*.nupkg"; DestDir: "{app}\DotnetTools"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Uninstall Cosmos"; Filename: "{uninstallexe}"
@@ -96,7 +91,7 @@ StatusMsg: "Updating Cosmos Patcher..."; \
   Check: DotNetInstalled
 StatusMsg: "Installing Cosmos Patcher..."; \
   Filename: "dotnet"; \
-  Parameters: "tool install -g Cosmos.Patcher --add-source ""{app}\DotnetTools"""; \
+  Parameters: "tool install -g Cosmos.Patcher --add-source ""{app}\Packages"""; \
   Flags: runhidden waituntilterminated; \
   Check: DotNetInstalled
 
@@ -108,7 +103,7 @@ StatusMsg: "Updating Cosmos Tools CLI..."; \
   Check: DotNetInstalled
 StatusMsg: "Installing Cosmos Tools CLI..."; \
   Filename: "dotnet"; \
-  Parameters: "tool install -g Cosmos.Tools --add-source ""{app}\DotnetTools"""; \
+  Parameters: "tool install -g Cosmos.Tools --add-source ""{app}\Packages"""; \
   Flags: runhidden waituntilterminated; \
   Check: DotNetInstalled
 
@@ -120,7 +115,7 @@ StatusMsg: "Updating Cosmos project templates..."; \
   Check: DotNetInstalled
 StatusMsg: "Installing Cosmos project templates..."; \
   Filename: "dotnet"; \
-  Parameters: "new install Cosmos.Build.Templates --add-source ""{app}\DotnetTools"""; \
+  Parameters: "new install Cosmos.Build.Templates --add-source ""{app}\Packages"""; \
   Flags: runhidden waituntilterminated; \
   Check: DotNetInstalled
 
@@ -231,9 +226,7 @@ begin
     { Add tool directories to user PATH }
     AddToUserPath(ExpandConstant('{app}\Tools\yasm'));
     AddToUserPath(ExpandConstant('{app}\Tools\xorriso'));
-    AddToUserPath(ExpandConstant('{app}\Tools\lld'));
-    AddToUserPath(ExpandConstant('{app}\Tools\x86_64-elf-tools\bin'));
-    AddToUserPath(ExpandConstant('{app}\Tools\aarch64-elf-tools\bin'));
+    AddToUserPath(ExpandConstant('{app}\Tools\llvm-tools\bin'));
     AddToUserPath(ExpandConstant('{app}\Tools\qemu'));
     { grumpycoder's gdb-multiarch zip extracts to gdb\bin — DLLs live there too }
     AddToUserPath(ExpandConstant('{app}\Tools\gdb\bin'));
@@ -249,9 +242,7 @@ begin
     { Remove tool directories from user PATH }
     RemoveFromUserPath(ExpandConstant('{app}\Tools\yasm'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\xorriso'));
-    RemoveFromUserPath(ExpandConstant('{app}\Tools\lld'));
-    RemoveFromUserPath(ExpandConstant('{app}\Tools\x86_64-elf-tools\bin'));
-    RemoveFromUserPath(ExpandConstant('{app}\Tools\aarch64-elf-tools\bin'));
+    RemoveFromUserPath(ExpandConstant('{app}\Tools\llvm-tools\bin'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\qemu'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\gdb\bin'));
     { Broadcast so terminals pick up the PATH removal }
