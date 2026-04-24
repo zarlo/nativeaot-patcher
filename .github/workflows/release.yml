@@ -55,7 +55,7 @@ jobs:
           TOOLS_DIR="$HOME/.cosmos/tools"
           mkdir -p "$TOOLS_DIR"
           echo "Downloading tools from release: tools-latest"
-          for asset in llvm-tools xorriso yasm; do
+          for asset in llvm-tools xorriso yasm qemu; do
             gh release download tools-latest --pattern "${asset}-*-linux-x64.tar.gz" --dir /tmp/cosmos-tools
             tar xzf /tmp/cosmos-tools/${asset}-*-linux-x64.tar.gz -C "$TOOLS_DIR"
           done
@@ -66,6 +66,7 @@ jobs:
           echo "$TOOLS_DIR/llvm-tools/bin" >> $GITHUB_PATH
           echo "$TOOLS_DIR/xorriso" >> $GITHUB_PATH
           echo "$TOOLS_DIR/yasm" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/qemu" >> $GITHUB_PATH
 
       - name: Determine version
         id: version
