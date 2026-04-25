@@ -94,6 +94,10 @@ public class RunCommand : AsyncCommand<RunSettings>
                 AnsiConsole.MarkupLine("  [red]Failed to start QEMU[/]");
                 return 1;
             }
+            // Make QEMU die with us. Without this, callers that kill cosmos
+            // (e.g. VS Code's debug Stop button issuing TerminateProcess on
+            // Windows or SIGTERM on Unix) leave QEMU running as an orphan.
+            using var lifetime = ChildProcessLifetime.AttachTo(process);
             await process.WaitForExitAsync();
             return process.ExitCode;
         }
