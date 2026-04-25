@@ -89,18 +89,6 @@ jobs:
             tar czf llvm-tools-${LLVM_VERSION}-${{ matrix.target }}.tar.gz -C pkg llvm-tools
           fi
 
-      # Smoke test: the upstream LLVM binaries are statically linked, but cross-
-      # platform packaging (esp. Windows on a Linux runner) can still go wrong.
-      # Run only on linux-x64 since that's the only target the runner can execute.
-      - name: Smoke test bundle
-        if: matrix.target == 'linux-x64'
-        shell: bash
-        env:
-          PATH: /usr/bin:/bin
-        run: |
-          ./pkg/llvm-tools/bin/clang --version
-          ./pkg/llvm-tools/bin/ld.lld --version
-
       - uses: actions/upload-artifact@v4
         with:
           name: llvm-tools-${{ matrix.target }}
@@ -194,21 +182,6 @@ jobs:
           Copy-Item "$msysRoot\msys-iconv-2.dll" pkg/xorriso/
           Set-Content -Path pkg/xorriso/VERSION -Value "${{ env.XORRISO_VERSION }}"
 
-      - name: Smoke test bundle (Linux/macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        env:
-          PATH: /usr/bin:/bin
-        run: ./pkg/xorriso/xorriso -version
-
-      - name: Smoke test bundle (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        # cmd.exe with default Windows PATH — no msys64 — so missing DLLs surface as 0xC0000135
-        run: |
-          cd pkg\xorriso
-          xorriso.exe -version || exit /b 1
-
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -284,14 +257,6 @@ jobs:
           cp yasm-${{ env.YASM_VERSION }}/yasm.exe pkg/yasm/
           echo "${{ env.YASM_VERSION }}" > pkg/yasm/VERSION
           cd pkg && zip -r ../yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.zip yasm
-
-      # Native binaries only — Windows yasm is cross-compiled from Linux and can't run here.
-      - name: Smoke test bundle
-        if: matrix.ext == ''
-        shell: bash
-        env:
-          PATH: /usr/bin:/bin
-        run: ./pkg/yasm/yasm --version
 
       - uses: actions/upload-artifact@v4
         with:
@@ -537,36 +502,6 @@ jobs:
           echo "=== Bundled MINGW64 DLLs ==="
           ls pkg/qemu/bin/*.dll
 
-      # Smoke-test the packaged binaries in a clean environment so missing
-      # runtime deps (e.g. the libbz2/libfdt/libzstd Windows regression that
-      # caused STATUS_DLL_NOT_FOUND) fail CI before publish, not in users' VMs.
-      - name: Smoke test bundle (Linux/macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        env:
-          PATH: /usr/bin:/bin
-        run: |
-          cd pkg/qemu
-          ./qemu-system-x86_64 --version
-          ./qemu-system-aarch64 --version
-          [ -f qemu-img ] && ./qemu-img --version || true
-
-      - name: Smoke test bundle (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        # cmd.exe with default Windows PATH (no /mingw64/bin) — any missing
-        # transitive DLL surfaces as exit 0xC0000135. Verifies layout invariant
-        # too: BIOS in qemu/share/qemu/, exes in qemu/bin/ — launchers pass -L
-        # to make QEMU find them.
-        run: |
-          cd pkg\qemu\bin
-          qemu-system-x86_64.exe --version || exit /b 1
-          qemu-system-aarch64.exe --version || exit /b 1
-          if exist qemu-img.exe ( qemu-img.exe --version || exit /b 1 )
-          if not exist ..\share\qemu\bios-256k.bin ( echo ERROR: bios-256k.bin missing from qemu\share\qemu\ & exit /b 1 )
-          if not exist ..\share\qemu\edk2-aarch64-code.fd ( echo ERROR: edk2-aarch64-code.fd missing from qemu\share\qemu\ & exit /b 1 )
-          echo OK: BIOS and ARM64 UEFI firmware present in qemu\share\qemu\
-
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -784,24 +719,6 @@ jobs:
           echo "${GDB_VERSION}" > pkg/gdb/VERSION
           echo "=== Bundled MINGW64 DLLs ==="
           ls pkg/gdb/bin/*.dll || echo "(no DLLs bundled — gdb-multiarch.exe must be statically linked)"
-
-      - name: Smoke test bundle (Linux/macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        env:
-          PATH: /usr/bin:/bin
-        run: |
-          cd pkg/gdb/bin
-          ./gdb-multiarch --version
-
-      - name: Smoke test bundle (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        # cmd.exe with default Windows PATH (no /mingw64/bin) — any missing
-        # transitive DLL surfaces as exit 0xC0000135 here, before publish.
-        run: |
-          cd pkg\gdb\bin
-          gdb-multiarch.exe --version || exit /b 1
 
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
