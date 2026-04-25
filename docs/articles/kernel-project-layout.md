@@ -47,8 +47,8 @@ flowchart LR;
 |---------|---------|
 | **Cosmos.Build.Patcher** | IL patcher — applies plugs and patches at build time. |
 | **Cosmos.Build.Ilc** | Custom ILC (IL Compiler) integration for NativeAOT. |
-| **Cosmos.Build.Asm** | NASM assembly compilation. |
-| **Cosmos.Build.GCC** | GCC cross-compilation and linking. |
+| **Cosmos.Build.Asm** | YASM/Clang assembly compilation. |
+| **Cosmos.Build.CC** | Clang cross-compilation for x64 and ARM64 bare-metal targets. |
 | **Cosmos.Build.Common** | Shared build props, architecture picker. |
 | **Cosmos.Build.API** | Plug attributes (`[Plug]`, `[PlugMember]`) and enums. |
 | **Cosmos.Build.Analyzer.Patcher** | Roslyn analyzer for plug correctness. |

@@ -8,7 +8,7 @@
     <PackageVersion Include="Cosmos.Build.Analyzer.Patcher" Version="$(VersionPrefix)" />
     <PackageVersion Include="Cosmos.Build.Asm" Version="$(VersionPrefix)" />
     <PackageVersion Include="Cosmos.Build.Common" Version="$(VersionPrefix)" />
-    <PackageVersion Include="Cosmos.Build.GCC" Version="$(VersionPrefix)" />
+    <PackageVersion Include="Cosmos.Build.CC" Version="$(VersionPrefix)" />
     <PackageVersion Include="Cosmos.Build.Ilc" Version="$(VersionPrefix)" />
     <PackageVersion Include="Cosmos.Build.Patcher" Version="$(VersionPrefix)" />
     <PackageVersion Include="Cosmos.Kernel" Version="$(VersionPrefix)" />

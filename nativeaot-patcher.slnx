@@ -29,7 +29,7 @@
         <Project Path="src/Cosmos.Build.Ilc/Cosmos.Build.Ilc.csproj"/>
         <Project Path="src/Cosmos.Build.Patcher/Cosmos.Build.Patcher.csproj"/>
         <Project Path="src/Cosmos.Build.Templates/Cosmos.Build.Templates.csproj"/>
-        <Project Path="src/Cosmos.Build.GCC/Cosmos.Build.GCC.csproj"/>
+        <Project Path="src/Cosmos.Build.CC/Cosmos.Build.CC.csproj"/>
         <Project Path="src/Cosmos.Tools/Cosmos.Tools.csproj"/>
         <Project Path="src/Cosmos.Patcher/Cosmos.Patcher.csproj"/>
         <Project Path="src/Cosmos.Sdk/Cosmos.Sdk.csproj"/>

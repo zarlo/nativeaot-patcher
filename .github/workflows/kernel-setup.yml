@@ -38,24 +38,33 @@ jobs:
           path: artifacts/package/release/*.nupkg
           retention-days: 1
 
-      - name: 🔧 Install Build Tools
+      - name: 🔧 Cache Build Tools
+        id: cache-tools
+        uses: actions/cache@v4
+        with:
+          path: ~/.cosmos/tools
+          key: cosmos-tools-linux-x64-${{ hashFiles('.github/workflows/build-tools.yml') }}
+
+      - name: 📥 Download Build Tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          sudo apt-get clean
-          cosmos install --auto --tools
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          mkdir -p "$TOOLS_DIR"
+          echo "Downloading tools from release: tools-latest"
+          for asset in llvm-tools xorriso yasm qemu; do
+            gh release download tools-latest --pattern "${asset}-*-linux-x64.tar.gz" --dir /tmp/cosmos-tools
+            tar xzf /tmp/cosmos-tools/${asset}-*-linux-x64.tar.gz -C "$TOOLS_DIR"
+          done
+
+      - name: 🔗 Add Tools to PATH
+        run: |
+          TOOLS_DIR="$HOME/.cosmos/tools"
+          echo "$TOOLS_DIR/llvm-tools/bin" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/xorriso" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/yasm" >> $GITHUB_PATH
+          echo "$TOOLS_DIR/qemu" >> $GITHUB_PATH
 
       - name: 🔍 Verify Tools Installation
         run: cosmos check
-
-      - name: 📦 Package build tools debs
-        run: |
-          mkdir -p build-tools-cache
-          cp /var/cache/apt/archives/*.deb build-tools-cache/ 2>/dev/null || true
-          echo "Cached $(ls build-tools-cache/*.deb 2>/dev/null | wc -l) deb packages ($(du -sh build-tools-cache/ | cut -f1))"
-
-      - name: 📤 Upload Build Tools Cache
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-tools-cache
-          path: build-tools-cache/
-          retention-days: 1
-          compression-level: 1

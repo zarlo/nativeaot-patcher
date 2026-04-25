@@ -13,7 +13,7 @@ echo "=== Starting postCreate setup (multi-arch) ==="
 # If none of these resolve a 3-component base version, we bail out loudly
 # rather than silently building broken packages with a hardcoded literal.
 if [[ -z "${VersionPrefix:-}" ]]; then
-  BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+  BASE_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || true)
   BASE_TAG="${BASE_TAG#v}"
   if [[ -z "$BASE_TAG" ]]; then
     BASE_TAG=$(sed -nE 's/.*"Cosmos\.Sdk"[[:space:]]*:[[:space:]]*"([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' global.json | head -n1)
@@ -70,7 +70,7 @@ dotnet build src/Cosmos.Build.Common/Cosmos.Build.Common.csproj -c Release --no-
 
 echo "Building and packing build tools..."
 dotnet build src/Cosmos.Build.Asm/Cosmos.Build.Asm.csproj -c Release --no-incremental
-dotnet build src/Cosmos.Build.GCC/Cosmos.Build.GCC.csproj -c Release --no-incremental
+dotnet build src/Cosmos.Build.CC/Cosmos.Build.CC.csproj -c Release --no-incremental
 dotnet build src/Cosmos.Build.Ilc/Cosmos.Build.Ilc.csproj -c Release --no-incremental
 dotnet build src/Cosmos.Build.Patcher/Cosmos.Build.Patcher.csproj -c Release --no-incremental
 dotnet build src/Cosmos.Build.Analyzer.Patcher.Package/Cosmos.Build.Analyzer.Patcher.Package.csproj -c Release --no-incremental

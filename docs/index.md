@@ -29,7 +29,7 @@ If you want to develop or contribute to the project, clone the repository and op
  - [Testing](articles/testing.md)
  - [Garbage Collector](articles/garbage-collector.md)
  - [Cosmos.Build.Asm](articles/build/asm-build.md)
- - [Cosmos.Build.GCC](articles/build/gcc-build.md)
+ - [Cosmos.Build.CC](articles/build/cc-build.md)
  - [Cosmos.Build.Patcher](articles/build/patcher-build.md)
  - [Cosmos.Build.Ilc](articles/build/ilc-build.md)
 

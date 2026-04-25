@@ -4,22 +4,24 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Cosmos.Tools.Launcher;
 
 namespace Cosmos.TestRunner.Engine.Hosts;
 
 /// <summary>
-/// QEMU host for x86-64 architecture
+/// QEMU host for x86-64 architecture. Argument construction lives in
+/// <see cref="QemuLauncher"/> so this stays in sync with `cosmos run`.
 /// </summary>
 public class QemuX64Host : IQemuHost
 {
     public string Architecture => "x64";
 
-    private readonly string _qemuBinary;
+    private readonly string? _qemuBinaryOverride;
     private readonly int _memoryMb;
 
-    public QemuX64Host(string qemuBinary = "qemu-system-x86_64", int memoryMb = 512)
+    public QemuX64Host(string? qemuBinary = null, int memoryMb = 512)
     {
-        _qemuBinary = qemuBinary;
+        _qemuBinaryOverride = qemuBinary;
         _memoryMb = memoryMb;
     }
 
@@ -47,30 +49,20 @@ public class QemuX64Host : IQemuHost
             File.Delete(uartLogPath);
         }
 
-        // Build QEMU arguments
-        // Note: Always write UART to file for parsing, display mode only affects GUI
-        // Use -display none instead of -nographic to avoid conflicts with -serial file:
-        string displayArgs = showDisplay
-            ? $"-display gtk -vga std -serial file:\"{uartLogPath}\""
-            : $"-display none -serial file:\"{uartLogPath}\"";
-
-        // Network configuration: E1000E device with user-mode networking
-        // Guest IP: 10.0.2.15, Gateway: 10.0.2.2
-        // UDP Port 5555: UdpTestServer binds to receive kernel's outgoing packets (no hostfwd needed)
-        // UDP Port 5556: hostfwd forwards test runner packets to kernel
-        // TCP Port 5557: kernel connects to host (no hostfwd needed, outgoing from guest)
-        // TCP Port 5558: hostfwd forwards test runner packets to kernel's listening socket
-        string networkArgs = "-netdev user,id=net0,hostfwd=udp::5556-:5556,hostfwd=tcp::5558-:5558 -device e1000e,netdev=net0";
-
-        var startInfo = new ProcessStartInfo
+        QemuLaunchPlan plan = await QemuLauncher.BuildAsync(new QemuLaunchOptions
         {
-            FileName = _qemuBinary,
-            Arguments = $"-cdrom \"{isoPath}\" -m {_memoryMb}M -boot d -no-reboot {displayArgs} {networkArgs}",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = false
-        };
+            Architecture = "x64",
+            IsoPath = isoPath,
+            MemoryMb = _memoryMb,
+            Headless = !showDisplay,
+            SerialOutputFile = uartLogPath,
+            EnableNetworkTesting = enableNetworkTesting
+        });
+        var startInfo = QemuLauncher.ToProcessStartInfo(plan);
+        if (_qemuBinaryOverride is not null)
+        {
+            startInfo.FileName = _qemuBinaryOverride;
+        }
 
         using var process = new Process { StartInfo = startInfo };
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
@@ -93,6 +85,9 @@ public class QemuX64Host : IQemuHost
             tcpServer?.Start();
 
             process.Start();
+
+            // Capture stderr asynchronously for diagnostics
+            var stderrTask = process.StandardError.ReadToEndAsync();
 
             // Monitor UART log for TestSuiteEnd while waiting for process
             var monitorTask = MonitorUartLogForTestEndAsync(uartLogPath, cts.Token);
@@ -131,6 +126,13 @@ public class QemuX64Host : IQemuHost
             if (tcpServer != null)
             {
                 await tcpServer.StopAsync();
+            }
+
+            // Log stderr for diagnostics
+            string stderr = await stderrTask;
+            if (!string.IsNullOrWhiteSpace(stderr))
+            {
+                Console.WriteLine($"[QEMU stderr] {stderr.Trim()}");
             }
 
             // Read UART log
