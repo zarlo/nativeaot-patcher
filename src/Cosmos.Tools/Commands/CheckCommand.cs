@@ -50,8 +50,15 @@ public class CheckCommand : AsyncCommand<CheckSettings>
             if (detected)
             {
                 string ver = result.Version != null ? $" [dim]({result.Version})[/]" : "";
+                string source = result.Source switch
+                {
+                    ToolSource.Bundle => " [cyan][[bundle]][/]",
+                    ToolSource.System => " [green][[system]][/]",
+                    ToolSource.Override => " [yellow][[override]][/]",
+                    _ => ""
+                };
                 string path = result.Path != null ? $" [dim]{Markup.Escape(result.Path)}[/]" : "";
-                AnsiConsole.MarkupLine($"  {status} {name}{ver}{path}");
+                AnsiConsole.MarkupLine($"  {status} {name}{ver}{source}{path}");
             }
             else if (result.Found)
             {
@@ -112,7 +119,8 @@ public class CheckCommand : AsyncCommand<CheckSettings>
             Console.WriteLine($"      \"found\": {r.Found.ToString().ToLower()},");
             Console.WriteLine($"      \"required\": {r.Tool.Required.ToString().ToLower()},");
             Console.WriteLine($"      \"version\": {(r.Version != null ? $"\"{r.Version}\"" : "null")},");
-            Console.WriteLine($"      \"path\": {(r.Path != null ? $"\"{r.Path.Replace("\\", "\\\\")}\"" : "null")}");
+            Console.WriteLine($"      \"path\": {(r.Path != null ? $"\"{r.Path.Replace("\\", "\\\\")}\"" : "null")},");
+            Console.WriteLine($"      \"source\": \"{r.Source.ToString().ToLowerInvariant()}\"");
             Console.WriteLine($"    }}{comma}");
         }
 

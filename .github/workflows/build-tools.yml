@@ -78,12 +78,27 @@ jobs:
           ls -la pkg/llvm-tools/bin/
           find pkg/llvm-tools/lib -type f | head -20 || true
 
+          # Stamp the bundle so ToolResolver can compare against system tools
+          echo "${LLVM_VERSION}" > pkg/llvm-tools/VERSION
+
           # Package
           if [ "${{ matrix.target }}" = "win-x64" ]; then
             cd pkg && zip -r ../llvm-tools-${LLVM_VERSION}-${{ matrix.target }}.zip llvm-tools
           else
             tar czf llvm-tools-${LLVM_VERSION}-${{ matrix.target }}.tar.gz -C pkg llvm-tools
           fi
+
+      # Smoke test: the upstream LLVM binaries are statically linked, but cross-
+      # platform packaging (esp. Windows on a Linux runner) can still go wrong.
+      # Run only on linux-x64 since that's the only target the runner can execute.
+      - name: Smoke test bundle
+        if: matrix.target == 'linux-x64'
+        shell: bash
+        env:
+          PATH: /usr/bin:/bin
+        run: |
+          ./pkg/llvm-tools/bin/clang --version
+          ./pkg/llvm-tools/bin/ld.lld --version
 
       - uses: actions/upload-artifact@v4
         with:
@@ -155,6 +170,7 @@ jobs:
         run: |
           mkdir -p pkg/xorriso
           cp xorriso-${{ env.XORRISO_DIR }}/xorriso/xorriso pkg/xorriso/
+          echo "${{ env.XORRISO_VERSION }}" > pkg/xorriso/VERSION
           tar czf xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.tar.gz -C pkg xorriso
 
       - name: Package (zip)
@@ -175,7 +191,27 @@ jobs:
           Copy-Item "$msysRoot\msys-2.0.dll" pkg/xorriso/
           Copy-Item "$msysRoot\msys-intl-8.dll" pkg/xorriso/
           Copy-Item "$msysRoot\msys-iconv-2.dll" pkg/xorriso/
-          Compress-Archive -Path pkg/xorriso -DestinationPath xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.zip
+          Set-Content -Path pkg/xorriso/VERSION -Value "${{ env.XORRISO_VERSION }}"
+
+      - name: Smoke test bundle (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          PATH: /usr/bin:/bin
+        run: ./pkg/xorriso/xorriso -version
+
+      - name: Smoke test bundle (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        # cmd.exe with default Windows PATH — no msys64 — so missing DLLs surface as 0xC0000135
+        run: |
+          cd pkg\xorriso
+          xorriso.exe -version || exit /b 1
+
+      - name: Create zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path pkg/xorriso -DestinationPath xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.zip
 
       - uses: actions/upload-artifact@v4
         with:
@@ -237,6 +273,7 @@ jobs:
         run: |
           mkdir -p pkg/yasm
           cp yasm-${{ env.YASM_VERSION }}/yasm pkg/yasm/
+          echo "${{ env.YASM_VERSION }}" > pkg/yasm/VERSION
           tar czf yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.tar.gz -C pkg yasm
 
       - name: Package (zip)
@@ -244,7 +281,16 @@ jobs:
         run: |
           mkdir -p pkg/yasm
           cp yasm-${{ env.YASM_VERSION }}/yasm.exe pkg/yasm/
+          echo "${{ env.YASM_VERSION }}" > pkg/yasm/VERSION
           cd pkg && zip -r ../yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.zip yasm
+
+      # Native binaries only — Windows yasm is cross-compiled from Linux and can't run here.
+      - name: Smoke test bundle
+        if: matrix.ext == ''
+        shell: bash
+        env:
+          PATH: /usr/bin:/bin
+        run: ./pkg/yasm/yasm --version
 
       - uses: actions/upload-artifact@v4
         with:
@@ -429,6 +475,8 @@ jobs:
           cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
           echo "=== Firmware files packaged ==="
           ls pkg/qemu/share/qemu/*.bin pkg/qemu/share/qemu/*.fd 2>/dev/null || echo "WARNING: no firmware files found"
+          # Stamp the bundle with its version (see Windows packaging step for rationale)
+          echo "${{ env.QEMU_VERSION }}" > pkg/qemu/VERSION
           tar czf qemu-${{ env.QEMU_VERSION }}-${{ matrix.target }}.tar.gz -C pkg qemu
 
       - name: Package (Windows)
@@ -449,14 +497,64 @@ jobs:
           cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/share/qemu/ 2>/dev/null || true
           cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/share/qemu/ 2>/dev/null || true
           cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
-          # Bundle MINGW64 runtime DLLs
+          # Bundle MINGW64 runtime DLLs by walking PE imports transitively.
+          # objdump -p lists each DLL imported by a binary; we recurse so deps
+          # of deps (e.g. libgio -> libgmodule -> libffi) are captured. Anything
+          # that doesn't resolve under /mingw64/bin is assumed to be a Windows
+          # system DLL (kernel32, ole32, api-ms-win-*) and skipped.
           MINGW_BIN="/mingw64/bin"
-          for dll in libglib-2.0-0.dll libgthread-2.0-0.dll libintl-8.dll libiconv-2.dll \
-                     libpixman-1-0.dll libslirp-0.dll zlib1.dll libpcre2-8-0.dll \
-                     libgcc_s_seh-1.dll libwinpthread-1.dll libstdc++-6.dll libffi-8.dll \
-                     SDL2.dll; do
-            cp "$MINGW_BIN/$dll" pkg/qemu/ 2>/dev/null || true
+          declare -A seen
+          queue=()
+          for exe in pkg/qemu/qemu-system-x86_64.exe pkg/qemu/qemu-system-aarch64.exe pkg/qemu/qemu-img.exe; do
+            [ -f "$exe" ] && queue+=("$exe")
           done
+          while [ ${#queue[@]} -gt 0 ]; do
+            cur="${queue[0]}"
+            queue=("${queue[@]:1}")
+            base_lc=$(basename "$cur" | tr '[:upper:]' '[:lower:]')
+            [ -n "${seen[$base_lc]:-}" ] && continue
+            seen[$base_lc]=1
+            while IFS= read -r dll; do
+              dll_lc=$(echo "$dll" | tr '[:upper:]' '[:lower:]')
+              [ -n "${seen[$dll_lc]:-}" ] && continue
+              src="$MINGW_BIN/$dll"
+              if [ -f "$src" ]; then
+                dest="pkg/qemu/$dll"
+                [ -f "$dest" ] || cp "$src" "$dest"
+                queue+=("$dest")
+              fi
+            done < <(objdump -p "$cur" 2>/dev/null | awk '/DLL Name:/ {print $3}')
+          done
+          # Stamp the bundle with its version so the resolver can compare
+          # against system-installed QEMU and accept it when versions match.
+          echo "${{ env.QEMU_VERSION }}" > pkg/qemu/VERSION
+          echo "=== Bundled MINGW64 DLLs ==="
+          ls pkg/qemu/*.dll
+
+      # Smoke-test the packaged binaries in a clean environment so missing
+      # runtime deps (e.g. the libbz2/libfdt/libzstd Windows regression that
+      # caused STATUS_DLL_NOT_FOUND) fail CI before publish, not in users' VMs.
+      - name: Smoke test bundle (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          PATH: /usr/bin:/bin
+        run: |
+          cd pkg/qemu
+          ./qemu-system-x86_64 --version
+          ./qemu-system-aarch64 --version
+          [ -f qemu-img ] && ./qemu-img --version || true
+
+      - name: Smoke test bundle (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        # cmd.exe runs with the default Windows PATH only — no /mingw64/bin —
+        # so any missing transitive DLL surfaces here as exit 0xC0000135.
+        run: |
+          cd pkg\qemu
+          qemu-system-x86_64.exe --version || exit /b 1
+          qemu-system-aarch64.exe --version || exit /b 1
+          if exist qemu-img.exe ( qemu-img.exe --version || exit /b 1 )
 
       - name: Create zip (Windows)
         if: runner.os == 'Windows'

@@ -1,14 +1,6 @@
 <Project>
-  <!-- Platform detection -->
-  <PropertyGroup>
-    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
-    <IsMacOS Condition="'$(OS)' != 'Windows_NT' AND $([MSBuild]::IsOSPlatform('OSX'))">true</IsMacOS>
-    <IsLinux Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' != 'true'">true</IsLinux>
-  </PropertyGroup>
-
-  <Import Project="CC.Build.Unix.targets" Condition="'$(IsLinux)' == 'true'"/>
-  <Import Project="CC.Build.macOS.targets" Condition="'$(IsMacOS)' == 'true'"/>
-  <Import Project="CC.Build.Windows.targets" Condition="'$(IsWindows)' == 'true'"/>
+  <!-- Cross-OS clang resolution via ResolveCosmosToolTask. -->
+  <Import Project="CC.Build.targets"/>
 
   <Target Name="FindCSourceFilesForCC" BeforeTargets="BuildCC">
     <PropertyGroup>

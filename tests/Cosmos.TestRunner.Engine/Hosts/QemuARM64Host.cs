@@ -4,18 +4,19 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Cosmos.Tools.Launcher;
 
 namespace Cosmos.TestRunner.Engine.Hosts;
 
 /// <summary>
-/// QEMU host for ARM64/AArch64 architecture
+/// QEMU host for ARM64/AArch64 architecture. Argument construction lives in
+/// <see cref="QemuLauncher"/> so this stays in sync with `cosmos run`.
 /// </summary>
 public class QemuARM64Host : IQemuHost
 {
     public string Architecture => "arm64";
 
-    private readonly string _qemuBinary;
-    private readonly string _uefiFirmwarePath;
+    private readonly string? _qemuBinaryOverride;
     private readonly int _memoryMb;
 
     public QemuARM64Host(
@@ -23,18 +24,9 @@ public class QemuARM64Host : IQemuHost
         string? uefiFirmwarePath = null,
         int memoryMb = 512)
     {
-        _qemuBinary = qemuBinary ?? ResolveQemuBinaryPath();
-        _uefiFirmwarePath = uefiFirmwarePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "share", "qemu", "edk2-aarch64-code.fd");
+        _qemuBinaryOverride = qemuBinary;
         _memoryMb = memoryMb;
-    }
-
-    private static string ResolveQemuBinaryPath()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cosmos", "Tools", "qemu", "qemu-system-aarch64.exe");
-        }
-        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cosmos", "tools", "qemu", "qemu-system-aarch64");
+        // uefiFirmwarePath ignored — QemuLauncher.ResolveArm64Firmware() handles it.
     }
 
     public async Task<QemuRunResult> RunKernelAsync(string isoPath, string uartLogPath, int timeoutSeconds = 30, bool showDisplay = false, bool enableNetworkTesting = false)
@@ -45,15 +37,6 @@ public class QemuARM64Host : IQemuHost
             {
                 ExitCode = -1,
                 ErrorMessage = $"ISO file not found: {isoPath}"
-            };
-        }
-
-        if (!File.Exists(_uefiFirmwarePath))
-        {
-            return new QemuRunResult
-            {
-                ExitCode = -1,
-                ErrorMessage = $"UEFI firmware not found: {_uefiFirmwarePath}. Please ensure Cosmos Tools are correctly installed."
             };
         }
 
@@ -70,36 +53,28 @@ public class QemuARM64Host : IQemuHost
             File.Delete(uartLogPath);
         }
 
-        // Build QEMU arguments
-        // Note: Always write UART to file for parsing, display mode only affects GUI
-        // ARM64 virt machine doesn't support -vga std, use ramfb device instead
-        // ramfb is required even in headless mode for Limine framebuffer support
-        string displayArgs = showDisplay
-            ? $"-device ramfb -display gtk -serial file:\"{uartLogPath}\""
-            : $"-device ramfb -serial file:\"{uartLogPath}\" -nographic";
-
-        // Network configuration: E1000E device with user-mode networking
-        // Guest IP: 10.0.2.15, Gateway: 10.0.2.2
-        // UDP Port 5555: UdpTestServer binds to receive kernel's outgoing packets (no hostfwd needed)
-        // UDP Port 5556: hostfwd forwards test runner packets to kernel
-        // TCP Port 5557: kernel connects to host (no hostfwd needed, outgoing from guest)
-        // TCP Port 5558: hostfwd forwards test runner packets to kernel's listening socket
-        string networkArgs = "-netdev user,id=net0,hostfwd=udp::5556-:5556,hostfwd=tcp::5558-:5558 -device virtio-net-device,netdev=net0";
-
-        var startInfo = new ProcessStartInfo
+        QemuLaunchPlan plan;
+        try
         {
-            FileName = _qemuBinary,
-            Arguments = $"-M virt,highmem=off -cpu cortex-a72 -m {_memoryMb}M " +
-                       $"-bios \"{_uefiFirmwarePath}\" " +
-                       $"-cdrom \"{isoPath}\" " +
-                       $"-boot d -no-reboot " +
-                       $"{networkArgs} " +
-                       $"{displayArgs}",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = false
-        };
+            plan = await QemuLauncher.BuildAsync(new QemuLaunchOptions
+            {
+                Architecture = "arm64",
+                IsoPath = isoPath,
+                MemoryMb = _memoryMb,
+                Headless = !showDisplay,
+                SerialOutputFile = uartLogPath,
+                EnableNetworkTesting = enableNetworkTesting
+            });
+        }
+        catch (FileNotFoundException ex)
+        {
+            return new QemuRunResult { ExitCode = -1, ErrorMessage = ex.Message };
+        }
+        var startInfo = QemuLauncher.ToProcessStartInfo(plan);
+        if (_qemuBinaryOverride is not null)
+        {
+            startInfo.FileName = _qemuBinaryOverride;
+        }
 
         using var process = new Process { StartInfo = startInfo };
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));

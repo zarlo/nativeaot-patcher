@@ -9,6 +9,8 @@ public class ToolStatus
     public string? Version { get; init; }
     public string? Path { get; init; }
     public string? FoundCommand { get; init; }
+    /// <summary>How the tool was located (Override / System / Bundle / NotFound). FileToolDefinitions report NotFound on miss, Bundle on hit.</summary>
+    public ToolSource Source { get; init; } = ToolSource.NotFound;
 }
 
 public static class ToolChecker
@@ -27,23 +29,22 @@ public static class ToolChecker
 
     private static async Task<ToolStatus> CheckCommandToolAsync(CommandToolDefinition tool)
     {
-        foreach (string command in tool.GetCommands(PlatformInfo.CurrentOS))
+        // Delegate to ToolResolver so cosmos check, MSBuild, and the test runner all
+        // agree on which binary to use for any given tool.
+        ResolvedTool resolved = await ToolResolver.ResolveAsync(tool);
+        if (resolved.Source != ToolSource.NotFound && File.Exists(resolved.Path))
         {
-            var (found, version, path) = await TryFindCommandAsync(command, tool.VersionArg);
-            if (found)
+            return new ToolStatus
             {
-                return new ToolStatus
-                {
-                    Tool = tool,
-                    Found = true,
-                    Version = version,
-                    Path = path,
-                    FoundCommand = command
-                };
-            }
+                Tool = tool,
+                Found = true,
+                Version = resolved.Version,
+                Path = resolved.Path,
+                FoundCommand = Path.GetFileName(resolved.Path),
+                Source = resolved.Source
+            };
         }
-
-        return new ToolStatus { Tool = tool, Found = false };
+        return new ToolStatus { Tool = tool, Found = false, Source = ToolSource.NotFound };
     }
 
     private static ToolStatus CheckFileTool(FileToolDefinition tool)
@@ -68,7 +69,8 @@ public static class ToolChecker
                     Tool = tool,
                     Found = true,
                     Path = expanded,
-                    FoundCommand = expanded
+                    FoundCommand = expanded,
+                    Source = ToolSource.Bundle
                 };
             }
         }
