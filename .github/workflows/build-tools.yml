@@ -662,16 +662,25 @@ jobs:
             export LDFLAGS="-L${BREW_PREFIX}/lib ${LDFLAGS:-}"
           fi
           cd gdb-${GDB_VERSION}
+          # --disable-{binutils,gas,ld,gprof,gprofng}: we only want gdb,
+          # so skip the binutils sister components. `make` then builds
+          # gdb + its required support libs (bfd, opcodes, libiberty…)
+          # and nothing else.
           ./configure \
             --enable-targets=all \
             --disable-werror \
             --disable-source-highlight \
             --disable-tui \
             --disable-nls \
+            --disable-binutils \
+            --disable-gas \
+            --disable-ld \
+            --disable-gprof \
+            --disable-gprofng \
             --with-python=no \
             --without-guile
-          make -j$NPROC all-gdb
-          strip gdb/gdb 2>/dev/null || true
+          make -j$NPROC
+          strip gdb/gdb gdb/gdb-unsigned 2>/dev/null || true
 
       - name: Build GDB (Windows)
         if: runner.os == 'Windows'
@@ -684,9 +693,14 @@ jobs:
             --disable-source-highlight \
             --disable-tui \
             --disable-nls \
+            --disable-binutils \
+            --disable-gas \
+            --disable-ld \
+            --disable-gprof \
+            --disable-gprofng \
             --with-python=no \
             --without-guile
-          make -j$(nproc) all-gdb
+          make -j$(nproc)
           strip gdb/gdb.exe
 
       - name: Package (Linux/macOS)
