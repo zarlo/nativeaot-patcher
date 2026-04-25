@@ -743,8 +743,21 @@ jobs:
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
+          set -e
           mkdir -p pkg/gdb/bin
-          cp gdb-${GDB_VERSION}/gdb/gdb.exe pkg/gdb/bin/gdb-multiarch.exe
+          # Locate the built binary — the cross-target build can land it
+          # under .libs/ (libtool) or the gdb/ root. List candidates first
+          # so any path drift surfaces clearly in the log.
+          echo "=== Candidate gdb binaries in build dir ==="
+          find "gdb-${GDB_VERSION}/gdb" -maxdepth 2 -name 'gdb*.exe' -type f 2>/dev/null
+          SRC=$(find "gdb-${GDB_VERSION}/gdb" -maxdepth 2 -name 'gdb.exe' -type f | head -1)
+          if [ -z "$SRC" ]; then
+            echo "ERROR: built gdb.exe not found" >&2
+            exit 1
+          fi
+          cp "$SRC" pkg/gdb/bin/gdb-multiarch.exe
+          echo "=== Packaged binary ==="
+          ls -la pkg/gdb/bin/
           # Walk PE imports to bundle MINGW64 DLLs (same recursive pattern as
           # the QEMU bundle). Anything not under /mingw64/bin is a Windows
           # system DLL (kernel32, ws2_32, …) and is skipped.
@@ -770,7 +783,7 @@ jobs:
           done
           echo "${GDB_VERSION}" > pkg/gdb/VERSION
           echo "=== Bundled MINGW64 DLLs ==="
-          ls pkg/gdb/bin/*.dll || true
+          ls pkg/gdb/bin/*.dll || echo "(no DLLs bundled — gdb-multiarch.exe must be statically linked)"
 
       - name: Smoke test bundle (Linux/macOS)
         if: runner.os != 'Windows'
