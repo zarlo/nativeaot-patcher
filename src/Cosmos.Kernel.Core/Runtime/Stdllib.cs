@@ -74,7 +74,7 @@ namespace Cosmos.Kernel.Core.Runtime
         [RuntimeExport("InitializeModules")]
         internal static unsafe void InitializeModules(IntPtr osModule, IntPtr* pModuleHeaders, int count, IntPtr* pClasslibFunctions, int nClasslibFunctions) { }
 
-        // RhpThrowEx is now implemented in assembly (CPU/ExceptionHandling.asm)
+        // RhpThrowEx is now implemented in assembly (CPU/ExceptionHandling.s)
         // The assembly stub saves register context, creates ExInfo, then calls RhThrowEx
 
         /// <summary>
@@ -265,7 +265,7 @@ namespace Cosmos.Kernel.Core.Runtime
             return Memory.RhpNewFast(pEEType); // Simplified implementation (Should set gc flag)
         }
 
-        // RhpRethrow is now implemented in assembly (CPU/ExceptionHandling.asm)
+        // RhpRethrow is now implemented in assembly (CPU/ExceptionHandling.s)
 
         [RuntimeExport("RhSpinWait")]
         internal static void RhSpinWait(int iterations)

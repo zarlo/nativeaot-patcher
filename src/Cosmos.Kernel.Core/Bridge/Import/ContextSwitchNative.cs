@@ -7,7 +7,7 @@ namespace Cosmos.Kernel.Core.Bridge;
 /// <summary>
 /// Native imports for the low-level context switch primitives.
 /// Symbols are unified across architectures: Cosmos.Kernel.Native.X64
-/// (Interrupts.asm) and Cosmos.Kernel.Native.ARM64 (ContextSwitch.s) both
+/// (Interrupts.s) and Cosmos.Kernel.Native.ARM64 (ContextSwitch.s) both
 /// export the same names, so no arch gating is needed here.
 /// </summary>
 public static partial class ContextSwitchNative

@@ -15,11 +15,11 @@
 
   <ItemGroup>
     <Content Include="build\Cosmos.Kernel.Native.X64.props" PackagePath="build\" />
-    <Content Include="IO\*.asm" PackagePath="build\IO" />
-    <Content Include="Debug\*.asm" PackagePath="build\Debug" />
-    <Content Include="CPU\*.asm" PackagePath="build\CPU" />
-    <Content Include="Memory\*.asm" PackagePath="build\Memory" />
-    <Content Include="Runtime\*.asm" PackagePath="build\Runtime" />
+    <Content Include="IO\*.s" PackagePath="build\IO" />
+    <Content Include="Debug\*.s" PackagePath="build\Debug" />
+    <Content Include="CPU\*.s" PackagePath="build\CPU" />
+    <Content Include="Memory\*.s" PackagePath="build\Memory" />
+    <Content Include="Runtime\*.s" PackagePath="build\Runtime" />
   </ItemGroup>
 
 </Project>

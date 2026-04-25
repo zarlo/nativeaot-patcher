@@ -2,12 +2,12 @@
 // Build cache integration tests — coverage matrix
 // =====================================================================
 //
-// Validates the full pipeline (Patcher → ILC → YASM → CC → Linker → ISO):
+// Validates the full pipeline (Patcher → ILC → ASM → CC → Linker → ISO):
 //   - All steps are skipped when nothing changed.
 //   - Each source-language change rebuilds only its own step + downstream
 //     (managed → managed, ASM → ASM, C → C) and leaves the unrelated
 //     compilation steps strictly cached.
-//   - Content-hash filenames for YASM/CC create new outputs on edit and
+//   - Content-hash filenames for ASM/CC create new outputs on edit and
 //     cleanly orphan-remove the previous ones.
 //   - Adding/removing a source file is reflected in the object directory.
 //
@@ -20,7 +20,7 @@
 //                       revert source -> original content-hash name returns
 //
 // |-----------------------------------------------------------------------------------------------------------------------------------------------------|
-// | Test            | Patcher             | ILC                 | YASM                | CC                 | Linker              | ISO                 |
+// | Test            | Patcher             | ILC                 | ASM                | CC                 | Linker              | ISO                 |
 // |-----------------|---------------------|---------------------|---------------------|---------------------|---------------------|---------------------|
 // | T01 Clean       | runs                | runs                | runs                | runs                | runs                | runs                |
 // | T02 No-change   | OK hit + hash mtime | OK hit + hash mtime | OK snapshot eq      | OK snapshot eq      | OK hit + hash mtime | OK hit + hash mtime |
@@ -31,8 +31,8 @@
 // | T07 C change    | OK hit              | OK hit + mtime eq   | OK snapshot eq      | rebuilds (keys)     | rebuilds (mtime)    | rebuilds (mtime)    |
 // | T08 C revert    | OK hit              | OK hit              | OK hit              | OK hit              | OK hit              | OK hit              |
 // | T09 CC orphan  | -                   | -                   | -                   | add/del cleanup     | -                   | -                   |
-// | T10 YASM orphan | -                   | -                   | add/del cleanup     | -                   | -                   | -                   |
-// | T11 YASM hash   | -                   | -                   | edit/revert RT      | -                   | -                   | -                   |
+// | T10 ASM orphan | -                   | -                   | add/del cleanup     | -                   | -                   | -                   |
+// | T11 ASM hash   | -                   | -                   | edit/revert RT      | -                   | -                   | -                   |
 // | T12 CC hash    | -                   | -                   | -                   | edit/revert RT      | -                   | -                   |
 // | T13 Clean+cache | runs -> OK hit      | runs -> OK hit      | runs -> snapshot eq | runs -> snapshot eq | runs -> OK hit      | runs -> OK hit      |
 // |-----------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -114,7 +114,7 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         Assert.True(File.Exists(_fixture.IsoHashFile), "ISO cache hash not written");
         Assert.True(File.Exists(_fixture.IlcOutput), "ILC .o not produced");
         Assert.True(Directory.Exists(_fixture.AsmObjDir) && Directory.GetFiles(_fixture.AsmObjDir, "*.obj").Length > 0,
-            "YASM produced no .obj files");
+            "ASM produced no .obj files");
         Assert.True(Directory.Exists(_fixture.CObjDir) && Directory.GetFiles(_fixture.CObjDir, "*.o").Length > 0,
             "CC produced no .o files");
 
@@ -129,7 +129,7 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
     //   - No "actually compiled" log lines.
     //   - ELF / ISO / ILC output mtimes unchanged.
     //   - All four hash files unchanged (no cache layer rewrote its file).
-    //   - YASM .obj snapshot byte-for-byte identical.
+    //   - ASM .obj snapshot byte-for-byte identical.
     //   - CC  .o   snapshot byte-for-byte identical.
     // ==================================================================
     [Fact, TestPriority(2)]
@@ -169,14 +169,14 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         Assert.Equal(linkHashBefore, File.GetLastWriteTimeUtc(_fixture.LinkHashFile));
         Assert.Equal(isoHashBefore, File.GetLastWriteTimeUtc(_fixture.IsoHashFile));
 
-        // YASM and CC object directories untouched
-        AssertSnapshotEqual(asmObjBefore, SnapshotDir(_fixture.AsmObjDir, "*.obj"), "YASM .obj");
+        // ASM and CC object directories untouched
+        AssertSnapshotEqual(asmObjBefore, SnapshotDir(_fixture.AsmObjDir, "*.obj"), "ASM .obj");
         AssertSnapshotEqual(cObjBefore, SnapshotDir(_fixture.CObjDir, "*.o"), "CC .o");
     }
 
     // ==================================================================
     // TEST 3: C# change → only patcher + ILC + linker + ISO rebuild.
-    //                     YASM and CC stay strictly cached.
+    //                     ASM and CC stay strictly cached.
     // ==================================================================
     [Fact, TestPriority(3)]
     public void T03_CSharpChange_RebuildsManagedOnly()
@@ -200,10 +200,10 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         Assert.Contains("Batch patching:", result.Stdout);
         Assert.Contains("[ILC] Compiling:", result.Stdout);
 
-        // YASM and CC object directories must be untouched (managed change
+        // ASM and CC object directories must be untouched (managed change
         // doesn't affect ASM or C compilation inputs).
         AssertSnapshotEqual(asmObjBefore, SnapshotDir(_fixture.AsmObjDir, "*.obj"),
-            "YASM .obj after C# change");
+            "ASM .obj after C# change");
         AssertSnapshotEqual(cObjBefore, SnapshotDir(_fixture.CObjDir, "*.o"),
             "CC .o after C# change");
 
@@ -231,7 +231,7 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
     }
 
     // ==================================================================
-    // TEST 5: ASM change → only YASM + linker + ISO rebuild.
+    // TEST 5: ASM change → only ASM + linker + ISO rebuild.
     //                      Patcher, ILC and CC stay strictly cached.
     // ==================================================================
     [Fact, TestPriority(5)]
@@ -258,7 +258,7 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         AssertSnapshotEqual(cObjBefore, SnapshotDir(_fixture.CObjDir, "*.o"),
             "CC .o after ASM change");
 
-        // YASM .obj set must change (content-hash filename → new file, old orphan removed).
+        // ASM .obj set must change (content-hash filename → new file, old orphan removed).
         Dictionary<string, DateTime> asmObjAfter = SnapshotDir(_fixture.AsmObjDir, "*.obj");
         string asmKeysBefore = string.Join(",", asmObjBefore.Keys.OrderBy(k => k));
         string asmKeysAfter = string.Join(",", asmObjAfter.Keys.OrderBy(k => k));
@@ -276,7 +276,7 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
     public void T06_AsmRevert_RestoresCache()
     {
         // Marker was reverted by the using-disposable in T05. The first build
-        // re-hashes the asm to its original content; YASM regenerates the
+        // re-hashes the asm to its original content; ASM regenerates the
         // original-content .obj filename and orphans the modified one. Second
         // build then hits all four caches.
         BuildResult stabilize = _fixture.Build();
@@ -289,7 +289,7 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
 
     // ==================================================================
     // TEST 7: C change → only CC + linker + ISO rebuild.
-    //                    Patcher, ILC and YASM stay strictly cached.
+    //                    Patcher, ILC and ASM stay strictly cached.
     // ==================================================================
     [Fact, TestPriority(7)]
     public void T07_CChange_RebuildsCCOnly()
@@ -311,9 +311,9 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
         Assert.Contains("ILC cache hit", result.Stdout);
         Assert.Equal(ilcBefore, File.GetLastWriteTimeUtc(_fixture.IlcOutput));
 
-        // YASM ASM objects must be byte-for-byte unchanged.
+        // ASM ASM objects must be byte-for-byte unchanged.
         AssertSnapshotEqual(asmObjBefore, SnapshotDir(_fixture.AsmObjDir, "*.obj"),
-            "YASM .obj after C change");
+            "ASM .obj after C change");
 
         // CC .o set must change (content-hash filename → new file, old orphan removed).
         Dictionary<string, DateTime> cObjAfter = SnapshotDir(_fixture.CObjDir, "*.o");
@@ -373,24 +373,24 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
     }
 
     // ==================================================================
-    // TEST 10: YASM orphan cleanup — deleted ASM file's object is removed.
+    // TEST 10: ASM orphan cleanup — deleted ASM file's object is removed.
     //
-    // Drops a self-contained .asm file alongside Runtime.asm in the NuGet
-    // runtime build dir; YASM picks it up via the *.asm glob, builds it,
+    // Drops a self-contained .s file alongside Runtime.s in the NuGet
+    // runtime build dir; clang picks it up via the *.s glob, builds it,
     // then we delete the source and rebuild to verify the .obj is removed.
     // ==================================================================
     [Fact, TestPriority(10)]
-    public void T10_YasmOrphanCleanup_RemovesStaleObject()
+    public void T10_AsmOrphanCleanup_RemovesStaleObject()
     {
         string asmDir = Path.GetDirectoryName(_fixture.AsmFile)!;
-        string tempAsm = Path.Combine(asmDir, "cache_test_orphan.asm");
+        string tempAsm = Path.Combine(asmDir, "cache_test_orphan.s");
 
         // Self-contained: a unique section + global label, no external refs.
         File.WriteAllText(tempAsm,
-            "section .cache_test_orphan_data\n" +
-            "global cache_test_orphan_marker_sym\n" +
+            ".section .cache_test_orphan_data\n" +
+            ".global cache_test_orphan_marker_sym\n" +
             "cache_test_orphan_marker_sym:\n" +
-            "db 0x42\n");
+            ".byte 0x42\n");
 
         try
         {
@@ -416,13 +416,13 @@ public class BuildCacheTests : IClassFixture<BuildFixture>
     }
 
     // ==================================================================
-    // TEST 11: YASM content-hash filename round trip.
+    // TEST 11: ASM content-hash filename round trip.
     //
     // Edit asm → new content-hash filename + old orphan removed.
     // Revert  → original content-hash filename returns.
     // ==================================================================
     [Fact, TestPriority(11)]
-    public void T11_YasmContentHash_RoundTrip()
+    public void T11_AsmContentHash_RoundTrip()
     {
         string asmBaseName = Path.GetFileNameWithoutExtension(_fixture.AsmFile);
         string[] originalObjs = Directory.GetFiles(_fixture.AsmObjDir, $"{asmBaseName}-*.obj");

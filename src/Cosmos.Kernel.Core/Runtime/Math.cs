@@ -11,7 +11,7 @@
 
 // Transcendental math functions.
 // Core functions (sin, cos, tan, exp, log, atan): ARM64 uses C# fdlibm,
-//   x64 uses x87 FPU assembly in Cosmos.Kernel.Native.X64/Runtime/Runtime.asm.
+//   x64 uses x87 FPU assembly in Cosmos.Kernel.Native.X64/Runtime/Runtime.s.
 // Derived functions (asin, acos, atan2, pow, log2, log10): shared C# on both arches,
 //   ported from fdlibm via Cosmos Gen2 (Cosmos/source/Cosmos.System2_Plugs/System/MathImpl.cs).
 

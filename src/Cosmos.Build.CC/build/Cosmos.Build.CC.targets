@@ -28,7 +28,7 @@
   </Target>
 
   <!-- Target to compile C files with Clang -->
-  <Target Name="BuildCC" AfterTargets="BuildYasm" DependsOnTargets="FindCSourceFilesForCC; GetCC">
+  <Target Name="BuildCC" AfterTargets="BuildAsm" DependsOnTargets="FindCSourceFilesForCC; GetCC">
     <PropertyGroup>
       <CCOutputPath>$(IntermediateOutputPath)cosmos/cobj/</CCOutputPath>
       <!-- Default compiler flags -->
