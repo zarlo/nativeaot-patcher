@@ -9,7 +9,7 @@ public class ToolStatus
     public string? Version { get; init; }
     public string? Path { get; init; }
     public string? FoundCommand { get; init; }
-    /// <summary>How the tool was located (Override / System / Bundle / NotFound). FileToolDefinitions report NotFound on miss, Bundle on hit.</summary>
+    /// <summary>How the tool was located (Override / System / Bundle / NotFound).</summary>
     public ToolSource Source { get; init; } = ToolSource.NotFound;
 }
 
@@ -22,7 +22,6 @@ public static class ToolChecker
         return tool switch
         {
             CommandToolDefinition cmd => await CheckCommandToolAsync(cmd),
-            FileToolDefinition file => CheckFileTool(file),
             _ => new ToolStatus { Tool = tool, Found = false }
         };
     }
@@ -45,37 +44,6 @@ public static class ToolChecker
             };
         }
         return new ToolStatus { Tool = tool, Found = false, Source = ToolSource.NotFound };
-    }
-
-    private static ToolStatus CheckFileTool(FileToolDefinition tool)
-    {
-        var paths = tool.GetPaths(PlatformInfo.CurrentOS);
-        if (paths == null)
-        {
-            return new ToolStatus { Tool = tool, Found = false };
-        }
-
-        foreach (string filePath in paths)
-        {
-            string expanded = Environment.ExpandEnvironmentVariables(filePath);
-            if (expanded.StartsWith("~/"))
-            {
-                expanded = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), expanded.Substring(2));
-            }
-            if (File.Exists(expanded))
-            {
-                return new ToolStatus
-                {
-                    Tool = tool,
-                    Found = true,
-                    Path = expanded,
-                    FoundCommand = expanded,
-                    Source = ToolSource.Bundle
-                };
-            }
-        }
-
-        return new ToolStatus { Tool = tool, Found = false };
     }
 
     public static async Task<List<ToolStatus>> CheckAllToolsAsync()

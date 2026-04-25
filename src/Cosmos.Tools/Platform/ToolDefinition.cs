@@ -35,21 +35,6 @@ public class CommandToolDefinition : ToolDefinition
     };
 }
 
-public class FileToolDefinition : ToolDefinition
-{
-    public string[]? WindowsPaths { get; init; }
-    public string[]? LinuxPaths { get; init; }
-    public string[]? MacOSPaths { get; init; }
-
-    public string[]? GetPaths(OSPlatform platform) => platform switch
-    {
-        OSPlatform.Windows => WindowsPaths,
-        OSPlatform.Linux => LinuxPaths,
-        OSPlatform.MacOS => MacOSPaths,
-        _ => null
-    };
-}
-
 public static class ToolDefinitions
 {
     public static readonly CommandToolDefinition DotNetSdk = new()
@@ -143,18 +128,6 @@ public static class ToolDefinitions
         ReleaseAsset = "qemu"
     };
 
-    public static readonly FileToolDefinition QemuEfiArm64 = new()
-    {
-        Name = "QEMU EFI (ARM64)",
-        DisplayName = "QEMU UEFI Firmware",
-        Description = "UEFI firmware for ARM64 QEMU — bundled with QEMU",
-        Required = false,
-        // Single canonical bundle path on every OS (matches QemuLauncher.ResolveArm64Firmware).
-        WindowsPaths = [@"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\qemu\edk2-aarch64-code.fd"],
-        LinuxPaths = ["~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd"],
-        MacOSPaths = ["~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd"]
-    };
-
     public static readonly CommandToolDefinition Gdb = new()
     {
         Name = "gdb-multiarch",
@@ -177,7 +150,6 @@ public static class ToolDefinitions
         Yasm,
         QemuX64,
         QemuArm64,
-        QemuEfiArm64,
         Gdb
     ];
 }

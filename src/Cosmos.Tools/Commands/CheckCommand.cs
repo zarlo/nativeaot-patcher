@@ -42,7 +42,7 @@ public class CheckCommand : AsyncCommand<CheckSettings>
 
         foreach (var result in results)
         {
-            bool detected = result.Found && (result.Version != null || result.Tool is FileToolDefinition);
+            bool detected = result.Found && result.Version != null;
             string status = detected ? "[green]\u2713[/]" : "[red]\u2717[/]";
             string required = result.Tool.Required ? "" : " [dim](optional)[/]";
             string name = result.Tool.DisplayName.PadRight(maxNameLen);
@@ -77,7 +77,7 @@ public class CheckCommand : AsyncCommand<CheckSettings>
         AnsiConsole.WriteLine();
         AnsiConsole.WriteLine("  " + new string('-', 50));
 
-        bool IsDetected(ToolStatus r) => r.Found && (r.Version != null || r.Tool is FileToolDefinition);
+        bool IsDetected(ToolStatus r) => r.Found && r.Version != null;
         var requiredMissing = results.Where(r => r.Tool.Required && !IsDetected(r)).ToList();
         var optionalMissing = results.Where(r => !r.Tool.Required && !IsDetected(r)).ToList();
         bool allFound = results.All(r => IsDetected(r) || !r.Tool.Required);

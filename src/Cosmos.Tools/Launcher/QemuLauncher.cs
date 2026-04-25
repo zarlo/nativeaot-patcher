@@ -119,36 +119,16 @@ public static class QemuLauncher
 
     private static void AppendArm64Args(StringBuilder args, QemuLaunchOptions options)
     {
-        string firmware = ResolveArm64Firmware();
+        // -bios takes a bare filename when not absolute — QEMU resolves it
+        // through its data dir search, which our `-L "<exe>/../share/qemu"`
+        // (added above when Source==Bundle) points at the bundle's
+        // edk2-aarch64-code.fd. No separate firmware-lookup logic needed.
         args.Append($"-M virt,highmem=off -cpu cortex-a72 -m {options.MemoryMb}M");
-        args.Append($" -bios \"{firmware}\"");
+        args.Append(" -bios edk2-aarch64-code.fd");
         args.Append($" -cdrom \"{options.IsoPath}\"");
         args.Append(" -boot d -no-reboot");
         // ramfb is required for Limine framebuffer support even when headless.
         args.Append(" -device ramfb");
-    }
-
-    public static string ResolveArm64Firmware()
-    {
-        // Single canonical bundle path (cross-OS). System-wide install fallbacks
-        // are kept only for users who haven't run `cosmos install`.
-        string toolsRoot = ToolChecker.GetCosmosToolsPath();
-        foreach (string candidate in new[]
-        {
-            Path.Combine(toolsRoot, "qemu", "share", "qemu", "edk2-aarch64-code.fd"),
-            "/usr/share/AAVMF/AAVMF_CODE.fd",
-            "/usr/share/qemu-efi-aarch64/QEMU_EFI.fd",
-            "/opt/homebrew/share/qemu/edk2-aarch64-code.fd",
-            "/usr/local/share/qemu/edk2-aarch64-code.fd"
-        })
-        {
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-        }
-        throw new FileNotFoundException(
-            "ARM64 UEFI firmware (edk2-aarch64-code.fd) not found. Run `cosmos install` to fetch it with the QEMU bundle.");
     }
 
     public static ProcessStartInfo ToProcessStartInfo(QemuLaunchPlan plan)
