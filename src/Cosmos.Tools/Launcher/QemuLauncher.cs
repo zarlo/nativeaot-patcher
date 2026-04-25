@@ -45,6 +45,20 @@ public static class QemuLauncher
         }
 
         var args = new StringBuilder();
+
+        // Single rule, all OSes: when QEMU is bundled, point it at the bundle's
+        // share/qemu/ for BIOS/firmware lookup. The MSYS2 Windows build never
+        // auto-discovers its data dir, and even the Linux/macOS build's runtime
+        // search depends on the build's compile-time prefix matching the install
+        // prefix — we ship a portable bundle, so neither holds. Explicit -L is
+        // the only universally reliable mechanism.
+        if (resolved.Source == ToolSource.Bundle)
+        {
+            string shareQemu = Path.GetFullPath(
+                Path.Combine(Path.GetDirectoryName(resolved.Path)!, "..", "share", "qemu"));
+            args.Append($"-L \"{shareQemu}\" ");
+        }
+
         if (options.Architecture == "x64")
         {
             AppendX64Args(args, options);
@@ -116,15 +130,12 @@ public static class QemuLauncher
 
     public static string ResolveArm64Firmware()
     {
-        // The Windows bundle ships firmware in qemu/bin/ (next to the exe so
-        // QEMU's exec-dir BIOS autodetect finds it). Linux/macOS keep the
-        // share/qemu layout because their wrapper passes -L explicitly.
+        // Single canonical bundle path (cross-OS). System-wide install fallbacks
+        // are kept only for users who haven't run `cosmos install`.
         string toolsRoot = ToolChecker.GetCosmosToolsPath();
         foreach (string candidate in new[]
         {
-            Path.Combine(toolsRoot, "qemu", "bin", "edk2-aarch64-code.fd"),
             Path.Combine(toolsRoot, "qemu", "share", "qemu", "edk2-aarch64-code.fd"),
-            // System-wide locations, for users who skipped `cosmos install`.
             "/usr/share/AAVMF/AAVMF_CODE.fd",
             "/usr/share/qemu-efi-aarch64/QEMU_EFI.fd",
             "/opt/homebrew/share/qemu/edk2-aarch64-code.fd",

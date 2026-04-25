@@ -484,24 +484,23 @@ jobs:
         shell: msys2 {0}
         run: |
           BUILD_DIR="qemu-${{ env.QEMU_VERSION }}/build"
-          # Windows layout: exes + DLLs + BIOS/firmware all in qemu/bin/. QEMU's
-          # os_find_datadir() on Windows returns only qemu_get_exec_dir() (it does
-          # NOT search <exec>/../share/qemu like the Linux/macOS wrapper assumes),
-          # so the BIOS files must live in the same directory as the exe for
-          # automatic lookup to work without -L. The Linux/macOS bundles keep
-          # the share/qemu/ tree because they ship a wrapper script that passes
-          # -L "$DIR/share/qemu".
-          mkdir -p pkg/qemu/bin
+          # Universal layout (matches Linux/macOS):
+          #   qemu/bin/         exes + transitive DLLs
+          #   qemu/share/qemu/  BIOS, ROMs, edk2 firmware
+          # QEMU on the MSYS2/MinGW Windows build does not auto-discover its
+          # data dir, so launchers (cosmos run, test runner, VS Code extension)
+          # always pass -L "<exe_dir>/../share/qemu" — single rule, no OS branch.
+          mkdir -p pkg/qemu/bin pkg/qemu/share/qemu
           find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
           find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
           find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/ 2>/dev/null || true
           strip pkg/qemu/bin/*.exe 2>/dev/null || true
           ls -la pkg/qemu/bin/qemu-system-*
-          # Copy BIOS/firmware files directly alongside the exes
-          cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/bin/ 2>/dev/null || true
-          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/bin/ 2>/dev/null || true
-          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/bin/ 2>/dev/null || true
-          cp firmware/edk2-aarch64-code.fd pkg/qemu/bin/
+          # Copy BIOS/firmware files
+          cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/share/qemu/ 2>/dev/null || true
+          cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
           # Bundle MINGW64 runtime DLLs by walking PE imports transitively.
           # objdump -p lists each DLL imported by a binary; we recurse so deps
           # of deps (e.g. libgio -> libgmodule -> libffi) are captured. Anything
@@ -554,19 +553,18 @@ jobs:
       - name: Smoke test bundle (Windows)
         if: runner.os == 'Windows'
         shell: cmd
-        # cmd.exe runs with the default Windows PATH only — no /mingw64/bin —
-        # so any missing transitive DLL surfaces here as exit 0xC0000135.
-        # File-existence checks enforce the layout invariant: on Windows QEMU's
-        # os_find_datadir() returns just exec_dir (NOT exec_dir/../share/qemu),
-        # so BIOS/firmware files must live next to the exe to be auto-found.
+        # cmd.exe with default Windows PATH (no /mingw64/bin) — any missing
+        # transitive DLL surfaces as exit 0xC0000135. Verifies layout invariant
+        # too: BIOS in qemu/share/qemu/, exes in qemu/bin/ — launchers pass -L
+        # to make QEMU find them.
         run: |
           cd pkg\qemu\bin
           qemu-system-x86_64.exe --version || exit /b 1
           qemu-system-aarch64.exe --version || exit /b 1
           if exist qemu-img.exe ( qemu-img.exe --version || exit /b 1 )
-          if not exist bios-256k.bin ( echo ERROR: bios-256k.bin must sit next to qemu exe ^(Windows looks in exec_dir, not share/qemu^) & exit /b 1 )
-          if not exist edk2-aarch64-code.fd ( echo ERROR: ARM64 UEFI firmware must sit next to qemu exe & exit /b 1 )
-          echo OK: BIOS and firmware files present in exec_dir
+          if not exist ..\share\qemu\bios-256k.bin ( echo ERROR: bios-256k.bin missing from qemu\share\qemu\ & exit /b 1 )
+          if not exist ..\share\qemu\edk2-aarch64-code.fd ( echo ERROR: edk2-aarch64-code.fd missing from qemu\share\qemu\ & exit /b 1 )
+          echo OK: BIOS and ARM64 UEFI firmware present in qemu\share\qemu\
 
       - name: Create zip (Windows)
         if: runner.os == 'Windows'

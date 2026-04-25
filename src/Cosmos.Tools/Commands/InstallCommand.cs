@@ -525,17 +525,15 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         }
     }
 
-    // Tool directories that should be on PATH. QEMU has both "qemu" and
-    // "qemu\bin" because the bundle layout moved exes into bin/ (so QEMU's
-    // <exec>/../share/qemu BIOS autodetection works). Keeping the legacy
-    // "qemu" entry covers existing installs that haven't been re-extracted.
+    // Tool directories that should be on PATH. QEMU exes live under qemu\bin\
+    // (so the bundle's qemu\share\qemu\ BIOS files are discoverable via -L,
+    // which launchers add automatically).
     private static readonly string[] ToolPathSubDirs =
     [
         Path.Combine("llvm-tools", "bin"),
         "yasm",
         "xorriso",
-        Path.Combine("qemu", "bin"),
-        "qemu"
+        Path.Combine("qemu", "bin")
     ];
 
     internal static bool AddToolsToWindowsPath(string toolsPath)

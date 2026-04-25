@@ -149,21 +149,10 @@ public static class ToolDefinitions
         DisplayName = "QEMU UEFI Firmware",
         Description = "UEFI firmware for ARM64 QEMU — bundled with QEMU",
         Required = false,
-        WindowsPaths = [
-            // New layout: firmware ships next to the exe in qemu\bin\ so QEMU's
-            // exec-dir BIOS autodetect on Windows resolves it.
-            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\bin\edk2-aarch64-code.fd",
-            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\qemu\edk2-aarch64-code.fd",
-            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\edk2-aarch64-code.fd"
-        ],
-        LinuxPaths = [
-            "~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd",
-            "~/.cosmos/tools/qemu/share/edk2-aarch64-code.fd"
-        ],
-        MacOSPaths = [
-            "~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd",
-            "~/.cosmos/tools/qemu/share/edk2-aarch64-code.fd"
-        ]
+        // Single canonical bundle path on every OS (matches QemuLauncher.ResolveArm64Firmware).
+        WindowsPaths = [@"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\qemu\edk2-aarch64-code.fd"],
+        LinuxPaths = ["~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd"],
+        MacOSPaths = ["~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd"]
     };
 
     public static IEnumerable<ToolDefinition> GetAllTools() =>
