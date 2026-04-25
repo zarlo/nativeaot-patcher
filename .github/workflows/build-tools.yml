@@ -696,7 +696,16 @@ jobs:
           # Layout matches QEMU bundle: gdb/bin/<exe> so the resolver finds it
           # under the same `<asset>/bin/<cmd>` rule it uses for llvm-tools.
           mkdir -p pkg/gdb/bin
-          cp gdb-${GDB_VERSION}/gdb/gdb pkg/gdb/bin/gdb-multiarch
+          # macOS produces `gdb-unsigned` (codesign is a separate post-build
+          # step); Linux produces `gdb`. Pick whichever exists.
+          SRC=$(find "gdb-${GDB_VERSION}/gdb" -maxdepth 1 \( -name 'gdb' -o -name 'gdb-unsigned' \) -type f | head -1)
+          if [ -z "$SRC" ]; then
+            echo "ERROR: built gdb binary not found under gdb-${GDB_VERSION}/gdb/" >&2
+            ls -la "gdb-${GDB_VERSION}/gdb/" >&2
+            exit 1
+          fi
+          cp "$SRC" pkg/gdb/bin/gdb-multiarch
+          chmod +x pkg/gdb/bin/gdb-multiarch
           echo "${GDB_VERSION}" > pkg/gdb/VERSION
           tar czf gdb-${GDB_VERSION}-${{ matrix.target }}.tar.gz -C pkg gdb
 
