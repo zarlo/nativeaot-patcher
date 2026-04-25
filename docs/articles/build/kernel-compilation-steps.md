@@ -35,12 +35,12 @@ flowchart TD
     end
     ASM_SRC["Assembly Files (.asm)"] --> ASM_BUILD
 
-    subgraph "Cosmos.Build.GCC"
-        GCC_BUILD[GCC Compiler]
-        GCC_BUILD --> |gcc/x86_64-elf-gcc| C_OBJ["C Objects (.obj)"]
+    subgraph "Cosmos.Build.CC"
+        CC_BUILD[Clang Compiler]
+        CC_BUILD --> |"clang --target=..."| C_OBJ["C Objects (.obj)"]
         C_OBJ --> COSMOS_COBJ["$(IntermediateOutputPath)/cosmos/cobj/"]
     end
-    C_SRC["C Source Files (.c)"] --> GCC_BUILD
+    C_SRC["C Source Files (.c)"] --> CC_BUILD
 
     subgraph "Cosmos.Build.Common"
         LINK[Link Target]
@@ -70,11 +70,11 @@ flowchart TD
 
 | Tool | Purpose | Required Version |
 |------|---------|-----------------|
-| **.NET SDK** | Core compilation | 9.0.200+ |
-| **YASM** | Assembly compilation | Latest |
+| **.NET SDK** | Core compilation | 10.0+ |
+| **Clang** | C compilation (x64/ARM64 via --target) | LLVM toolchain |
+| **YASM** | x64 assembly compilation | Latest |
 | **ld.lld** | ELF linking | LLVM toolchain |
 | **xorriso** | ISO creation | Latest |
-| **gcc/x86_64-elf-gcc** | C compilation | Cross-compiler on Windows |
 
 ## Key Components
 
@@ -82,7 +82,7 @@ flowchart TD
 - [`Cosmos.Build.Patcher`](../../../src/Cosmos.Build.Patcher) - IL patching infrastructure
 - [`Cosmos.Build.Ilc`](../../../src/Cosmos.Build.Ilc) - NativeAOT integration
 - [`Cosmos.Build.Asm`](../../../src/Cosmos.Build.Asm) - Assembly compilation
-- [`Cosmos.Build.GCC`](../../../src/Cosmos.Build.GCC) - C compilation
+- [`Cosmos.Build.CC`](../../../src/Cosmos.Build.CC) - C compilation (Clang)
 - [`Cosmos.Build.Common`](../../../src/Cosmos.Build.Common) - Linking and ISO creation
 
 ## Example Project
@@ -97,7 +97,7 @@ Reference implementation: `examples/DevKernel/DevKernel.csproj`
 | Patching | `$(IntermediateOutputPath)/cosmos/ref/` | Reference assemblies |
 | NativeAOT | `$(IntermediateOutputPath)/cosmos/native/` | Native object files (.o) |
 | Assembly | `$(IntermediateOutputPath)/cosmos/asm/` | YASM objects (.obj) |
-| C Code | `$(IntermediateOutputPath)/cosmos/cobj/` | GCC objects (.o/.obj) |
+| C Code | `$(IntermediateOutputPath)/cosmos/cobj/` | Clang objects (.o/.obj) |
 | Linking | `$(OutputPath)/$(AssemblyName).elf` | Linked ELF kernel |
 | ISO | `$(OutputPath)/cosmos/$(AssemblyName).iso` | Bootable ISO image |
 | Publish | `$(PublishDir)/$(AssemblyName).iso` | Published ISO |

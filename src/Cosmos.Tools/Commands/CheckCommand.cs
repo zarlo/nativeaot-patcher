@@ -42,7 +42,7 @@ public class CheckCommand : AsyncCommand<CheckSettings>
 
         foreach (var result in results)
         {
-            bool detected = result.Found && (result.Version != null || result.Tool is FileToolDefinition);
+            bool detected = result.Found && result.Version != null;
             string status = detected ? "[green]\u2713[/]" : "[red]\u2717[/]";
             string required = result.Tool.Required ? "" : " [dim](optional)[/]";
             string name = result.Tool.DisplayName.PadRight(maxNameLen);
@@ -50,8 +50,15 @@ public class CheckCommand : AsyncCommand<CheckSettings>
             if (detected)
             {
                 string ver = result.Version != null ? $" [dim]({result.Version})[/]" : "";
+                string source = result.Source switch
+                {
+                    ToolSource.Bundle => " [cyan][[bundle]][/]",
+                    ToolSource.System => " [green][[system]][/]",
+                    ToolSource.Override => " [yellow][[override]][/]",
+                    _ => ""
+                };
                 string path = result.Path != null ? $" [dim]{Markup.Escape(result.Path)}[/]" : "";
-                AnsiConsole.MarkupLine($"  {status} {name}{ver}{path}");
+                AnsiConsole.MarkupLine($"  {status} {name}{ver}{source}{path}");
             }
             else if (result.Found)
             {
@@ -70,7 +77,7 @@ public class CheckCommand : AsyncCommand<CheckSettings>
         AnsiConsole.WriteLine();
         AnsiConsole.WriteLine("  " + new string('-', 50));
 
-        bool IsDetected(ToolStatus r) => r.Found && (r.Version != null || r.Tool is FileToolDefinition);
+        bool IsDetected(ToolStatus r) => r.Found && r.Version != null;
         var requiredMissing = results.Where(r => r.Tool.Required && !IsDetected(r)).ToList();
         var optionalMissing = results.Where(r => !r.Tool.Required && !IsDetected(r)).ToList();
         bool allFound = results.All(r => IsDetected(r) || !r.Tool.Required);
@@ -112,7 +119,8 @@ public class CheckCommand : AsyncCommand<CheckSettings>
             Console.WriteLine($"      \"found\": {r.Found.ToString().ToLower()},");
             Console.WriteLine($"      \"required\": {r.Tool.Required.ToString().ToLower()},");
             Console.WriteLine($"      \"version\": {(r.Version != null ? $"\"{r.Version}\"" : "null")},");
-            Console.WriteLine($"      \"path\": {(r.Path != null ? $"\"{r.Path.Replace("\\", "\\\\")}\"" : "null")}");
+            Console.WriteLine($"      \"path\": {(r.Path != null ? $"\"{r.Path.Replace("\\", "\\\\")}\"" : "null")},");
+            Console.WriteLine($"      \"source\": \"{r.Source.ToString().ToLowerInvariant()}\"");
             Console.WriteLine($"    }}{comma}");
         }
 

@@ -7,7 +7,7 @@ ifeq ($(ARCH),arm64)
   DEFINE       := ARCH_ARM64
   COSMOS_ARCH  := arm64
   QEMU         := qemu-system-aarch64 -M virt -cpu cortex-a72 -m 512M \
-                    -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd
+                    -bios ~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd
 else
   RID          := linux-x64
   DEFINE       := ARCH_X64

@@ -65,17 +65,7 @@
     <TargetArchitecture Condition="'$(TargetArchitecture)' == '' and '$(CosmosArch)' != ''">$(CosmosArch)</TargetArchitecture>
   </PropertyGroup>
 
-  <!-- Prefer Homebrew cross compilers when available to avoid hardcoded /opt/homebrew paths in downstream targets -->
-  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-    <HomebrewPrefix Condition="'$(HomebrewPrefix)' == '' and Exists('/opt/homebrew/bin/brew')">/opt/homebrew</HomebrewPrefix>
-    <HomebrewPrefix Condition="'$(HomebrewPrefix)' == '' and Exists('/usr/local/bin/brew')">/usr/local</HomebrewPrefix>
-
-    <!-- GCCPath only if not already set by the caller; mirrors ResolveHomebrewGCC but runs earlier as a safety net -->
-    <GCCPath Condition="'$(GCCPath)' == '' and '$(TargetArchitecture)' == 'x64' and '$(HomebrewPrefix)' != '' and Exists('$(HomebrewPrefix)/opt/x86_64-elf-gcc/bin/x86_64-elf-gcc')">$(HomebrewPrefix)/opt/x86_64-elf-gcc/bin/x86_64-elf-gcc</GCCPath>
-    <GCCPath Condition="'$(GCCPath)' == '' and '$(TargetArchitecture)' == 'x64' and '$(HomebrewPrefix)' != '' and Exists('$(HomebrewPrefix)/bin/x86_64-elf-gcc')">$(HomebrewPrefix)/bin/x86_64-elf-gcc</GCCPath>
-    <GCCPath Condition="'$(GCCPath)' == '' and '$(TargetArchitecture)' == 'arm64' and '$(HomebrewPrefix)' != '' and Exists('$(HomebrewPrefix)/opt/aarch64-elf-gcc/bin/aarch64-elf-gcc')">$(HomebrewPrefix)/opt/aarch64-elf-gcc/bin/aarch64-elf-gcc</GCCPath>
-    <GCCPath Condition="'$(GCCPath)' == '' and '$(TargetArchitecture)' == 'arm64' and '$(HomebrewPrefix)' != '' and Exists('$(HomebrewPrefix)/bin/aarch64-elf-gcc')">$(HomebrewPrefix)/bin/aarch64-elf-gcc</GCCPath>
-  </PropertyGroup>
+  <!-- Clang defaults to 'clang' on PATH — set by Cosmos.Build.CC.props -->
 
   <!-- Native ASM files come from the NuGet packages (Cosmos.Kernel.Native.X64/ARM64).
        Local-source overrides removed to avoid duplicate-symbol conflicts when both the

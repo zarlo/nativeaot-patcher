@@ -487,8 +487,7 @@ The CI workflow (`.github/workflows/kernel-tests.yml`) runs kernel integration t
 - Verify .NET 9 SDK is installed
 
 ### ARM64 Issues
-- Ensure UEFI firmware is present: `/usr/share/qemu-efi-aarch64/QEMU_EFI.fd`
-- Install on Ubuntu: `sudo apt install qemu-efi-aarch64`
+- Ensure UEFI firmware is present: `~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd`
 - Use a longer timeout (90 s+ for HelloWorld, 180 s+ for Memory)
 
 ### #UD Exceptions (Invalid Opcode)
