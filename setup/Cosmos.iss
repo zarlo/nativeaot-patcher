@@ -55,7 +55,6 @@ Source: "bundle\packages\*.nupkg"; DestDir: "{app}\Packages"; Flags: ignoreversi
 Source: "bundle\tools\windows\llvm-tools\*"; DestDir: "{app}\Tools\llvm-tools"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Build tools
-Source: "bundle\tools\windows\yasm\*"; DestDir: "{app}\Tools\yasm"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "bundle\tools\windows\xorriso\*"; DestDir: "{app}\Tools\xorriso"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; QEMU emulator (x64 and ARM64)
@@ -224,7 +223,6 @@ begin
   if CurStep = ssPostInstall then
   begin
     { Add tool directories to user PATH }
-    AddToUserPath(ExpandConstant('{app}\Tools\yasm'));
     AddToUserPath(ExpandConstant('{app}\Tools\xorriso'));
     AddToUserPath(ExpandConstant('{app}\Tools\llvm-tools\bin'));
     AddToUserPath(ExpandConstant('{app}\Tools\qemu'));
@@ -240,7 +238,6 @@ begin
   if CurUninstallStep = usPostUninstall then
   begin
     { Remove tool directories from user PATH }
-    RemoveFromUserPath(ExpandConstant('{app}\Tools\yasm'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\xorriso'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\llvm-tools\bin'));
     RemoveFromUserPath(ExpandConstant('{app}\Tools\qemu'));
