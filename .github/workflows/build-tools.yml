@@ -484,14 +484,16 @@ jobs:
         shell: msys2 {0}
         run: |
           BUILD_DIR="qemu-${{ env.QEMU_VERSION }}/build"
-          mkdir -p pkg/qemu/share/qemu
-          # Find binaries
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/ 2>/dev/null || true
-          strip pkg/qemu/*.exe 2>/dev/null || true
-          # Verify binaries exist
-          ls -la pkg/qemu/qemu-system-*
+          # Layout: exes go in qemu/bin/ so QEMU's <exec_dir>/../share/qemu BIOS
+          # autodetect resolves to qemu/share/qemu (where the firmware lives).
+          # Without bin/ subdir, QEMU would search Cosmos/Tools/share/qemu (one
+          # level up from qemu/) and fail with "could not load PC BIOS".
+          mkdir -p pkg/qemu/bin pkg/qemu/share/qemu
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/ 2>/dev/null || true
+          strip pkg/qemu/bin/*.exe 2>/dev/null || true
+          ls -la pkg/qemu/bin/qemu-system-*
           # Copy firmware files from build dir (directories) and source tree (BIOS binaries)
           cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
           cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/share/qemu/ 2>/dev/null || true
@@ -501,11 +503,12 @@ jobs:
           # objdump -p lists each DLL imported by a binary; we recurse so deps
           # of deps (e.g. libgio -> libgmodule -> libffi) are captured. Anything
           # that doesn't resolve under /mingw64/bin is assumed to be a Windows
-          # system DLL (kernel32, ole32, api-ms-win-*) and skipped.
+          # system DLL (kernel32, ole32, api-ms-win-*) and skipped. DLLs land
+          # in pkg/qemu/bin/ alongside the exes so Windows' loader finds them.
           MINGW_BIN="/mingw64/bin"
           declare -A seen
           queue=()
-          for exe in pkg/qemu/qemu-system-x86_64.exe pkg/qemu/qemu-system-aarch64.exe pkg/qemu/qemu-img.exe; do
+          for exe in pkg/qemu/bin/qemu-system-x86_64.exe pkg/qemu/bin/qemu-system-aarch64.exe pkg/qemu/bin/qemu-img.exe; do
             [ -f "$exe" ] && queue+=("$exe")
           done
           while [ ${#queue[@]} -gt 0 ]; do
@@ -519,7 +522,7 @@ jobs:
               [ -n "${seen[$dll_lc]:-}" ] && continue
               src="$MINGW_BIN/$dll"
               if [ -f "$src" ]; then
-                dest="pkg/qemu/$dll"
+                dest="pkg/qemu/bin/$dll"
                 [ -f "$dest" ] || cp "$src" "$dest"
                 queue+=("$dest")
               fi
@@ -529,7 +532,7 @@ jobs:
           # against system-installed QEMU and accept it when versions match.
           echo "${{ env.QEMU_VERSION }}" > pkg/qemu/VERSION
           echo "=== Bundled MINGW64 DLLs ==="
-          ls pkg/qemu/*.dll
+          ls pkg/qemu/bin/*.dll
 
       # Smoke-test the packaged binaries in a clean environment so missing
       # runtime deps (e.g. the libbz2/libfdt/libzstd Windows regression that
@@ -550,8 +553,11 @@ jobs:
         shell: cmd
         # cmd.exe runs with the default Windows PATH only — no /mingw64/bin —
         # so any missing transitive DLL surfaces here as exit 0xC0000135.
+        # Run from pkg\qemu\bin so QEMU's <exec_dir>/../share/qemu BIOS lookup
+        # resolves to pkg\qemu\share\qemu — verifies the new bin/ layout works
+        # for the BIOS path too, not just the DLL load.
         run: |
-          cd pkg\qemu
+          cd pkg\qemu\bin
           qemu-system-x86_64.exe --version || exit /b 1
           qemu-system-aarch64.exe --version || exit /b 1
           if exist qemu-img.exe ( qemu-img.exe --version || exit /b 1 )
