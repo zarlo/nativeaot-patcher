@@ -35,21 +35,6 @@ public class CommandToolDefinition : ToolDefinition
     };
 }
 
-public class FileToolDefinition : ToolDefinition
-{
-    public string[]? WindowsPaths { get; init; }
-    public string[]? LinuxPaths { get; init; }
-    public string[]? MacOSPaths { get; init; }
-
-    public string[]? GetPaths(OSPlatform platform) => platform switch
-    {
-        OSPlatform.Windows => WindowsPaths,
-        OSPlatform.Linux => LinuxPaths,
-        OSPlatform.MacOS => MacOSPaths,
-        _ => null
-    };
-}
-
 public static class ToolDefinitions
 {
     public static readonly CommandToolDefinition DotNetSdk = new()
@@ -143,24 +128,17 @@ public static class ToolDefinitions
         ReleaseAsset = "qemu"
     };
 
-    public static readonly FileToolDefinition QemuEfiArm64 = new()
+    public static readonly CommandToolDefinition Gdb = new()
     {
-        Name = "QEMU EFI (ARM64)",
-        DisplayName = "QEMU UEFI Firmware",
-        Description = "UEFI firmware for ARM64 QEMU — bundled with QEMU",
+        Name = "gdb-multiarch",
+        DisplayName = "GDB (multiarch)",
+        Description = "GNU debugger built with --enable-targets=all for x64 and ARM64 remote debugging via QEMU's gdbstub",
+        WindowsCommands = ["gdb-multiarch"],
+        LinuxCommands = ["gdb-multiarch"],
+        MacOSCommands = ["gdb-multiarch"],
+        VersionArg = "--version",
         Required = false,
-        WindowsPaths = [
-            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\qemu\edk2-aarch64-code.fd",
-            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\edk2-aarch64-code.fd"
-        ],
-        LinuxPaths = [
-            "~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd",
-            "~/.cosmos/tools/qemu/share/edk2-aarch64-code.fd"
-        ],
-        MacOSPaths = [
-            "~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd",
-            "~/.cosmos/tools/qemu/share/edk2-aarch64-code.fd"
-        ]
+        ReleaseAsset = "gdb"
     };
 
     public static IEnumerable<ToolDefinition> GetAllTools() =>
@@ -172,6 +150,6 @@ public static class ToolDefinitions
         Yasm,
         QemuX64,
         QemuArm64,
-        QemuEfiArm64
+        Gdb
     ];
 }

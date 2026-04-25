@@ -10,6 +10,7 @@ env:
   XORRISO_DIR: "1.5.8"
   YASM_VERSION: "1.3.0"
   QEMU_VERSION: "10.2.2"
+  GDB_VERSION: "17.1"
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════
@@ -77,6 +78,9 @@ jobs:
           # Verify
           ls -la pkg/llvm-tools/bin/
           find pkg/llvm-tools/lib -type f | head -20 || true
+
+          # Stamp the bundle so ToolResolver can compare against system tools
+          echo "${LLVM_VERSION}" > pkg/llvm-tools/VERSION
 
           # Package
           if [ "${{ matrix.target }}" = "win-x64" ]; then
@@ -155,6 +159,7 @@ jobs:
         run: |
           mkdir -p pkg/xorriso
           cp xorriso-${{ env.XORRISO_DIR }}/xorriso/xorriso pkg/xorriso/
+          echo "${{ env.XORRISO_VERSION }}" > pkg/xorriso/VERSION
           tar czf xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.tar.gz -C pkg xorriso
 
       - name: Package (zip)
@@ -175,7 +180,12 @@ jobs:
           Copy-Item "$msysRoot\msys-2.0.dll" pkg/xorriso/
           Copy-Item "$msysRoot\msys-intl-8.dll" pkg/xorriso/
           Copy-Item "$msysRoot\msys-iconv-2.dll" pkg/xorriso/
-          Compress-Archive -Path pkg/xorriso -DestinationPath xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.zip
+          Set-Content -Path pkg/xorriso/VERSION -Value "${{ env.XORRISO_VERSION }}"
+
+      - name: Create zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path pkg/xorriso -DestinationPath xorriso-${{ env.XORRISO_VERSION }}-${{ matrix.target }}.zip
 
       - uses: actions/upload-artifact@v4
         with:
@@ -237,6 +247,7 @@ jobs:
         run: |
           mkdir -p pkg/yasm
           cp yasm-${{ env.YASM_VERSION }}/yasm pkg/yasm/
+          echo "${{ env.YASM_VERSION }}" > pkg/yasm/VERSION
           tar czf yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.tar.gz -C pkg yasm
 
       - name: Package (zip)
@@ -244,6 +255,7 @@ jobs:
         run: |
           mkdir -p pkg/yasm
           cp yasm-${{ env.YASM_VERSION }}/yasm.exe pkg/yasm/
+          echo "${{ env.YASM_VERSION }}" > pkg/yasm/VERSION
           cd pkg && zip -r ../yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.zip yasm
 
       - uses: actions/upload-artifact@v4
@@ -429,6 +441,8 @@ jobs:
           cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
           echo "=== Firmware files packaged ==="
           ls pkg/qemu/share/qemu/*.bin pkg/qemu/share/qemu/*.fd 2>/dev/null || echo "WARNING: no firmware files found"
+          # Stamp the bundle with its version (see Windows packaging step for rationale)
+          echo "${{ env.QEMU_VERSION }}" > pkg/qemu/VERSION
           tar czf qemu-${{ env.QEMU_VERSION }}-${{ matrix.target }}.tar.gz -C pkg qemu
 
       - name: Package (Windows)
@@ -436,27 +450,57 @@ jobs:
         shell: msys2 {0}
         run: |
           BUILD_DIR="qemu-${{ env.QEMU_VERSION }}/build"
-          mkdir -p pkg/qemu/share/qemu
-          # Find binaries
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/
-          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/ 2>/dev/null || true
-          strip pkg/qemu/*.exe 2>/dev/null || true
-          # Verify binaries exist
-          ls -la pkg/qemu/qemu-system-*
-          # Copy firmware files from build dir (directories) and source tree (BIOS binaries)
+          # Universal layout (matches Linux/macOS):
+          #   qemu/bin/         exes + transitive DLLs
+          #   qemu/share/qemu/  BIOS, ROMs, edk2 firmware
+          # QEMU on the MSYS2/MinGW Windows build does not auto-discover its
+          # data dir, so launchers (cosmos run, test runner, VS Code extension)
+          # always pass -L "<exe_dir>/../share/qemu" — single rule, no OS branch.
+          mkdir -p pkg/qemu/bin pkg/qemu/share/qemu
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
+          find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/ 2>/dev/null || true
+          strip pkg/qemu/bin/*.exe 2>/dev/null || true
+          ls -la pkg/qemu/bin/qemu-system-*
+          # Copy BIOS/firmware files
           cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
           cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/share/qemu/ 2>/dev/null || true
           cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/share/qemu/ 2>/dev/null || true
           cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
-          # Bundle MINGW64 runtime DLLs
+          # Bundle MINGW64 runtime DLLs by walking PE imports transitively.
+          # objdump -p lists each DLL imported by a binary; we recurse so deps
+          # of deps (e.g. libgio -> libgmodule -> libffi) are captured. Anything
+          # that doesn't resolve under /mingw64/bin is assumed to be a Windows
+          # system DLL (kernel32, ole32, api-ms-win-*) and skipped. DLLs land
+          # in pkg/qemu/bin/ alongside the exes so Windows' loader finds them.
           MINGW_BIN="/mingw64/bin"
-          for dll in libglib-2.0-0.dll libgthread-2.0-0.dll libintl-8.dll libiconv-2.dll \
-                     libpixman-1-0.dll libslirp-0.dll zlib1.dll libpcre2-8-0.dll \
-                     libgcc_s_seh-1.dll libwinpthread-1.dll libstdc++-6.dll libffi-8.dll \
-                     SDL2.dll; do
-            cp "$MINGW_BIN/$dll" pkg/qemu/ 2>/dev/null || true
+          declare -A seen
+          queue=()
+          for exe in pkg/qemu/bin/qemu-system-x86_64.exe pkg/qemu/bin/qemu-system-aarch64.exe pkg/qemu/bin/qemu-img.exe; do
+            [ -f "$exe" ] && queue+=("$exe")
           done
+          while [ ${#queue[@]} -gt 0 ]; do
+            cur="${queue[0]}"
+            queue=("${queue[@]:1}")
+            base_lc=$(basename "$cur" | tr '[:upper:]' '[:lower:]')
+            [ -n "${seen[$base_lc]:-}" ] && continue
+            seen[$base_lc]=1
+            while IFS= read -r dll; do
+              dll_lc=$(echo "$dll" | tr '[:upper:]' '[:lower:]')
+              [ -n "${seen[$dll_lc]:-}" ] && continue
+              src="$MINGW_BIN/$dll"
+              if [ -f "$src" ]; then
+                dest="pkg/qemu/bin/$dll"
+                [ -f "$dest" ] || cp "$src" "$dest"
+                queue+=("$dest")
+              fi
+            done < <(objdump -p "$cur" 2>/dev/null | awk '/DLL Name:/ {print $3}')
+          done
+          # Stamp the bundle with its version so the resolver can compare
+          # against system-installed QEMU and accept it when versions match.
+          echo "${{ env.QEMU_VERSION }}" > pkg/qemu/VERSION
+          echo "=== Bundled MINGW64 DLLs ==="
+          ls pkg/qemu/bin/*.dll
 
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
@@ -469,6 +513,224 @@ jobs:
           path: qemu-${{ env.QEMU_VERSION }}-*.*
 
   # ═══════════════════════════════════════════════════════════════════════
+  #  GDB — multiarch debugger built from sourceware tarball
+  #  Single binary `gdb-multiarch` configured with --enable-targets=all so
+  #  the same binary can debug x64 and ARM64 kernels via QEMU's gdbstub.
+  # ═══════════════════════════════════════════════════════════════════════
+  build-gdb:
+    name: GDB ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+          - os: macos-latest
+            target: darwin-arm64
+          - os: windows-latest
+            target: win-x64
+    steps:
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential texinfo \
+            libgmp-dev libmpfr-dev libexpat1-dev libxml2-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install gmp mpfr expat libxml2 texinfo
+
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gmp
+            mingw-w64-x86_64-mpfr
+            mingw-w64-x86_64-expat
+            mingw-w64-x86_64-libxml2
+            mingw-w64-x86_64-pkg-config
+            make texinfo bison flex
+
+      - name: Download GDB source (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          curl -L -o gdb.tar.xz \
+            "https://ftp.gnu.org/gnu/gdb/gdb-${GDB_VERSION}.tar.xz"
+          tar xf gdb.tar.xz
+
+      - name: Download GDB source (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          curl -L -o gdb.tar.xz \
+            "https://ftp.gnu.org/gnu/gdb/gdb-${GDB_VERSION}.tar.xz"
+          tar xf gdb.tar.xz
+
+      # Configure flags rationale:
+      #   --enable-targets=all       gdb-multiarch can debug x86, x86_64, arm, aarch64 from one binary
+      #   --disable-werror           newer compilers warn on legacy gdb code
+      #   --disable-source-highlight drops libsource-highlight runtime dep
+      #   --disable-tui              skips ncurses TUI (we drive gdb via cppdbg/MI, not interactive)
+      #   --disable-nls              no translations
+      #   --with-python=no           don't embed CPython (huge runtime + libpython dep)
+      #   --without-guile            no Guile scripting
+      # libxml2 is left enabled — QEMU's gdbstub sends XML target descriptions.
+      - name: Build GDB (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+          # Apple Silicon brew lives at /opt/homebrew, not on the default
+          # compiler search path — configure won't find gmp/mpfr/expat
+          # headers without the explicit -I/-L. Linux apt installs to
+          # /usr/include and /usr/lib so this is a no-op there.
+          if [ "$(uname)" = "Darwin" ]; then
+            BREW_PREFIX=$(brew --prefix)
+            export CPPFLAGS="-I${BREW_PREFIX}/include ${CPPFLAGS:-}"
+            export LDFLAGS="-L${BREW_PREFIX}/lib ${LDFLAGS:-}"
+          fi
+          cd gdb-${GDB_VERSION}
+          # --target=x86_64-pc-linux-gnu builds gdb as a cross-debugger.
+          # Required on macOS aarch64 because upstream has no native
+          # debugging backend for that host — without --target, configure
+          # auto-excludes the gdb subdir entirely ("This configuration is
+          # not supported in the following subdirectories: gdb"). Cosmos
+          # kernels are linux-<arch> ELF and we always debug remotely via
+          # QEMU's gdbstub, so a cross-debugger is what we want anyway;
+          # --enable-targets=all keeps multiarch support at runtime.
+          # --disable-{binutils,gas,ld,gprof,gprofng}: skip binutils sister
+          # components, build only gdb + its support libs.
+          ./configure \
+            --target=x86_64-pc-linux-gnu \
+            --enable-targets=all \
+            --disable-werror \
+            --disable-source-highlight \
+            --disable-tui \
+            --disable-nls \
+            --disable-binutils \
+            --disable-gas \
+            --disable-ld \
+            --disable-gprof \
+            --disable-gprofng \
+            --disable-sim \
+            --disable-gdbserver \
+            --with-python=no \
+            --without-guile
+          make -j$NPROC
+          strip gdb/gdb gdb/gdb-unsigned 2>/dev/null || true
+
+      - name: Build GDB (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cd gdb-${GDB_VERSION}
+          # See Linux/macOS step: --target=x86_64-pc-linux-gnu makes gdb
+          # a cross-debugger (so configure doesn't try native Windows
+          # debugging, which has its own complications); --enable-targets=all
+          # keeps multiarch support.
+          ./configure \
+            --target=x86_64-pc-linux-gnu \
+            --enable-targets=all \
+            --disable-werror \
+            --disable-source-highlight \
+            --disable-tui \
+            --disable-nls \
+            --disable-binutils \
+            --disable-gas \
+            --disable-ld \
+            --disable-gprof \
+            --disable-gprofng \
+            --disable-sim \
+            --disable-gdbserver \
+            --with-python=no \
+            --without-guile
+          make -j$(nproc)
+          strip gdb/gdb.exe
+
+      - name: Package (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          # Layout matches QEMU bundle: gdb/bin/<exe> so the resolver finds it
+          # under the same `<asset>/bin/<cmd>` rule it uses for llvm-tools.
+          mkdir -p pkg/gdb/bin
+          # macOS produces `gdb-unsigned` (codesign is a separate post-build
+          # step); Linux produces `gdb`. Pick whichever exists.
+          SRC=$(find "gdb-${GDB_VERSION}/gdb" -maxdepth 1 \( -name 'gdb' -o -name 'gdb-unsigned' \) -type f | head -1)
+          if [ -z "$SRC" ]; then
+            echo "ERROR: built gdb binary not found under gdb-${GDB_VERSION}/gdb/" >&2
+            ls -la "gdb-${GDB_VERSION}/gdb/" >&2
+            exit 1
+          fi
+          cp "$SRC" pkg/gdb/bin/gdb-multiarch
+          chmod +x pkg/gdb/bin/gdb-multiarch
+          echo "${GDB_VERSION}" > pkg/gdb/VERSION
+          tar czf gdb-${GDB_VERSION}-${{ matrix.target }}.tar.gz -C pkg gdb
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          set -e
+          mkdir -p pkg/gdb/bin
+          # Locate the built binary — the cross-target build can land it
+          # under .libs/ (libtool) or the gdb/ root. List candidates first
+          # so any path drift surfaces clearly in the log.
+          echo "=== Candidate gdb binaries in build dir ==="
+          find "gdb-${GDB_VERSION}/gdb" -maxdepth 2 -name 'gdb*.exe' -type f 2>/dev/null
+          SRC=$(find "gdb-${GDB_VERSION}/gdb" -maxdepth 2 -name 'gdb.exe' -type f | head -1)
+          if [ -z "$SRC" ]; then
+            echo "ERROR: built gdb.exe not found" >&2
+            exit 1
+          fi
+          cp "$SRC" pkg/gdb/bin/gdb-multiarch.exe
+          echo "=== Packaged binary ==="
+          ls -la pkg/gdb/bin/
+          # Walk PE imports to bundle MINGW64 DLLs (same recursive pattern as
+          # the QEMU bundle). Anything not under /mingw64/bin is a Windows
+          # system DLL (kernel32, ws2_32, …) and is skipped.
+          MINGW_BIN="/mingw64/bin"
+          declare -A seen
+          queue=("pkg/gdb/bin/gdb-multiarch.exe")
+          while [ ${#queue[@]} -gt 0 ]; do
+            cur="${queue[0]}"
+            queue=("${queue[@]:1}")
+            base_lc=$(basename "$cur" | tr '[:upper:]' '[:lower:]')
+            [ -n "${seen[$base_lc]:-}" ] && continue
+            seen[$base_lc]=1
+            while IFS= read -r dll; do
+              dll_lc=$(echo "$dll" | tr '[:upper:]' '[:lower:]')
+              [ -n "${seen[$dll_lc]:-}" ] && continue
+              src="$MINGW_BIN/$dll"
+              if [ -f "$src" ]; then
+                dest="pkg/gdb/bin/$dll"
+                [ -f "$dest" ] || cp "$src" "$dest"
+                queue+=("$dest")
+              fi
+            done < <(objdump -p "$cur" 2>/dev/null | awk '/DLL Name:/ {print $3}')
+          done
+          echo "${GDB_VERSION}" > pkg/gdb/VERSION
+          echo "=== Bundled MINGW64 DLLs ==="
+          ls pkg/gdb/bin/*.dll || echo "(no DLLs bundled — gdb-multiarch.exe must be statically linked)"
+
+      - name: Create zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path pkg/gdb -DestinationPath gdb-${{ env.GDB_VERSION }}-${{ matrix.target }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gdb-${{ matrix.target }}
+          path: gdb-${{ env.GDB_VERSION }}-*.*
+
+  # ═══════════════════════════════════════════════════════════════════════
   #  Release — collect all artifacts and create a GitHub release
   # ═══════════════════════════════════════════════════════════════════════
   release:
@@ -478,6 +740,7 @@ jobs:
       - build-xorriso
       - build-yasm
       - build-qemu
+      - build-gdb
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -500,7 +763,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tools-latest
-          name: "Cosmos Tools (LLVM ${{ env.LLVM_VERSION }}, QEMU ${{ env.QEMU_VERSION }}, Yasm ${{ env.YASM_VERSION }}, xorriso ${{ env.XORRISO_VERSION }})"
+          name: "Cosmos Tools (LLVM ${{ env.LLVM_VERSION }}, QEMU ${{ env.QEMU_VERSION }}, Yasm ${{ env.YASM_VERSION }}, xorriso ${{ env.XORRISO_VERSION }}, GDB ${{ env.GDB_VERSION }})"
           body: |
             Pre-built development tools for Cosmos kernel development.
 
@@ -511,6 +774,7 @@ jobs:
             | xorriso | ${{ env.XORRISO_VERSION }} |
             | Yasm | ${{ env.YASM_VERSION }} |
             | QEMU | ${{ env.QEMU_VERSION }} |
+            | GDB (multiarch) | ${{ env.GDB_VERSION }} |
 
             ## Platforms
             - `linux-x64` — .tar.gz archives

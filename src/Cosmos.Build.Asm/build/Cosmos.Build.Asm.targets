@@ -1,14 +1,6 @@
 <Project>
-  <!-- Platform detection -->
-  <PropertyGroup>
-    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
-    <IsMacOS Condition="'$(OS)' != 'Windows_NT' AND $([MSBuild]::IsOSPlatform('OSX'))">true</IsMacOS>
-    <IsLinux Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' != 'true'">true</IsLinux>
-  </PropertyGroup>
-
-  <Import Project="Asm.Build.Unix.targets" Condition="'$(IsLinux)' == 'true'"/>
-  <Import Project="Asm.Build.macOS.targets" Condition="'$(IsMacOS)' == 'true'"/>
-  <Import Project="Asm.Build.Windows.targets" Condition="'$(IsWindows)' == 'true'"/>
+  <!-- Cross-OS assembler resolution via ResolveCosmosToolTask. -->
+  <Import Project="Asm.Build.targets"/>
 
   <Target Name="FindSourceFilesForYasm" AfterTargets="Build">
     <PropertyGroup>

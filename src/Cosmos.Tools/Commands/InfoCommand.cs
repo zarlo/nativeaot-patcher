@@ -21,7 +21,6 @@ public class InfoCommand : AsyncCommand<InfoSettings>
         string platform = GetPlatformName();
         string arch = PlatformInfo.CurrentArch.ToString().ToLower();
         string packageManager = PlatformInfo.GetPackageManager();
-        string displayBackend = GetDisplayBackend();
 
         if (settings.Json)
         {
@@ -29,8 +28,7 @@ public class InfoCommand : AsyncCommand<InfoSettings>
             Console.WriteLine($"  \"platform\": \"{platform}\",");
             Console.WriteLine($"  \"platformName\": \"{PlatformInfo.GetDistroName()}\",");
             Console.WriteLine($"  \"arch\": \"{arch}\",");
-            Console.WriteLine($"  \"packageManager\": \"{packageManager}\",");
-            Console.WriteLine($"  \"qemuDisplay\": \"{displayBackend}\",");
+            Console.WriteLine($"  \"packageManager\": \"{packageManager}\"");
             Console.WriteLine("}");
         }
         else
@@ -41,7 +39,6 @@ public class InfoCommand : AsyncCommand<InfoSettings>
             AnsiConsole.MarkupLine($"  Platform: [blue]{PlatformInfo.GetDistroName()}[/] ({platform})");
             AnsiConsole.MarkupLine($"  Architecture: [blue]{arch}[/]");
             AnsiConsole.MarkupLine($"  Package Manager: [blue]{packageManager}[/]");
-            AnsiConsole.MarkupLine($"  QEMU Display: [blue]{displayBackend}[/]");
             AnsiConsole.WriteLine();
         }
 
@@ -72,16 +69,6 @@ public class InfoCommand : AsyncCommand<InfoSettings>
         }
 
         return "unknown";
-    }
-
-    private static string GetDisplayBackend()
-    {
-        if (RuntimeInformation.IsOSPlatform(SysOSPlatform.OSX))
-        {
-            return "cocoa";
-        }
-
-        return "gtk";
     }
 
     private static string EscapeJson(string s)
