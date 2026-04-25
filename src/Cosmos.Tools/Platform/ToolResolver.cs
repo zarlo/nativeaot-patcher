@@ -56,7 +56,7 @@ public static class ToolResolver
         if (!string.IsNullOrEmpty(overridePath) && File.Exists(overridePath))
         {
             string? overrideVersion = await TryGetVersionAsync(overridePath, tool.VersionArg);
-            return new ResolvedTool(overridePath, ToolSource.Override, overrideVersion);
+            return new ResolvedTool(overridePath, ClassifySource(overridePath, ToolSource.Override), overrideVersion);
         }
 
         // 2. System PATH lookup, gated by version match against the bundle's VERSION
@@ -73,7 +73,7 @@ public static class ToolResolver
             string? systemVersion = await TryGetVersionAsync(systemPath, tool.VersionArg);
             if (pinnedVersion is null || VersionsMatch(pinnedVersion, systemVersion))
             {
-                return new ResolvedTool(systemPath, ToolSource.System, systemVersion);
+                return new ResolvedTool(systemPath, ClassifySource(systemPath, ToolSource.System), systemVersion);
             }
             // Version mismatch — fall through to bundle.
         }
@@ -90,6 +90,32 @@ public static class ToolResolver
         }
 
         return new ResolvedTool(string.Empty, ToolSource.NotFound, null);
+    }
+
+    /// <summary>
+    /// "System" means the user installed it themselves outside our bundle. If the
+    /// path actually lives inside %LOCALAPPDATA%\Cosmos\Tools (or ~/.cosmos/tools),
+    /// it's a bundle file regardless of which lookup found it — Windows installs
+    /// add the bundle dirs to user PATH so `where clang` finds the bundled binary.
+    /// </summary>
+    private static ToolSource ClassifySource(string path, ToolSource lookupSource)
+    {
+        string toolsRoot = ToolChecker.GetCosmosToolsPath();
+        try
+        {
+            string fullPath = Path.GetFullPath(path);
+            string fullRoot = Path.GetFullPath(toolsRoot);
+            if (fullPath.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+                fullPath.StartsWith(fullRoot + Path.AltDirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            {
+                return ToolSource.Bundle;
+            }
+        }
+        catch
+        {
+            // Fall through to original classification if path normalization fails.
+        }
+        return lookupSource;
     }
 
     /// <summary>
