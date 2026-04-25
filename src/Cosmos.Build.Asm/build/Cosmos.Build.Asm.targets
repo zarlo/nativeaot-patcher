@@ -2,7 +2,7 @@
   <!-- Cross-OS assembler resolution via ResolveCosmosToolTask. -->
   <Import Project="Asm.Build.targets"/>
 
-  <Target Name="FindSourceFilesForYasm" AfterTargets="Build">
+  <Target Name="FindAsmSourceFiles" AfterTargets="Build">
     <PropertyGroup>
       <TargetArchitecture Condition="$(RuntimeIdentifier) != ''">$(RuntimeIdentifier.Split('-')[1])</TargetArchitecture>
     </PropertyGroup>
@@ -31,15 +31,14 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <!-- Search for .asm files (YASM/NASM) for x64, .s files (GNU AS) for ARM64 -->
-      <AsmSearchPattern Condition="'$(TargetArchitecture)' == 'x64' or '$(TargetArchitecture)' == ''">@(AsmSearchPath->'%(FullPath)/*.asm')</AsmSearchPattern>
-      <AsmSearchPattern Condition="'$(TargetArchitecture)' == 'arm64'">@(AsmSearchPath->'%(FullPath)/*.s')</AsmSearchPattern>
+      <!-- Both x64 and ARM64 use GAS-syntax .s files assembled by clang -->
+      <AsmSearchPattern>@(AsmSearchPath->'%(FullPath)/*.s')</AsmSearchPattern>
     </PropertyGroup>
 
     <Message Text="⚙️  [ASM] TargetArchitecture: $(TargetArchitecture), CosmosArch: $(CosmosArch)" Importance="High" />
     <Message Text="⚙️  [ASM] Searching assembly files on: @(AsmSearchPath)" Importance="High" />
     <ItemGroup>
-      <!-- Use the search pattern to find the .asm files -->
+      <!-- Use the search pattern to find the .s files -->
       <AsmSearch Include="$(AsmSearchPattern)" />
       <!-- Remove Duplicates -->
       <AsmSearch Remove="@(AsmFiles)" />
@@ -50,17 +49,17 @@
     <Message Text="✅ [ASM] Number of Asm files found: @(AsmFiles->Count())" Importance="High" />
   </Target>
 
-  <!-- Target that invokes the YasmBuildTask to compile assembly source files -->
-  <Target Name="BuildYasm" AfterTargets="Build" DependsOnTargets="FindSourceFilesForYasm; GetYasm">
+  <!-- Target that invokes the AsmBuildTask to compile assembly source files -->
+  <Target Name="BuildAsm" AfterTargets="Build" DependsOnTargets="FindAsmSourceFiles; GetAsmTool">
     <PropertyGroup>
       <!-- Adjust output path if needed -->
       <AsmOutputPath>$(IntermediateOutputPath)/cosmos/asm/</AsmOutputPath>
     </PropertyGroup>
 
 
-    <!-- Invoke the custom Yasm task -->
-    <YasmBuildTask
-      YasmPath="$(YasmPath)"
+    <!-- Invoke the custom Asm task -->
+    <AsmBuildTask
+      ClangPath="$(AsmToolPath)"
       OutputPath="$(AsmOutputPath)"
       SourceFiles="@(AsmFiles)"
       TargetArchitecture="$(TargetArchitecture)" />
@@ -69,7 +68,7 @@
   </Target>
 
   <!-- Clean target to remove the asm folder -->
-  <Target Name="CleanYasm" BeforeTargets="Clean">
+  <Target Name="CleanAsm" BeforeTargets="Clean">
     <PropertyGroup>
       <AsmOutputPath>$(IntermediateOutputPath)/cosmos/asm/</AsmOutputPath>
     </PropertyGroup>

@@ -36,8 +36,8 @@ User Kernel (DevKernel, test kernels)
               ├── Cosmos.Kernel.HAL.ARM64      ← ARM64-specific HAL implementations
               └── Cosmos.Kernel.HAL.Interfaces ← pure interfaces, no implementations
                    └── Cosmos.Kernel.Core   ← low-level runtime (memory, scheduler, serial)
-                        ├── Cosmos.Kernel.Native.X64       ← x64 assembly (.asm)
-                        ├── Cosmos.Kernel.Native.ARM64     ← ARM64 assembly (.S)
+                        ├── Cosmos.Kernel.Native.X64       ← x64 assembly (.s)
+                        ├── Cosmos.Kernel.Native.ARM64     ← ARM64 assembly (.s)
                         └── Cosmos.Kernel.Native.MultiArch ← cross-platform native C code (ACPI, libc stubs)
 ```
 
@@ -470,7 +470,7 @@ public static void ComWrite(byte value)
 | `#if ARCH_X64` | Same class, small code differences (eg. serial driver) |
 | Separate files (`*.X64.cs`) | Same class, large per-arch blocks (eg.  ThreadContext) |
 | Separate HAL projects | Different implementations behind a shared interface |
-| Separate Native projects | Assembly code (`.asm` / `.S`) |
+| Separate Native projects | Assembly code (`.s`) |
 
 ### Guard Rules
 

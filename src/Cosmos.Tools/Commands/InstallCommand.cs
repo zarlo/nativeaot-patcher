@@ -19,7 +19,7 @@ public class InstallSettings : CommandSettings
     public string? Setup { get; set; }
 
     [CommandOption("--tools")]
-    [Description("Only install system tools (QEMU, clang, lld, xorriso, yasm) from the Cosmos tools release")]
+    [Description("Only install system tools (QEMU, clang, lld, xorriso) from the Cosmos tools release")]
     public bool Tools { get; set; }
 
     [CommandOption("--packages")]
@@ -539,7 +539,6 @@ public class InstallCommand : AsyncCommand<InstallSettings>
     private static readonly string[] ToolPathSubDirs =
     [
         Path.Combine("llvm-tools", "bin"),
-        "yasm",
         "xorriso",
         Path.Combine("qemu", "bin"),
         Path.Combine("gdb", "bin")

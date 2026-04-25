@@ -155,7 +155,7 @@ public static class ToolResolver
 
         foreach (string command in tool.GetCommands(PlatformInfo.CurrentOS))
         {
-            // Try {bundle}/{cmd}{ext} (qemu, yasm, xorriso) and {bundle}/bin/{cmd}{ext} (llvm-tools).
+            // Try {bundle}/{cmd}{ext} (qemu, xorriso) and {bundle}/bin/{cmd}{ext} (llvm-tools).
             foreach (string subDir in new[] { "", "bin" })
             {
                 string dir = string.IsNullOrEmpty(subDir) ? bundleRoot : Path.Combine(bundleRoot, subDir);

@@ -11,7 +11,7 @@ using Microsoft.Build.Framework;
 namespace Cosmos.Build.Common.Tasks;
 
 /// <summary>
-/// Resolves a Cosmos toolchain binary (clang, ld.lld, yasm, xorriso, qemu-*) using
+/// Resolves a Cosmos toolchain binary (clang, ld.lld, xorriso, qemu-*) using
 /// the same policy as Cosmos.Tools.Platform.ToolResolver:
 ///   1. explicit override path (e.g. user-set MSBuild $(CCPath))
 ///   2. system tool on PATH, accepted only if its version matches the bundle's
@@ -26,7 +26,7 @@ public sealed class ResolveCosmosToolTask : Microsoft.Build.Utilities.Task
 {
     private const int CommandTimeoutMs = 5000;
 
-    /// <summary>Logical tool name: clang | lld | yasm | xorriso | qemu-x64 | qemu-arm64.</summary>
+    /// <summary>Logical tool name: clang | lld | xorriso | qemu-x64 | qemu-arm64.</summary>
     [Required]
     public string ToolName { get; set; } = string.Empty;
 
@@ -45,7 +45,7 @@ public sealed class ResolveCosmosToolTask : Microsoft.Build.Utilities.Task
         ToolSpec? spec = LookupTool(ToolName);
         if (spec is null)
         {
-            Log.LogError("ResolveCosmosTool: unknown tool name '{0}'. Valid: clang, lld, yasm, xorriso, qemu-x64, qemu-arm64.", ToolName);
+            Log.LogError("ResolveCosmosTool: unknown tool name '{0}'. Valid: clang, lld, xorriso, qemu-x64, qemu-arm64.", ToolName);
             return false;
         }
 
@@ -110,7 +110,6 @@ public sealed class ResolveCosmosToolTask : Microsoft.Build.Utilities.Task
         {
             case "clang": return new ToolSpec { ReleaseAsset = "llvm-tools", Commands = new[] { "clang" }, InBinSubdir = true };
             case "lld": return new ToolSpec { ReleaseAsset = "llvm-tools", Commands = new[] { "ld.lld", "lld" }, InBinSubdir = true };
-            case "yasm": return new ToolSpec { ReleaseAsset = "yasm", Commands = new[] { "yasm" } };
             case "xorriso": return new ToolSpec { ReleaseAsset = "xorriso", Commands = new[] { "xorriso" } };
             case "qemu-x64": return new ToolSpec { ReleaseAsset = "qemu", Commands = new[] { "qemu-system-x86_64" } };
             case "qemu-arm64": return new ToolSpec { ReleaseAsset = "qemu", Commands = new[] { "qemu-system-aarch64" } };
