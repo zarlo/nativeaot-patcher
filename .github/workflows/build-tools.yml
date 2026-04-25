@@ -652,6 +652,15 @@ jobs:
         shell: bash
         run: |
           NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+          # Apple Silicon brew lives at /opt/homebrew, not on the default
+          # compiler search path — configure won't find gmp/mpfr/expat
+          # headers without the explicit -I/-L. Linux apt installs to
+          # /usr/include and /usr/lib so this is a no-op there.
+          if [ "$(uname)" = "Darwin" ]; then
+            BREW_PREFIX=$(brew --prefix)
+            export CPPFLAGS="-I${BREW_PREFIX}/include ${CPPFLAGS:-}"
+            export LDFLAGS="-L${BREW_PREFIX}/lib ${LDFLAGS:-}"
+          fi
           cd gdb-${GDB_VERSION}
           ./configure \
             --enable-targets=all \
