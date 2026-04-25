@@ -662,11 +662,18 @@ jobs:
             export LDFLAGS="-L${BREW_PREFIX}/lib ${LDFLAGS:-}"
           fi
           cd gdb-${GDB_VERSION}
-          # --disable-{binutils,gas,ld,gprof,gprofng}: we only want gdb,
-          # so skip the binutils sister components. `make` then builds
-          # gdb + its required support libs (bfd, opcodes, libiberty…)
-          # and nothing else.
+          # --target=x86_64-pc-linux-gnu builds gdb as a cross-debugger.
+          # Required on macOS aarch64 because upstream has no native
+          # debugging backend for that host — without --target, configure
+          # auto-excludes the gdb subdir entirely ("This configuration is
+          # not supported in the following subdirectories: gdb"). Cosmos
+          # kernels are linux-<arch> ELF and we always debug remotely via
+          # QEMU's gdbstub, so a cross-debugger is what we want anyway;
+          # --enable-targets=all keeps multiarch support at runtime.
+          # --disable-{binutils,gas,ld,gprof,gprofng}: skip binutils sister
+          # components, build only gdb + its support libs.
           ./configure \
+            --target=x86_64-pc-linux-gnu \
             --enable-targets=all \
             --disable-werror \
             --disable-source-highlight \
@@ -687,7 +694,12 @@ jobs:
         shell: msys2 {0}
         run: |
           cd gdb-${GDB_VERSION}
+          # See Linux/macOS step: --target=x86_64-pc-linux-gnu makes gdb
+          # a cross-debugger (so configure doesn't try native Windows
+          # debugging, which has its own complications); --enable-targets=all
+          # keeps multiarch support.
           ./configure \
+            --target=x86_64-pc-linux-gnu \
             --enable-targets=all \
             --disable-werror \
             --disable-source-highlight \
