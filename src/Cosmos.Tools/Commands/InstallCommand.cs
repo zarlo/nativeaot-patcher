@@ -533,7 +533,8 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         Path.Combine("llvm-tools", "bin"),
         "yasm",
         "xorriso",
-        Path.Combine("qemu", "bin")
+        Path.Combine("qemu", "bin"),
+        Path.Combine("gdb", "bin")
     ];
 
     internal static bool AddToolsToWindowsPath(string toolsPath)

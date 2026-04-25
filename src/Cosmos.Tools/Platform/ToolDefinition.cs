@@ -155,6 +155,19 @@ public static class ToolDefinitions
         MacOSPaths = ["~/.cosmos/tools/qemu/share/qemu/edk2-aarch64-code.fd"]
     };
 
+    public static readonly CommandToolDefinition Gdb = new()
+    {
+        Name = "gdb-multiarch",
+        DisplayName = "GDB (multiarch)",
+        Description = "GNU debugger built with --enable-targets=all for x64 and ARM64 remote debugging via QEMU's gdbstub",
+        WindowsCommands = ["gdb-multiarch"],
+        LinuxCommands = ["gdb-multiarch"],
+        MacOSCommands = ["gdb-multiarch"],
+        VersionArg = "--version",
+        Required = false,
+        ReleaseAsset = "gdb"
+    };
+
     public static IEnumerable<ToolDefinition> GetAllTools() =>
     [
         DotNetSdk,
@@ -164,6 +177,7 @@ public static class ToolDefinitions
         Yasm,
         QemuX64,
         QemuArm64,
-        QemuEfiArm64
+        QemuEfiArm64,
+        Gdb
     ];
 }
