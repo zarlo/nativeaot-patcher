@@ -194,6 +194,14 @@ public class InstallCommand : AsyncCommand<InstallSettings>
             AnsiConsole.MarkupLine(pathOk ? "[green]OK[/]" : "[yellow]SKIPPED[/]");
         }
 
+        // Pre-install ResolveAsync calls cached system-tool hits while the bundle
+        // was still missing. Drop them so the verification below sees the freshly
+        // extracted bundle binaries instead of the stale pre-download resolution.
+        if (anyDownloaded)
+        {
+            ToolResolver.InvalidateCache();
+        }
+
         List<CommandToolDefinition> requiredReleaseTools = ToolDefinitions.GetAllTools()
             .OfType<CommandToolDefinition>()
             .Where(static t => t.Required && t.ReleaseAsset != null)

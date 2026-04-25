@@ -36,6 +36,17 @@ public static class ToolResolver
         return ResolveUncachedAsync(tool, overridePath, cacheKey);
     }
 
+    /// <summary>
+    /// Drop all cached resolutions. Call this after side-effects that change
+    /// what `ResolveAsync` would return — e.g. `cosmos install` downloading a
+    /// bundle that didn't exist when the pre-install check resolved a tool to
+    /// a system path.
+    /// </summary>
+    public static void InvalidateCache()
+    {
+        s_cache.Clear();
+    }
+
     private static async Task<ResolvedTool> ResolveUncachedAsync(
         CommandToolDefinition tool, string? overridePath, string cacheKey)
     {
