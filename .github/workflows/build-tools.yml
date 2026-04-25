@@ -556,18 +556,17 @@ jobs:
         shell: cmd
         # cmd.exe runs with the default Windows PATH only — no /mingw64/bin —
         # so any missing transitive DLL surfaces here as exit 0xC0000135.
-        # `-machine q35 -display none` actually triggers BIOS load, so it also
-        # catches "could not load PC BIOS" if firmware files aren't placed
-        # where QEMU expects them on Windows (i.e., in the exe directory).
+        # File-existence checks enforce the layout invariant: on Windows QEMU's
+        # os_find_datadir() returns just exec_dir (NOT exec_dir/../share/qemu),
+        # so BIOS/firmware files must live next to the exe to be auto-found.
         run: |
           cd pkg\qemu\bin
           qemu-system-x86_64.exe --version || exit /b 1
           qemu-system-aarch64.exe --version || exit /b 1
           if exist qemu-img.exe ( qemu-img.exe --version || exit /b 1 )
-          echo === BIOS load test ===
-          qemu-system-x86_64.exe -machine q35 -display none -no-reboot -bios bios-256k.bin -kernel NUL 2>nul
-          if not exist bios-256k.bin ( echo ERROR: bios-256k.bin not bundled & exit /b 1 )
-          if not exist edk2-aarch64-code.fd ( echo ERROR: ARM64 UEFI firmware not bundled & exit /b 1 )
+          if not exist bios-256k.bin ( echo ERROR: bios-256k.bin must sit next to qemu exe ^(Windows looks in exec_dir, not share/qemu^) & exit /b 1 )
+          if not exist edk2-aarch64-code.fd ( echo ERROR: ARM64 UEFI firmware must sit next to qemu exe & exit /b 1 )
+          echo OK: BIOS and firmware files present in exec_dir
 
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
