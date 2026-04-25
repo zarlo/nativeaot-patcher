@@ -134,29 +134,9 @@ public class InstallCommand : AsyncCommand<InstallSettings>
         foreach (var group in groups)
         {
             string releaseAsset = group.Key;
-            bool allFound = true;
 
-            foreach (var tool in group)
-            {
-                var status = await ToolChecker.CheckToolAsync(tool);
-                if (status.Found)
-                {
-                    string ver = status.Version != null ? $" (v{status.Version})" : "";
-                    AnsiConsole.MarkupLine($"  [dim]{tool.DisplayName}{ver} found at {status.Path}[/]");
-                }
-                else
-                {
-                    AnsiConsole.MarkupLine($"  [dim]{tool.DisplayName} not found.[/]");
-                    allFound = false;
-                }
-            }
-
-            if (allFound)
-            {
-                continue;
-            }
-
-            // Find the matching asset for this platform
+            // Find the matching asset BEFORE checking system tools — its filename
+            // is the source of truth for "what version cosmos.tools wants".
             string pattern = $"{releaseAsset}-";
             string suffix = $"-{platform}.{ext}";
             var asset = assets.FirstOrDefault(a =>
@@ -169,7 +149,35 @@ public class InstallCommand : AsyncCommand<InstallSettings>
                 continue;
             }
 
-            AnsiConsole.Markup($"  Downloading {releaseAsset} ... ");
+            // Asset name -> "<assetPrefix>-<version>-<platform>.<ext>"
+            string wantedVersion = asset.Name.Substring(pattern.Length, asset.Name.Length - pattern.Length - suffix.Length);
+
+            bool allFoundAndMatching = true;
+            foreach (var tool in group)
+            {
+                var status = await ToolChecker.CheckToolAsync(tool);
+                if (!status.Found)
+                {
+                    AnsiConsole.MarkupLine($"  [dim]{tool.DisplayName} not found.[/]");
+                    allFoundAndMatching = false;
+                    continue;
+                }
+                if (!ToolResolver.VersionsMatch(wantedVersion, status.Version))
+                {
+                    AnsiConsole.MarkupLine(
+                        $"  [yellow]{tool.DisplayName}[/] found at [white]{status.Path}[/] but version [red]{status.Version ?? "?"}[/] != wanted [green]{wantedVersion}[/] — will use bundle.");
+                    allFoundAndMatching = false;
+                    continue;
+                }
+                AnsiConsole.MarkupLine($"  [dim]{tool.DisplayName} (v{status.Version}) found at {status.Path}[/]");
+            }
+
+            if (allFoundAndMatching)
+            {
+                continue;
+            }
+
+            AnsiConsole.Markup($"  Downloading {releaseAsset} ({wantedVersion}) ... ");
             bool ok = await DownloadAndExtractAsync(asset.DownloadUrl, toolsPath, ext);
             AnsiConsole.MarkupLine(ok ? "[green]OK[/]" : "[red]FAILED[/]");
             if (ok)

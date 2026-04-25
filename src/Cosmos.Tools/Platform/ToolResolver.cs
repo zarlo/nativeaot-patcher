@@ -212,22 +212,36 @@ public static class ToolResolver
     }
 
     /// <summary>
-    /// Loose match: major.minor must agree. Patch differences accepted so a system
-    /// 10.2.4 satisfies a bundle pinned at 10.2.2 (point releases stay compatible).
+    /// Strict match after normalization: a system tool is acceptable only if its
+    /// reported version equals the bundle's pinned version exactly. The
+    /// normalization step strips packaging suffixes (e.g. xorriso ships
+    /// "1.5.8.pl01" as the asset but the binary reports "1.5.8") and any
+    /// non-numeric trailers, so the comparison stays on (major).(minor).(patch).
     /// </summary>
-    private static bool VersionsMatch(string pinned, string? system)
+    public static bool VersionsMatch(string wanted, string? system)
     {
         if (string.IsNullOrEmpty(system))
         {
             return false;
         }
-        var pinnedParts = pinned.Split('.');
-        var systemParts = system.Split('.');
-        if (pinnedParts.Length < 2 || systemParts.Length < 2)
+        return NormalizeVersion(wanted) == NormalizeVersion(system);
+    }
+
+    /// <summary>
+    /// Reduce a version-ish string to its leading dotted-numeric segment:
+    ///   "22.1.3"            -> "22.1.3"
+    ///   "1.5.8.pl01"        -> "1.5.8"
+    ///   "GNU gdb (GDB) 17.1" -> "17.1"
+    /// Returns null if no numeric version is found.
+    /// </summary>
+    public static string? NormalizeVersion(string? raw)
+    {
+        if (string.IsNullOrEmpty(raw))
         {
-            return false;
+            return null;
         }
-        return pinnedParts[0] == systemParts[0] && pinnedParts[1] == systemParts[1];
+        var match = Regex.Match(raw, @"\d+(\.\d+){1,2}");
+        return match.Success ? match.Value : null;
     }
 
     private static async Task<(bool success, string output)> RunCommandAsync(string command, string args)
