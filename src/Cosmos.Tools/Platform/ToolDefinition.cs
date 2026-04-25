@@ -150,6 +150,9 @@ public static class ToolDefinitions
         Description = "UEFI firmware for ARM64 QEMU — bundled with QEMU",
         Required = false,
         WindowsPaths = [
+            // New layout: firmware ships next to the exe in qemu\bin\ so QEMU's
+            // exec-dir BIOS autodetect on Windows resolves it.
+            @"%LOCALAPPDATA%\Cosmos\Tools\qemu\bin\edk2-aarch64-code.fd",
             @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\qemu\edk2-aarch64-code.fd",
             @"%LOCALAPPDATA%\Cosmos\Tools\qemu\share\edk2-aarch64-code.fd"
         ],

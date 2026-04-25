@@ -116,16 +116,15 @@ public static class QemuLauncher
 
     public static string ResolveArm64Firmware()
     {
-        // Ships inside the QEMU bundle written by build-tools.yml.
-        string bundleFirmware = Path.Combine(
-            ToolChecker.GetCosmosToolsPath(), "qemu", "share", "qemu", "edk2-aarch64-code.fd");
-        if (File.Exists(bundleFirmware))
-        {
-            return bundleFirmware;
-        }
-        // Common system-wide locations, for users who skipped `cosmos install`.
+        // The Windows bundle ships firmware in qemu/bin/ (next to the exe so
+        // QEMU's exec-dir BIOS autodetect finds it). Linux/macOS keep the
+        // share/qemu layout because their wrapper passes -L explicitly.
+        string toolsRoot = ToolChecker.GetCosmosToolsPath();
         foreach (string candidate in new[]
         {
+            Path.Combine(toolsRoot, "qemu", "bin", "edk2-aarch64-code.fd"),
+            Path.Combine(toolsRoot, "qemu", "share", "qemu", "edk2-aarch64-code.fd"),
+            // System-wide locations, for users who skipped `cosmos install`.
             "/usr/share/AAVMF/AAVMF_CODE.fd",
             "/usr/share/qemu-efi-aarch64/QEMU_EFI.fd",
             "/opt/homebrew/share/qemu/edk2-aarch64-code.fd",

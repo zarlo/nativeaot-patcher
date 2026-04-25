@@ -484,21 +484,24 @@ jobs:
         shell: msys2 {0}
         run: |
           BUILD_DIR="qemu-${{ env.QEMU_VERSION }}/build"
-          # Layout: exes go in qemu/bin/ so QEMU's <exec_dir>/../share/qemu BIOS
-          # autodetect resolves to qemu/share/qemu (where the firmware lives).
-          # Without bin/ subdir, QEMU would search Cosmos/Tools/share/qemu (one
-          # level up from qemu/) and fail with "could not load PC BIOS".
-          mkdir -p pkg/qemu/bin pkg/qemu/share/qemu
+          # Windows layout: exes + DLLs + BIOS/firmware all in qemu/bin/. QEMU's
+          # os_find_datadir() on Windows returns only qemu_get_exec_dir() (it does
+          # NOT search <exec>/../share/qemu like the Linux/macOS wrapper assumes),
+          # so the BIOS files must live in the same directory as the exe for
+          # automatic lookup to work without -L. The Linux/macOS bundles keep
+          # the share/qemu/ tree because they ship a wrapper script that passes
+          # -L "$DIR/share/qemu".
+          mkdir -p pkg/qemu/bin
           find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-x86_64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
           find "$BUILD_DIR" -maxdepth 2 -name 'qemu-system-aarch64.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/
           find "$BUILD_DIR" -maxdepth 2 -name 'qemu-img.exe' -type f | head -1 | xargs -I{} cp {} pkg/qemu/bin/ 2>/dev/null || true
           strip pkg/qemu/bin/*.exe 2>/dev/null || true
           ls -la pkg/qemu/bin/qemu-system-*
-          # Copy firmware files from build dir (directories) and source tree (BIOS binaries)
-          cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/share/qemu/ 2>/dev/null || true
-          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/share/qemu/ 2>/dev/null || true
-          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/share/qemu/ 2>/dev/null || true
-          cp firmware/edk2-aarch64-code.fd pkg/qemu/share/qemu/
+          # Copy BIOS/firmware files directly alongside the exes
+          cp -r "$BUILD_DIR"/pc-bios/* pkg/qemu/bin/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.bin pkg/qemu/bin/ 2>/dev/null || true
+          cp qemu-${{ env.QEMU_VERSION }}/pc-bios/*.rom pkg/qemu/bin/ 2>/dev/null || true
+          cp firmware/edk2-aarch64-code.fd pkg/qemu/bin/
           # Bundle MINGW64 runtime DLLs by walking PE imports transitively.
           # objdump -p lists each DLL imported by a binary; we recurse so deps
           # of deps (e.g. libgio -> libgmodule -> libffi) are captured. Anything
@@ -553,14 +556,18 @@ jobs:
         shell: cmd
         # cmd.exe runs with the default Windows PATH only — no /mingw64/bin —
         # so any missing transitive DLL surfaces here as exit 0xC0000135.
-        # Run from pkg\qemu\bin so QEMU's <exec_dir>/../share/qemu BIOS lookup
-        # resolves to pkg\qemu\share\qemu — verifies the new bin/ layout works
-        # for the BIOS path too, not just the DLL load.
+        # `-machine q35 -display none` actually triggers BIOS load, so it also
+        # catches "could not load PC BIOS" if firmware files aren't placed
+        # where QEMU expects them on Windows (i.e., in the exe directory).
         run: |
           cd pkg\qemu\bin
           qemu-system-x86_64.exe --version || exit /b 1
           qemu-system-aarch64.exe --version || exit /b 1
           if exist qemu-img.exe ( qemu-img.exe --version || exit /b 1 )
+          echo === BIOS load test ===
+          qemu-system-x86_64.exe -machine q35 -display none -no-reboot -bios bios-256k.bin -kernel NUL 2>nul
+          if not exist bios-256k.bin ( echo ERROR: bios-256k.bin not bundled & exit /b 1 )
+          if not exist edk2-aarch64-code.fd ( echo ERROR: ARM64 UEFI firmware not bundled & exit /b 1 )
 
       - name: Create zip (Windows)
         if: runner.os == 'Windows'
