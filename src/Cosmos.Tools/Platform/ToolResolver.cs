@@ -40,7 +40,13 @@ public static class ToolResolver
         CommandToolDefinition tool, string? overridePath, string cacheKey)
     {
         ResolvedTool result = await ResolveCoreAsync(tool, overridePath);
-        s_cache[cacheKey] = result;
+        // Only cache successful resolutions — NotFound must be retried on the next
+        // call so `cosmos install`'s post-download verification sees newly extracted
+        // bundle binaries instead of the pre-download miss.
+        if (result.Source != ToolSource.NotFound)
+        {
+            s_cache[cacheKey] = result;
+        }
         return result;
     }
 
