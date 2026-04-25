@@ -13,12 +13,18 @@ namespace Cosmos.Tools.Launcher;
 ///
 /// Strategy:
 ///  - Windows: wrap the child in a Job Object with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE.
-///    When the only handle to the job (held by us) closes — for any reason —
-///    the OS kills every process in the job. Survives TerminateProcess.
-///  - Unix:    register signal handlers (SIGTERM/SIGINT/SIGHUP) plus
-///    AppDomain.ProcessExit; each handler calls Kill(entireProcessTree: true)
-///    on the child before we exit. SIGKILL still orphans (no handler possible),
-///    but extension uses SIGTERM by default so this covers the common case.
+///    When the only handle to the job (held by us) closes — for any reason
+///    including TerminateProcess — the OS kills every process in the job.
+///    No managed cleanup code involved.
+///  - Unix:    register PosixSignalRegistration handlers for SIGINT/SIGTERM/SIGHUP.
+///    Each kills the child tree, then Environment.Exit with the conventional
+///    128+signum code. SIGKILL still orphans (no handler possible).
+///
+/// Deliberately does NOT use AppDomain.ProcessExit: that fires after
+/// `using var process` has disposed the Process object, and Process.Kill(true)
+/// on a disposed Process can degenerate to kill(0, SIGKILL) — which signals
+/// the entire process group, taking cosmos.exe down with SIGKILL and turning
+/// a clean exit into a signal-termination (Node sees `code=null`).
 /// </summary>
 public sealed class ChildProcessLifetime : IDisposable
 {
@@ -41,12 +47,14 @@ public sealed class ChildProcessLifetime : IDisposable
             lifetime._jobHandle = WindowsJobObject.CreateKillOnCloseJob();
             WindowsJobObject.AssignProcess(lifetime._jobHandle, child.Handle);
         }
-
-        Console.CancelKeyPress += (_, e) => { e.Cancel = true; lifetime.KillChild(); };
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => lifetime.KillChild();
-
-        if (!OperatingSystem.IsWindows())
+        else
         {
+            lifetime._signalHandlers.Add(PosixSignalRegistration.Create(PosixSignal.SIGINT, ctx =>
+            {
+                lifetime.KillChild();
+                ctx.Cancel = true;
+                Environment.Exit(130);
+            }));
             lifetime._signalHandlers.Add(PosixSignalRegistration.Create(PosixSignal.SIGTERM, ctx =>
             {
                 lifetime.KillChild();
@@ -66,6 +74,13 @@ public sealed class ChildProcessLifetime : IDisposable
 
     private void KillChild()
     {
+        // After Dispose, _child may be a disposed Process — Kill(true) on a
+        // disposed handle can collapse to kill(0, SIGKILL) on Unix, killing
+        // ourselves. Bail before touching it.
+        if (_disposed)
+        {
+            return;
+        }
         try
         {
             if (!_child.HasExited)
