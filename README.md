@@ -65,7 +65,7 @@ Cosmos gen2 (the current public Cosmos OS) compiles C# IL to x86 assembly throug
 
 Thanks to everyone who has contributed code, reviews, plugs, and bug reports:
 
-- [@zarlo](https://github.com/zarlo) — original NativeAOT patcher author
+- [@zarlo](https://github.com/zarlo)
 - [@valentinbreiz](https://github.com/valentinbreiz)
 - [@Guillermo-Santos](https://github.com/Guillermo-Santos)
 - [@kumja1](https://github.com/kumja1)
