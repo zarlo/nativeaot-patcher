@@ -684,6 +684,8 @@ jobs:
             --disable-ld \
             --disable-gprof \
             --disable-gprofng \
+            --disable-sim \
+            --disable-gdbserver \
             --with-python=no \
             --without-guile
           make -j$NPROC
@@ -710,6 +712,8 @@ jobs:
             --disable-ld \
             --disable-gprof \
             --disable-gprofng \
+            --disable-sim \
+            --disable-gdbserver \
             --with-python=no \
             --without-guile
           make -j$(nproc)
