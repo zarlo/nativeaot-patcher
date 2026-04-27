@@ -30,7 +30,7 @@ public class Kernel : Sys.Kernel
 
         Console.Clear();
         Console.WriteLine("========================================");
-        Console.WriteLine($"         CosmosOS {Cosmos.Kernel.Kernel.VersionString} Shell       ");
+        Console.WriteLine($"         CosmosOS {Sys.Kernel.VersionString} Shell       ");
         Console.WriteLine("========================================");
         Console.WriteLine();
 
@@ -121,17 +121,17 @@ public class Kernel : Sys.Kernel
 
                 case "halt":
                     PrintWarning("Halting CPU...");
-                    Cosmos.Kernel.Kernel.Halt();
+                    Sys.Power.Halt();
                     break;
 
                 case "reboot":
                     PrintWarning("Rebooting...");
-                    Cosmos.Kernel.Kernel.Reboot();
+                    Sys.Power.Reboot();
                     break;
 
                 case "shutdown":
                     PrintWarning("Shutting down...");
-                    Cosmos.Kernel.Kernel.Shutdown();
+                    Sys.Power.Shutdown();
                     break;
 
                 case "netconfig":
@@ -443,7 +443,7 @@ public class Kernel : Sys.Kernel
         Console.WriteLine("System Information:");
         Console.ResetColor();
 
-        PrintInfoLine("OS", $"CosmosOS v{Cosmos.Kernel.Kernel.VersionString} (gen3)");
+        PrintInfoLine("OS", $"CosmosOS v{Sys.Kernel.VersionString} (gen3)");
         PrintInfoLine("Runtime", "NativeAOT");
 #if ARCH_X64
         PrintInfoLine("Architecture", "x86-64");
