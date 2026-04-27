@@ -5,20 +5,20 @@ using Cosmos.TestRunner.Framework;
 using Sys = Cosmos.Kernel.System;
 using TR = Cosmos.TestRunner.Framework.TestRunner;
 
-namespace Cosmos.Kernel.Tests.Power;
+namespace Cosmos.Kernel.Tests.PowerReboot;
 
-// Validates the Cosmos.Kernel.System.Power surface and the underlying HAL
-// wire-up. The final test actually invokes Power.Reboot(), which on QEMU
-// causes a clean exit via -no-reboot. Shutdown isn't exercised end-to-end
-// because QEMU x64 is launched with -no-shutdown (the VM stays alive on
-// guest shutdown), so we settle for an API-surface check there.
+// Validates the Cosmos.Kernel.System.Power surface, the HAL wire-up, and
+// then actually invokes Power.Reboot(). With QEMU's -no-reboot the VM
+// exits cleanly so the suite only passes when the destructive op truly
+// fires. A separate Cosmos.Kernel.Tests.PowerShutdown suite covers the
+// _S5 / PSCI SYSTEM_OFF path.
 public class Kernel : Sys.Kernel
 {
     protected override void BeforeRun()
     {
-        Serial.WriteString("[Power Tests] BeforeRun() reached\n");
+        Serial.WriteString("[PowerReboot Tests] BeforeRun() reached\n");
 
-        TR.Start("Power Tests", expectedTests: 5);
+        TR.Start("PowerReboot Tests", expectedTests: 5);
 
         TR.Run("PlatformHAL_PowerOps_NotNull", () =>
         {
@@ -42,12 +42,7 @@ public class Kernel : Sys.Kernel
             Assert.NotNull(shutdown);
         });
 
-        // Final test: actually invoke Reboot. With QEMU's -no-reboot the VM
-        // exits cleanly, this method never returns, and the pre-emptive pass
-        // emitted by RunDestructive is the last record left in the log. If
-        // Reboot regresses and returns, RunDestructive overrides the pass
-        // with a fail and the suite finalises normally.
-        Serial.WriteString("[Power Tests] About to invoke Power.Reboot() — QEMU should exit\n");
+        Serial.WriteString("[PowerReboot Tests] About to invoke Power.Reboot() — QEMU should exit\n");
         TR.RunDestructive(
             "Reboot_FiresAndExits",
             () => Sys.Power.Reboot(),
@@ -55,7 +50,7 @@ public class Kernel : Sys.Kernel
 
         // Only reached if Reboot didn't fire.
         TR.Finish();
-        Serial.WriteString("[Power Tests] FATAL: reached post-Reboot epilogue\n");
+        Serial.WriteString("[PowerReboot Tests] FATAL: reached post-Reboot epilogue\n");
     }
 
     protected override void Run()

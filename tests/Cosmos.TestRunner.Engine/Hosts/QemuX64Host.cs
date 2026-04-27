@@ -56,7 +56,8 @@ public class QemuX64Host : IQemuHost
             MemoryMb = _memoryMb,
             Headless = !showDisplay,
             SerialOutputFile = uartLogPath,
-            EnableNetworkTesting = enableNetworkTesting
+            EnableNetworkTesting = enableNetworkTesting,
+            AllowGuestShutdown = true
         });
         var startInfo = QemuLauncher.ToProcessStartInfo(plan);
         if (_qemuBinaryOverride is not null)

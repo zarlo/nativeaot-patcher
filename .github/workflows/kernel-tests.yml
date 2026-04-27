@@ -251,26 +251,49 @@ jobs:
       event_name: ${{ github.event_name }}
       head_ref: ${{ github.head_ref || github.ref_name }}
 
-  # ── Power ─────────────────────────────────────────────────────────────────────
-  power-tests:
+  # ── PowerReboot ───────────────────────────────────────────────────────────────
+  powerreboot-tests:
     needs: setup
     uses: ./.github/workflows/kernel-test-run.yml
     with:
-      suite_name: Power
-      suite_id: power
-      kernel_path: tests/Kernels/Cosmos.Kernel.Tests.Power
+      suite_name: PowerReboot
+      suite_id: powerreboot
+      kernel_path: tests/Kernels/Cosmos.Kernel.Tests.PowerReboot
       timeout_x64: 60
       timeout_arm64: 90
       step_timeout_minutes: 5
 
-  power-results:
-    needs: power-tests
+  powerreboot-results:
+    needs: powerreboot-tests
     if: always()
     uses: ./.github/workflows/kernel-test-results.yml
     with:
-      suite_name: Power
-      suite_id: power
-      kernel_path: tests/Kernels/Cosmos.Kernel.Tests.Power
+      suite_name: PowerReboot
+      suite_id: powerreboot
+      kernel_path: tests/Kernels/Cosmos.Kernel.Tests.PowerReboot
+      event_name: ${{ github.event_name }}
+      head_ref: ${{ github.head_ref || github.ref_name }}
+
+  # ── PowerShutdown ─────────────────────────────────────────────────────────────
+  powershutdown-tests:
+    needs: setup
+    uses: ./.github/workflows/kernel-test-run.yml
+    with:
+      suite_name: PowerShutdown
+      suite_id: powershutdown
+      kernel_path: tests/Kernels/Cosmos.Kernel.Tests.PowerShutdown
+      timeout_x64: 60
+      timeout_arm64: 90
+      step_timeout_minutes: 5
+
+  powershutdown-results:
+    needs: powershutdown-tests
+    if: always()
+    uses: ./.github/workflows/kernel-test-results.yml
+    with:
+      suite_name: PowerShutdown
+      suite_id: powershutdown
+      kernel_path: tests/Kernels/Cosmos.Kernel.Tests.PowerShutdown
       event_name: ${{ github.event_name }}
       head_ref: ${{ github.head_ref || github.ref_name }}
 
@@ -301,7 +324,7 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-24.04
-    needs: [ helloworld-results, memory-results, typecasting-results, timer-results, network-results, runtime-results, threading-results, math-results, graphic-results, power-results, garbagecollector-results ]
+    needs: [ helloworld-results, memory-results, typecasting-results, timer-results, network-results, runtime-results, threading-results, math-results, graphic-results, powerreboot-results, powershutdown-results, garbagecollector-results ]
     if: always()
     steps:
       - name: 📊 Generate Summary
@@ -330,7 +353,8 @@ jobs:
           add_row "Math"             "${{ needs.math-tests.result }}"
           add_row "Threading"        "${{ needs.threading-tests.result }}"
           add_row "Graphic"          "${{ needs.graphic-tests.result }}"
-          add_row "Power"            "${{ needs.power-tests.result }}"
+          add_row "PowerReboot"      "${{ needs.powerreboot-tests.result }}"
+          add_row "PowerShutdown"    "${{ needs.powershutdown-tests.result }}"
           add_row "GarbageCollector" "${{ needs.garbagecollector-tests.result }}"
 
           echo "" >> $GITHUB_STEP_SUMMARY

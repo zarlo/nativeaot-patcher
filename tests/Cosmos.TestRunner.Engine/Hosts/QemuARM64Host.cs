@@ -63,7 +63,8 @@ public class QemuARM64Host : IQemuHost
                 MemoryMb = _memoryMb,
                 Headless = !showDisplay,
                 SerialOutputFile = uartLogPath,
-                EnableNetworkTesting = enableNetworkTesting
+                EnableNetworkTesting = enableNetworkTesting,
+                AllowGuestShutdown = true
             });
         }
         catch (FileNotFoundException ex)
