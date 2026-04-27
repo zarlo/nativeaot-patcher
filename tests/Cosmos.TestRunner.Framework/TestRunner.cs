@@ -75,6 +75,33 @@ namespace Cosmos.TestRunner.Framework
         }
 
         /// <summary>
+        /// Run a destructive test whose action is expected to never return
+        /// (e.g. a successful Power.Reboot / Power.Shutdown). The test is
+        /// pre-emptively reported as passed before invoking the action; if
+        /// the action returns the pre-emptive pass is overridden by a fail
+        /// message and the call returns normally so the suite can finalise.
+        /// </summary>
+        public static void RunDestructive(string testName, Action testAction, string failureMessage)
+        {
+            _currentTestNumber++;
+            _testCount++;
+
+            // Pre-send TestStart + TestPass so a successful destructive op
+            // (which never returns) still leaves a passing record in the log.
+            SendTestStart(_currentTestNumber, testName);
+            SendTestPass(_currentTestNumber, 0);
+            _passedCount++;
+
+            testAction();
+
+            // Action returned — destructive op didn't fire. Demote to fail
+            // (last write wins in the parser).
+            _passedCount--;
+            _failedCount++;
+            SendTestFail(_currentTestNumber, failureMessage);
+        }
+
+        /// <summary>
         /// Skip a test
         /// </summary>
         public static void Skip(string testName, string reason)
