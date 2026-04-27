@@ -122,6 +122,47 @@ static inline void* phys_to_virt(uint64_t phys) {
     return (void*)(phys + g_hhdm_offset);
 }
 
+// 4-byte signature compare (ACPI table signatures are exactly 4 ASCII chars).
+static inline int sig_eq(const char* a, const char* b) {
+    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3];
+}
+
+// Walk XSDT/RSDT looking for the Nth table whose signature matches `signature`.
+// Returns a virtual pointer to the table header, or NULL if not found.
+// Used by laihost_scan() to fulfill LAI's namespace-creation table requests
+// (FACP/DSDT/SSDT/PSDT) and by lai_acpi_reset() for the FADT reset register.
+void* cosmos_acpi_scan_table(const char* signature, size_t index) {
+    if (signature == NULL_PTR) return NULL_PTR;
+
+    extern void* cosmos_acpi_get_rsdp(void);
+    acpi_rsdp_t* rsdp = (acpi_rsdp_t*)cosmos_acpi_get_rsdp();
+    if (rsdp == NULL_PTR) return NULL_PTR;
+
+    size_t matches = 0;
+
+    if (rsdp->revision >= 2 && ((acpi_xsdp_t*)rsdp)->xsdt != 0) {
+        acpi_xsdt_t* xsdt = (acpi_xsdt_t*)phys_to_virt(((acpi_xsdp_t*)rsdp)->xsdt);
+        uint32_t count = (xsdt->header.length - sizeof(acpi_header_t)) / sizeof(uint64_t);
+        for (uint32_t i = 0; i < count; i++) {
+            acpi_header_t* tbl = (acpi_header_t*)phys_to_virt(xsdt->tables[i]);
+            if (tbl && sig_eq(tbl->signature, signature)) {
+                if (matches++ == index) return tbl;
+            }
+        }
+    } else if (rsdp->rsdt != 0) {
+        acpi_rsdt_t* rsdt = (acpi_rsdt_t*)phys_to_virt((uint64_t)rsdp->rsdt);
+        uint32_t count = (rsdt->header.length - sizeof(acpi_header_t)) / sizeof(uint32_t);
+        for (uint32_t i = 0; i < count; i++) {
+            acpi_header_t* tbl = (acpi_header_t*)phys_to_virt((uint64_t)rsdt->tables[i]);
+            if (tbl && sig_eq(tbl->signature, signature)) {
+                if (matches++ == index) return tbl;
+            }
+        }
+    }
+
+    return NULL_PTR;
+}
+
 // ============================================================================
 // MADT parsing - shared entry point
 // ============================================================================

@@ -120,9 +120,18 @@ public class Kernel : Sys.Kernel
                     break;
 
                 case "halt":
+                    PrintWarning("Halting CPU...");
+                    Cosmos.Kernel.Kernel.Halt();
+                    break;
+
+                case "reboot":
+                    PrintWarning("Rebooting...");
+                    Cosmos.Kernel.Kernel.Reboot();
+                    break;
+
                 case "shutdown":
-                    PrintWarning("Halting system...");
-                    Stop();
+                    PrintWarning("Shutting down...");
+                    Cosmos.Kernel.Kernel.Shutdown();
                     break;
 
                 case "netconfig":
@@ -409,7 +418,9 @@ public class Kernel : Sys.Kernel
         PrintCommand("thread", "Test System.Threading.Thread");
         PrintCommand("gfx", "Start graphics thread (draws square)");
         PrintCommand("kill <id>", "Kill a thread by ID");
-        PrintCommand("halt", "Halt the system");
+        PrintCommand("halt", "Halt the CPU (does not power off)");
+        PrintCommand("reboot", "Restart the machine");
+        PrintCommand("shutdown", "Power off the machine");
         PrintCommand("netconfig", "Configure network stack");
         PrintCommand("netinfo", "Show network device info");
         PrintCommand("netsend", "Send UDP test packet");
