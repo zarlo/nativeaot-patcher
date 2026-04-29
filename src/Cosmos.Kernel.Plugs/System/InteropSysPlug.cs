@@ -67,8 +67,8 @@ public static class InteropSysPlug
             {
                 return 0;
             }
-
-            return RTC.Instance.GetCurrentTicks();
+            
+            return RTC.Instance.GetElapsedTicks() / TimeSpan.TicksPerMillisecond;
         }
         else
         {
