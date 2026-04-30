@@ -4,6 +4,9 @@ using System;
 using System.Diagnostics;
 using Cosmos.Build.API.Attributes;
 using Cosmos.Kernel.Core;
+using Monitor = Cosmos.Kernel.Core.Scheduler.Monitor;
+using System.Runtime.InteropServices;
+using Cosmos.Kernel.Core.IO;
 #if ARCH_X64
 using Cosmos.Kernel.HAL.X64.Devices.Clock;
 #elif ARCH_ARM64
@@ -87,6 +90,70 @@ public static class InteropSysPlug
     public static void SetErrNo(int value)
     {
         // No-op for now
+    }
+    
+    [PlugMember]
+    internal static IntPtr LowLevelMonitor_Create()
+    {
+        Monitor monitor = new();
+        var gchandle = new GCHandle<Monitor>(monitor);
+
+        return GCHandle<Monitor>.ToIntPtr(gchandle);
+    }
+
+    [PlugMember]
+    internal static void LowLevelMonitor_Destroy(IntPtr monitor)
+    {
+        var gchandle = GCHandle<Monitor>.FromIntPtr(monitor);
+        gchandle.Target.Dispose();
+        gchandle.Dispose();
+    }
+
+    [PlugMember]
+    internal static void LowLevelMonitor_Acquire(IntPtr monitor)
+    {
+        var gchandle = GCHandle<Monitor>.FromIntPtr(monitor);
+        gchandle.Target.Acquire();
+    }
+
+    [PlugMember]
+    internal static void LowLevelMonitor_Release(IntPtr monitor)
+    {
+        var gchandle = GCHandle<Monitor>.FromIntPtr(monitor);
+        gchandle.Target.Release();
+    }
+
+    [PlugMember]
+    internal static void LowLevelMonitor_Wait(IntPtr monitor)
+    {
+        var gchandle = GCHandle<Monitor>.FromIntPtr(monitor);
+        gchandle.Target.Wait();
+    }
+
+    [PlugMember]
+    internal static bool LowLevelMonitor_TimedWait(IntPtr monitor, int timeoutMilliseconds)
+    {
+        Serial.Write("[LowLevelMonitor] LowLevelMonitor_TimedWait: BEGIN, timeout=");
+        Serial.Write(timeoutMilliseconds);
+        Serial.Write("ms\n");
+        var mon = GCHandle<Monitor>.FromIntPtr(monitor).Target;
+        
+        if (timeoutMilliseconds < 0)
+        {
+            mon.Wait();
+            return true;
+        }
+        
+        mon.Wait(timeoutMilliseconds);
+
+        return true;   
+    }
+
+    [PlugMember]
+    internal static void LowLevelMonitor_Signal_Release(IntPtr monitor)
+    {
+        var gchandle = GCHandle<Monitor>.FromIntPtr(monitor);
+        gchandle.Target.Signal();
     }
 
 }
