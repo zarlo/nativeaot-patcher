@@ -384,6 +384,52 @@ public static class SchedulerManager
         }
     }
 
+    /// <summary>
+    /// Puts a thread to sleep with a timeout.
+    /// The thread may be woken up either by the timeout expires or when signaled.
+    /// </summary>
+    /// <param name="cpuId">CPU ID of the thread.</param>
+    /// <param name="thread">Thread to sleep.</param>
+    /// <param name="timeoutMs">Timeout in milliseconds. 0 means indefinite sleep (until signaled).</param>
+    public static void Sleep(uint cpuId, Thread thread, uint timeoutMs)
+    {
+        if (timeoutMs == 0)
+        {
+            return;
+        }
+        
+        using (InternalCpu.DisableInterruptsScope())
+        {
+            PerCpuState cpuState = _cpuStates[cpuId];
+
+            ulong timestamp = GetTimestamp();
+            ulong num = timeoutMs * 1_000_000UL;
+            thread.WakeupTime = timestamp + num;
+
+            _currentScheduler.OnThreadBlocked(cpuState, thread);
+            thread.State = ThreadState.Sleeping;
+        }
+
+        do
+        {
+            InternalCpu.Halt();
+        }
+        while(thread.State == ThreadState.Sleeping);
+    }
+
+    /// <summary>
+    /// Puts the current thread to sleep with a timeout.
+    /// </summary>
+    /// <param name="timeoutMs">Timeout in milliseconds. 0 means indefinite sleep.</param>
+    public static void Sleep(uint timeoutMs)
+    {
+        Thread? currentThread = GetCpuState(0).CurrentThread;
+        if (currentThread != null)
+        {
+            Sleep(currentThread.CpuId, currentThread, timeoutMs);
+        }
+    }
+
     // ========== Scheduling ==========
 
     public static bool OnTick(uint cpuId, ulong elapsedNs)
@@ -495,12 +541,51 @@ public static class SchedulerManager
             return;
         }
 
+        // Check and wake up sleeping threads whose timeout has expired
+        CheckSleepingThreads(elapsedNs);
+
         // Update timing and check if preemption needed
         bool needsReschedule = _currentScheduler.OnTick(state, state.CurrentThread, elapsedNs);
 
         if (needsReschedule)
         {
             ScheduleFromInterrupt(cpuId, currentRsp);
+        }
+    }
+
+    /// <summary>
+    /// Checks all sleeping threads and wakes those whose wakeup time has expired.
+    /// Called from timer interrupt handler to implement timed waits.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CheckSleepingThreads(ulong elapsedNs)
+    {
+        if (_allThreads == null)
+        {
+            return;
+        }
+
+        ulong currentTime = GetTimestamp();
+
+        for (int i = 0; i < _allThreads.Length; i++)
+        {
+            Thread? thread = _allThreads[i];
+            if (thread == null || thread.State != ThreadState.Sleeping)
+            {
+                continue;
+            }
+
+            // Check if wakeup time has been reached
+            if (currentTime >= thread.WakeupTime)
+            {
+                Serial.WriteString("[SCHED] Waking sleeping thread ");
+                Serial.WriteNumber(thread.Id);
+                Serial.WriteString(" (time expired)\n");
+
+                // Wake the thread by marking it as ready
+                thread.WakeupTime = 0;
+                ReadyThread(thread.CpuId, thread);
+            }
         }
     }
 
