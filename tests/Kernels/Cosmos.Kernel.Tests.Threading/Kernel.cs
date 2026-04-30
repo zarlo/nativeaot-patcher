@@ -4,6 +4,7 @@ using Cosmos.Kernel.Core.Scheduler;
 using Cosmos.Kernel.System.Timer;
 using Cosmos.TestRunner.Framework;
 using Sys = Cosmos.Kernel.System;
+using Monitor = System.Threading.Monitor;
 using SysThread = System.Threading.Thread;
 using TR = Cosmos.TestRunner.Framework.TestRunner;
 
@@ -217,8 +218,15 @@ public class Kernel : Sys.Kernel
     private static void TestMonitorExitWithoutEnter()
     {
         object obj = new object();
-        Monitor.Exit(obj); // Should not crash
-        Assert.True(true, "Monitor.Exit without prior Enter should not crash");
+        try
+        {
+            Monitor.Exit(obj); // Should not crash        
+            Assert.Fail("Monitor.Exit should throw if owning thread doesn't own the lock");
+        }
+        catch(SynchronizationLockException)
+        {
+            Assert.True(true, "Monitor.Exit without prior Enter should not crash");
+        }
     }
 
     // ==================== SpinLock Tests ====================
