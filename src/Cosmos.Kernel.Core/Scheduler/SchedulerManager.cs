@@ -397,7 +397,7 @@ public static class SchedulerManager
         {
             return;
         }
-        
+
         using (InternalCpu.DisableInterruptsScope())
         {
             PerCpuState cpuState = _cpuStates[cpuId];
@@ -414,7 +414,7 @@ public static class SchedulerManager
         {
             InternalCpu.Halt();
         }
-        while(thread.State == ThreadState.Sleeping);
+        while (thread.State == ThreadState.Sleeping);
     }
 
     /// <summary>

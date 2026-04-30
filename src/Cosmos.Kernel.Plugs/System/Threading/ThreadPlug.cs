@@ -24,6 +24,7 @@ public static unsafe class ThreadPlug
     {
         Serial.WriteString("[ThreadPlug] CreateThread(GCHandle<Thread>)\n");
 
+        // Initialize the '_stopped' field
         _stopped(aThis) = new ManualResetEvent(false);
 
         if (SchedulerManager.Enabled)

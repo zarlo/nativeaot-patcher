@@ -70,7 +70,7 @@ public static class InteropSysPlug
             {
                 return 0;
             }
-            
+
             return RTC.Instance.GetElapsedTicks() / TimeSpan.TicksPerMillisecond;
         }
         else
@@ -91,7 +91,7 @@ public static class InteropSysPlug
     {
         // No-op for now
     }
-    
+
     [PlugMember]
     internal static IntPtr LowLevelMonitor_Create()
     {
@@ -137,16 +137,16 @@ public static class InteropSysPlug
         Serial.Write(timeoutMilliseconds);
         Serial.Write("ms\n");
         var mon = GCHandle<Monitor>.FromIntPtr(monitor).Target;
-        
+
         if (timeoutMilliseconds < 0)
         {
             mon.Wait();
             return true;
         }
-        
+
         mon.Wait(timeoutMilliseconds);
 
-        return true;   
+        return true;
     }
 
     [PlugMember]

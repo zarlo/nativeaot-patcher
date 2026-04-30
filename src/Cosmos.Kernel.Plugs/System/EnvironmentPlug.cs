@@ -7,7 +7,7 @@ namespace Cosmos.Kernel.Plugs.System;
 public static class EnvironmentPlug
 {
     [PlugMember]
-    public static string GetEnvironmentVariableCore(string variable)
+    public static string? GetEnvironmentVariableCore(string variable)
     {
         return null;
     }

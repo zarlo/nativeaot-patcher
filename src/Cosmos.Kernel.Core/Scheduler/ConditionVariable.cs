@@ -46,9 +46,9 @@ public class ConditionVariable : IDisposable
 
         do
         {
-            currentThread = SchedulerManager.GetCpuState(0).CurrentThread;        
+            currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
         }
-        while(currentThread == null);
+        while (currentThread == null);
 
         _lockGuard.Acquire();
         if (!_waitingThreads.Contains(currentThread!))
@@ -59,13 +59,13 @@ public class ConditionVariable : IDisposable
 
         // Release the mutex while waiting
         mutex.Release();
-            
+
         SchedulerManager.BlockThread(currentThread.CpuId, currentThread);
         do
         {
             InternalCpu.Halt();
         }
-        while(currentThread.State == ThreadState.Blocked);
+        while (currentThread.State == ThreadState.Blocked);
 
         // Reacquire the mutex before returning
         mutex.Acquire();
@@ -80,7 +80,7 @@ public class ConditionVariable : IDisposable
     public bool WaitTimeout(Mutex mutex, uint timeoutMs)
     {
         SchedThread? currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
-        if(currentThread == null)
+        if (currentThread == null)
         {
             return false;
         }
@@ -94,14 +94,14 @@ public class ConditionVariable : IDisposable
             _waitingThreads.Add(currentThread!);
         }
         _lockGuard.Release();
-        
+
         // Put thread to sleep with timeout
         SchedulerManager.Sleep(currentThread.CpuId, currentThread, timeoutMs);
 
         // Reacquire the mutex before returning
         mutex.Acquire();
 
-        if(currentThread.WakeupTime > 0)
+        if (currentThread.WakeupTime > 0)
         {
             currentThread.WakeupTime = 0;
             return true;

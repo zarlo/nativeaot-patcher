@@ -48,8 +48,8 @@ public class Mutex : IDisposable
     public void Acquire()
     {
         SchedThread? currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
-        
-        if(currentThread == null)
+
+        if (currentThread == null)
         {
             return;
         }
@@ -101,7 +101,7 @@ public class Mutex : IDisposable
                 {
                     InternalCpu.Halt();
                 }
-                while(currentThread.State == ThreadState.Blocked);
+                while (currentThread.State == ThreadState.Blocked);
             }
 
             spinAttempts = 0;
@@ -217,7 +217,7 @@ public class Mutex : IDisposable
 
     public void Dispose()
     {
-        while(_waitingThreads.Count > 0)
+        while (_waitingThreads.Count > 0)
         {
             _lockGuard.Acquire();
             SchedThread waitingThread = _waitingThreads[0];

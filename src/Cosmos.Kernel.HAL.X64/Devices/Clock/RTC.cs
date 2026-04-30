@@ -186,7 +186,7 @@ public class RTC : Device
 
         return BootTimeTicks + (long)elapsedTicks;
     }
-    
+
     public long GetElapsedTicks()
     {
         if (!IsInitialized)

@@ -82,7 +82,7 @@ public class Monitor : IDisposable
         _condition.Signal();
         _mutex.Release();
     }
-    
+
     /// <summary>
     /// Signals all waiting threads and releases the monitor lock.
     /// </summary>
