@@ -1,0 +1,28 @@
+<Project>
+  <!--
+    Cross-OS assembler resolution via ResolveCosmosToolTask. x64 uses yasm,
+    ARM64 uses the clang integrated assembler. Replaces three per-OS files.
+    UsingTask for ResolveCosmosToolTask is declared in Cosmos.Build.Common.props.
+  -->
+  <Target Name="GetYasm">
+    <PropertyGroup>
+      <TargetArchitecture Condition="$(RuntimeIdentifier) != ''">$(RuntimeIdentifier.Split('-')[1])</TargetArchitecture>
+    </PropertyGroup>
+
+    <ResolveCosmosToolTask
+        Condition="'$(YasmPath)' == '' AND ('$(TargetArchitecture)' == 'x64' or '$(TargetArchitecture)' == '')"
+        ToolName="yasm">
+      <Output TaskParameter="ResolvedPath" PropertyName="YasmPath" />
+    </ResolveCosmosToolTask>
+
+    <ResolveCosmosToolTask
+        Condition="'$(YasmPath)' == '' AND '$(TargetArchitecture)' == 'arm64'"
+        ToolName="clang">
+      <Output TaskParameter="ResolvedPath" PropertyName="YasmPath" />
+    </ResolveCosmosToolTask>
+
+    <PropertyGroup>
+      <YasmPath>$(YasmPath.Trim())</YasmPath>
+    </PropertyGroup>
+  </Target>
+</Project>

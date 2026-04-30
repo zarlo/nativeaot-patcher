@@ -16,9 +16,8 @@
     <IsLinux Condition="'$(OS)' != 'Windows_NT' AND '$(IsMacOS)' != 'true'">true</IsLinux>
   </PropertyGroup>
 
-  <Import Project="Common.Build.Unix.targets" Condition="'$(IsLinux)' == 'true'"/>
-  <Import Project="Common.Build.macOS.targets" Condition="'$(IsMacOS)' == 'true'"/>
-  <Import Project="Common.Build.Windows.targets" Condition="'$(IsWindows)' == 'true'"/>
+  <!-- Cross-OS tool resolution (xorriso, ld.lld) via ResolveCosmosToolTask. -->
+  <Import Project="Common.Build.Tools.targets"/>
 
   <!-- Content-hash based linker caching: hash all .o/.obj + exports file -->
   <Target Name="CheckLinkCache" DependsOnTargets="$(LinkTargetDependsOn)">
@@ -136,7 +135,7 @@
     <CallTarget Targets="_BuildIsoCore" Condition="'$(_IsoCacheHit)' != 'true'" />
   </Target>
 
-  <Target Name="_BuildIsoCore">
+  <Target Name="_BuildIsoCore" DependsOnTargets="GetXorriso">
     <Message Text="Creating ISO image with Limine..." Importance="High"/>
 
     <!-- Remove old ISO directory if it exists -->
