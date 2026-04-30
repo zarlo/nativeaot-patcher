@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Cosmos.Kernel.Core.Bridge.Export;
+namespace Cosmos.Kernel.Core.Bridge.Interop;
 
 internal static class libSystemNative
 {
