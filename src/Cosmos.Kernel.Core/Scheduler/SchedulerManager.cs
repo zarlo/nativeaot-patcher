@@ -28,6 +28,11 @@ public static class SchedulerManager
     private static Thread?[]? _allThreads;
     private static int _allThreadCount;
 
+    // Cumulative TotalRuntime of exited non-idle threads. Live-thread runtime
+    // disappears from _allThreads on UnregisterThread, so we move it here to
+    // keep GetBusyCpuTimeNs monotonic across thread lifecycle.
+    private static ulong _exitedNonIdleRuntimeNs;
+
     /// <summary>
     /// Default time slice in nanoseconds (10ms).
     /// </summary>
@@ -142,7 +147,7 @@ public static class SchedulerManager
     /// <param name="parameter">Generic parameter of the Thread Start, it is decoded based on the <see cref="ThreadFlags"/> set in the thread.</param>
     public static void InvokeCurrentThreadStart(IntPtr parameter)
     {
-        PerCpuState? cpuState = GetCpuState(0);
+        PerCpuState? cpuState = GetCpuState(GetCurrentCpuId());
         Thread? currentThread = cpuState?.CurrentThread;
 
         if (currentThread == null)
@@ -181,7 +186,7 @@ public static class SchedulerManager
             {
                 exitCode = 1;
                 // Re-query thread ID — locals may be clobbered across the catch funclet.
-                PerCpuState? exCpuState = GetCpuState(0);
+                PerCpuState? exCpuState = GetCpuState(GetCurrentCpuId());
                 uint exThreadId = exCpuState?.CurrentThread?.Id ?? 0;
                 Serial.WriteString("[SCHED] Thread ");
                 Serial.WriteNumber(exThreadId);
@@ -198,7 +203,7 @@ public static class SchedulerManager
         }
 
         // Re-query current thread for exit — locals may be corrupted after the catch funclet.
-        PerCpuState? exitCpuState = GetCpuState(0);
+        PerCpuState? exitCpuState = GetCpuState(GetCurrentCpuId());
         Thread? exitThread = exitCpuState?.CurrentThread;
         uint exitThreadId = exitThread?.Id ?? 0;
 
@@ -226,7 +231,7 @@ public static class SchedulerManager
 
             }
 
-            ExitThread(0, exitThread);
+            ExitThread(GetCurrentCpuId(), exitThread);
         }
 
         // Halt forever — scheduler should not pick this thread again.
@@ -247,6 +252,45 @@ public static class SchedulerManager
     /// Returns the number of registered threads. Safe to call from GC.
     /// </summary>
     public static int ThreadCount => _allThreadCount;
+
+    /// <summary>
+    /// Returns the CPU ID currently executing this code path. Single-CPU today.
+    /// TODO(SMP): replace with x86_64 GS-relative per-CPU storage or ARM64 MPIDR_EL1
+    /// affinity read once application processors are brought online.
+    /// </summary>
+    public static uint GetCurrentCpuId() => 0;
+
+    /// <summary>
+    /// Sum of TotalRuntime across all non-idle threads, in nanoseconds.
+    /// One timer tick is charged to exactly one current thread per CPU, so this sum
+    /// over a wall-clock window equals total busy CPU time for that window.
+    /// Lock-free: registry slots are atomic and ulong reads are atomic on x64/ARM64;
+    /// worst case is observing a stale value from an in-progress tick.
+    /// </summary>
+    public static ulong GetBusyCpuTimeNs()
+    {
+        Thread?[]? threads = _allThreads;
+        if (threads == null)
+        {
+            return 0;
+        }
+
+        ulong sum = _exitedNonIdleRuntimeNs;
+        for (int i = 0; i < threads.Length; i++)
+        {
+            Thread? t = threads[i];
+            if (t == null)
+            {
+                continue;
+            }
+            if ((t.Flags & ThreadFlags.IdleThread) != 0)
+            {
+                continue;
+            }
+            sum += t.TotalRuntime;
+        }
+        return sum;
+    }
 
     public static nint OnThreadExitCallback
     {
@@ -299,6 +343,10 @@ public static class SchedulerManager
         {
             if (_allThreads[i] == thread)
             {
+                if ((thread.Flags & ThreadFlags.IdleThread) == 0)
+                {
+                    _exitedNonIdleRuntimeNs += thread.TotalRuntime;
+                }
                 _allThreads[i] = null;
                 _allThreadCount--;
                 return;
@@ -423,7 +471,7 @@ public static class SchedulerManager
     /// <param name="timeoutMs">Timeout in milliseconds. 0 means indefinite sleep.</param>
     public static void Sleep(uint timeoutMs)
     {
-        Thread? currentThread = GetCpuState(0).CurrentThread;
+        Thread? currentThread = GetCpuState(GetCurrentCpuId()).CurrentThread;
         if (currentThread != null)
         {
             Sleep(currentThread.CpuId, currentThread, timeoutMs);

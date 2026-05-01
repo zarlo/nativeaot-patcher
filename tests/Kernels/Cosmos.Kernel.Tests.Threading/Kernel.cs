@@ -34,7 +34,7 @@ public class Kernel : Sys.Kernel
         Serial.WriteString("[Threading] BeforeRun() reached!\n");
         Serial.WriteString("[Threading] Starting tests...\n");
 
-        TR.Start("Threading Tests", expectedTests: 49);
+        TR.Start("Threading Tests", expectedTests: 51);
 
         // SpinLock tests
         TR.Run("SpinLock_InitialState_IsUnlocked", TestSpinLockInitialState);
@@ -67,6 +67,10 @@ public class Kernel : Sys.Kernel
         TR.Run("Async_Method_ReturnsValueViaCompletedTask", TestAsyncCompletedTask);
         TR.Run("Async_Await_TaskRun_ReturnsValue", TestAsyncAwaitsTaskRun);
         TR.Run("Async_Chain_PropagatesValue", TestAsyncChain);
+
+        // CPU utilization tracking
+        TR.Run("Cpu_BusyTime_TracksThreadWork", TestCpuBusyTimeTracksThreadWork);
+        TR.Run("Cpu_CurrentCpuId_IsValid", TestCpuCurrentCpuIdIsValid);
 
         // Delegate tests
         TR.Run("Delegate_Action_BasicInvoke", TestDelegateActionBasicInvoke);
@@ -564,6 +568,71 @@ public class Kernel : Sys.Kernel
 
         Assert.True(t.IsCompleted, "Chained async method should complete");
         Assert.Equal(43, t.Result, "Async chain (10+1) + (31+1) should equal 43");
+    }
+
+    // ==================== CPU Utilization Tests ====================
+
+    private static volatile bool _cpuLoadDone;
+    private static volatile int _cpuLoadSink;
+
+    private static void TestCpuBusyTimeTracksThreadWork()
+    {
+        Serial.WriteString("[Test] Testing SchedulerManager.GetBusyCpuTimeNs()...\n");
+
+        ulong busyBefore = SchedulerManager.GetBusyCpuTimeNs();
+        Assert.True(busyBefore > 0, "Busy time must be > 0 once kernel/threads have ticked");
+
+        _cpuLoadDone = false;
+        _cpuLoadSink = 0;
+
+        SysThread worker = new SysThread(CpuBusyLoopWorker);
+        worker.Start();
+
+        for (int i = 0; i < 30 && !_cpuLoadDone; i++)
+        {
+            TimerManager.Wait(100);
+        }
+
+        Assert.True(_cpuLoadDone, "CPU-bound worker thread should have completed");
+
+        ulong busyAfter = SchedulerManager.GetBusyCpuTimeNs();
+        Assert.True(busyAfter > busyBefore, "Busy time should grow while a thread runs CPU-bound work");
+
+        ulong delta = busyAfter - busyBefore;
+        Serial.WriteString("[Test] Busy delta (ns): ");
+        Serial.WriteNumber(delta);
+        Serial.WriteString("\n");
+
+        // Worker spins for ~300 ms; expect at least 50 ms of charged runtime
+        // (10 ms tick quantum, scheduler shares with idle/main, leaves ample margin).
+        Assert.True(delta > 50_000_000UL, "Worker should accumulate >50 ms of busy CPU time");
+    }
+
+    private static void CpuBusyLoopWorker()
+    {
+        // ~300 ms of pure CPU work — _cpuLoadSink prevents the loop being optimized away.
+        ulong start = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
+        ulong freq = (ulong)global::System.Diagnostics.Stopwatch.Frequency;
+        ulong target = freq * 300UL / 1000UL;
+
+        int acc = 0;
+        while (((ulong)global::System.Diagnostics.Stopwatch.GetTimestamp() - start) < target)
+        {
+            for (int i = 0; i < 10000; i++)
+            {
+                acc = unchecked(acc + i);
+            }
+        }
+        _cpuLoadSink = acc;
+        _cpuLoadDone = true;
+    }
+
+    private static void TestCpuCurrentCpuIdIsValid()
+    {
+        uint cpuId = SchedulerManager.GetCurrentCpuId();
+        uint cpuCount = SchedulerManager.CpuCount;
+        Assert.True(cpuCount > 0, "CpuCount should be > 0");
+        Assert.True(cpuId < cpuCount, "GetCurrentCpuId should be in [0, CpuCount)");
     }
 
     // ==================== Delegate Tests ====================

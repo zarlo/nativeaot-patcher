@@ -47,7 +47,7 @@ public class Mutex : IDisposable
     /// </summary>
     public void Acquire()
     {
-        SchedThread? currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
+        SchedThread? currentThread = SchedulerManager.GetCpuState(SchedulerManager.GetCurrentCpuId()).CurrentThread;
 
         if (currentThread == null)
         {
@@ -110,7 +110,7 @@ public class Mutex : IDisposable
     /// <returns>true if acquired, false if held by another thread.</returns>
     public bool TryAcquire()
     {
-        SchedThread? currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
+        SchedThread? currentThread = SchedulerManager.GetCpuState(SchedulerManager.GetCurrentCpuId()).CurrentThread;
 
         _lockGuard.Acquire();
 
@@ -141,7 +141,7 @@ public class Mutex : IDisposable
     /// </remarks>
     public void Release()
     {
-        SchedThread? currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
+        SchedThread? currentThread = SchedulerManager.GetCpuState(SchedulerManager.GetCurrentCpuId()).CurrentThread;
 
         _lockGuard.Acquire();
 

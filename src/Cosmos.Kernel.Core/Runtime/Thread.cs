@@ -17,7 +17,7 @@ public class Thread
     {
         if (CosmosFeatures.SchedulerEnabled)
         {
-            var cpuState = SchedulerManager.GetCpuState(0);
+            var cpuState = SchedulerManager.GetCpuState(SchedulerManager.GetCurrentCpuId());
             return ref cpuState.CurrentThread!.GetThreadStaticStorage();
         }
         else
@@ -57,11 +57,11 @@ public class Thread
         Serial.WriteString("RhYield Called\n");
         if (CosmosFeatures.SchedulerEnabled)
         {
-            Scheduler.Thread? thread = SchedulerManager.GetCpuState(0).CurrentThread;
+            Scheduler.Thread? thread = SchedulerManager.GetCpuState(SchedulerManager.GetCurrentCpuId()).CurrentThread;
             if (thread != null)
             {
                 //TODO: Switch Threads (if possible)
-                SchedulerManager.YieldThread(0, thread);
+                SchedulerManager.YieldThread(SchedulerManager.GetCurrentCpuId(), thread);
                 InternalCpu.Halt();
 
                 return 0;

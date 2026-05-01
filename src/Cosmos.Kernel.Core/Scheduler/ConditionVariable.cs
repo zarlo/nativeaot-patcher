@@ -46,7 +46,7 @@ public class ConditionVariable : IDisposable
 
         do
         {
-            currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
+            currentThread = SchedulerManager.GetCpuState(SchedulerManager.GetCurrentCpuId()).CurrentThread;
         }
         while (currentThread == null);
 
@@ -75,7 +75,7 @@ public class ConditionVariable : IDisposable
     /// <returns>true if signaled, false if timeout occurred.</returns>
     public bool WaitTimeout(Mutex mutex, uint timeoutMs)
     {
-        SchedThread? currentThread = SchedulerManager.GetCpuState(0).CurrentThread;
+        SchedThread? currentThread = SchedulerManager.GetCpuState(SchedulerManager.GetCurrentCpuId()).CurrentThread;
         if (currentThread == null)
         {
             return false;
