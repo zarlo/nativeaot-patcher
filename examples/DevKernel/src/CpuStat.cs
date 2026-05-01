@@ -250,6 +250,16 @@ internal static class CpuStat
             int graphX = 10;
             int graphY = rowY;
             int graphW = s_historyLen;
+            // Clamp graphW to what actually fits on the canvas — protects against
+            // any edge case where s_historyLen could disagree with canvas width.
+            if (graphX + graphW > width - 4)
+            {
+                graphW = width - 4 - graphX;
+            }
+            // Explicitly wipe the graph region — canvas.Clear leaves stale pixels
+            // on some ARM64 framebuffers, which produced "ghost" lines on the
+            // left side of the graph from the previous frame.
+            canvas.DrawFilledRectangle(Color.Black, graphX, graphY, graphW, graphH);
             canvas.DrawRectangle(Color.DimGray, graphX, graphY, graphW, graphH);
 
             // 25 / 50 / 75 % gridlines
