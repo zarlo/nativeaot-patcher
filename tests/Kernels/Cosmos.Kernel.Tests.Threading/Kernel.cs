@@ -589,9 +589,13 @@ public class Kernel : Sys.Kernel
         SysThread worker = new SysThread(CpuBusyLoopWorker);
         worker.Start();
 
+        // Use SysThread.Sleep — TimerManager.Wait halts the CPU but keeps the
+        // thread Running, so the scheduler keeps charging time to *us* and the
+        // worker only gets scheduled briefly. Sleep puts the test thread into
+        // Sleeping state so the worker actually gets the CPU.
         for (int i = 0; i < 30 && !_cpuLoadDone; i++)
         {
-            TimerManager.Wait(100);
+            SysThread.Sleep(100);
         }
 
         Assert.True(_cpuLoadDone, "CPU-bound worker thread should have completed");
@@ -660,8 +664,11 @@ public class Kernel : Sys.Kernel
             new SysThread(StressTestWorker).Start();
         }
 
-        // Let workers spin up before sampling.
-        TimerManager.Wait(150);
+        // Let workers spin up before sampling — Sleep (not Wait) so the
+        // scheduler actually transitions us to Sleeping and the workers
+        // can accumulate TotalRuntime instead of competing with us for
+        // "current" while we busy-halt.
+        SysThread.Sleep(150);
 
         int loadedPct = MeasureCpuPctOverWindow(200);
         Serial.WriteString("[Test] loaded CPU% (N=");
@@ -676,7 +683,7 @@ public class Kernel : Sys.Kernel
         _stressTestRun = false;
         for (int i = 0; i < 30 && _stressTestLive > 0; i++)
         {
-            TimerManager.Wait(50);
+            SysThread.Sleep(50);
         }
 
         Serial.WriteString("[Test] live workers after drain: ");
@@ -728,7 +735,9 @@ public class Kernel : Sys.Kernel
         ulong startWall = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
         ulong startBusy = SchedulerManager.GetBusyCpuTimeNs();
 
-        TimerManager.Wait((uint)windowMs);
+        // Sleep (not TimerManager.Wait) so the test thread actually goes to
+        // Sleeping and stops being charged for ticks while the workers run.
+        SysThread.Sleep(windowMs);
 
         ulong endWall = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
         ulong endBusy = SchedulerManager.GetBusyCpuTimeNs();
