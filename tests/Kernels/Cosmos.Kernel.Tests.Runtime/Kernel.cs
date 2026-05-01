@@ -1410,14 +1410,14 @@ public unsafe class Kernel : Sys.Kernel
     // -- RhSpinWait --
     private static void Test_RhSpinWait_Zero_NoOp()
     {
-        StartupCodeHelpers.RhSpinWait(0);
+        Core.Runtime.Thread.RhSpinWait(0);
         Assert.True(true, "RhSpinWait(0) returned");
     }
 
     // -- RhYield --
     private static void Test_RhYield_ReturnsZero()
     {
-        int result = StartupCodeHelpers.RhYield();
+        int result = Core.Runtime.Thread.RhYield();
         Assert.Equal(0, result, "RhYield stub returns 0");
     }
 

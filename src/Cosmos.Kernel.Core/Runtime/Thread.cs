@@ -58,7 +58,7 @@ public class Thread
         if (CosmosFeatures.SchedulerEnabled)
         {
             Scheduler.Thread? thread = SchedulerManager.GetCpuState(0).CurrentThread;
-            if(thread != null)
+            if (thread != null)
             {
                 //TODO: Switch Threads (if possible)
                 SchedulerManager.YieldThread(0, thread);
@@ -67,7 +67,7 @@ public class Thread
                 return 0;
             }
         }
-        
+
         return 0;
     }
 
