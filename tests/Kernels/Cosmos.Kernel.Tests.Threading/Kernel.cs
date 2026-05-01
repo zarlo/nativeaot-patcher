@@ -589,9 +589,13 @@ public class Kernel : Sys.Kernel
         SysThread worker = new SysThread(CpuBusyLoopWorker);
         worker.Start();
 
+        // Use SysThread.Sleep — TimerManager.Wait halts the CPU but keeps the
+        // thread Running, so the scheduler keeps charging time to *us* and the
+        // worker only gets scheduled briefly. Sleep puts the test thread into
+        // Sleeping state so the worker actually gets the CPU.
         for (int i = 0; i < 30 && !_cpuLoadDone; i++)
         {
-            TimerManager.Wait(100);
+            SysThread.Sleep(100);
         }
 
         Assert.True(_cpuLoadDone, "CPU-bound worker thread should have completed");
