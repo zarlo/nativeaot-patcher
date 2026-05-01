@@ -267,27 +267,11 @@ namespace Cosmos.Kernel.Core.Runtime
 
         // RhpRethrow is now implemented in assembly (CPU/ExceptionHandling.asm)
 
-        [RuntimeExport("RhSpinWait")]
-        internal static void RhSpinWait(int iterations)
-        {
-            // Simple spin wait
-            for (int i = 0; i < iterations; i++)
-            {
-                // Spin
-            }
-        }
-
         [RuntimeExport("RhCompatibleReentrantWaitAny")]
         internal static uint RhCompatibleReentrantWaitAny(int alertable, uint timeout, uint handleCount, IntPtr pHandles)
         {
             // Single-threaded kernel: always return success immediately
             return 0x00000000; // WAIT_OBJECT_0 (SUCCESS)
-        }
-
-        [RuntimeExport("RhYield")]
-        internal static int RhYield()
-        {
-            return 0;
         }
 
         [RuntimeExport("RhBuffer_BulkMoveWithWriteBarrier")]

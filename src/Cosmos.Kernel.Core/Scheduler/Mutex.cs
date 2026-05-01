@@ -97,11 +97,7 @@ public class Mutex : IDisposable
             if (currentThread != null)
             {
                 SchedulerManager.BlockThread(currentThread.CpuId, currentThread);
-                do
-                {
-                    InternalCpu.Halt();
-                }
-                while (currentThread.State == ThreadState.Blocked);
+                InternalCpu.Halt();
             }
 
             spinAttempts = 0;

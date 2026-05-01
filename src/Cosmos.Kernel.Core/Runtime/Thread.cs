@@ -1,6 +1,7 @@
 using System.Runtime;
 using System.Runtime.InteropServices.Marshalling;
 using Cosmos.Kernel.Core.Bridge;
+using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.Core.Scheduler;
 
@@ -47,6 +48,36 @@ public class Thread
         if (CosmosFeatures.SchedulerEnabled)
         {
             SchedulerManager.OnThreadExitCallback = callback;
+        }
+    }
+
+    [RuntimeExport("RhYield")]
+    internal static int RhYield()
+    {
+        Serial.WriteString("RhYield Called\n");
+        if (CosmosFeatures.SchedulerEnabled)
+        {
+            Scheduler.Thread? thread = SchedulerManager.GetCpuState(0).CurrentThread;
+            if(thread != null)
+            {
+                //TODO: Switch Threads (if possible)
+                SchedulerManager.YieldThread(0, thread);
+                InternalCpu.Halt();
+
+                return 0;
+            }
+        }
+        
+        return 0;
+    }
+
+    [RuntimeExport("RhSpinWait")]
+    internal static void RhSpinWait(int iterations)
+    {
+        // Simple spin wait
+        for (int i = 0; i < iterations; i++)
+        {
+            // Spin
         }
     }
 }

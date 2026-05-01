@@ -402,11 +402,6 @@ public static class SchedulerManager
     /// <param name="timeoutMs">Timeout in milliseconds. 0 means indefinite sleep (until signaled).</param>
     public static void Sleep(uint cpuId, Thread thread, uint timeoutMs)
     {
-        if (timeoutMs == 0)
-        {
-            return;
-        }
-
         using (InternalCpu.DisableInterruptsScope())
         {
             PerCpuState cpuState = _cpuStates[cpuId];
@@ -419,11 +414,7 @@ public static class SchedulerManager
             thread.State = ThreadState.Sleeping;
         }
 
-        do
-        {
-            InternalCpu.Halt();
-        }
-        while (thread.State == ThreadState.Sleeping);
+        InternalCpu.Halt();
     }
 
     /// <summary>

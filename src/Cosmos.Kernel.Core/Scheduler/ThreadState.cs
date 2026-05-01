@@ -36,9 +36,9 @@ public enum ThreadFlags : ushort
     /// </summary>
     Pinned = 1 << 2,
     /// <summary>
-    /// Entrypoint parameter is a <see cref="GCHandle<System.Threading.Thread>"/>, 
+    /// Entrypoint parameter is a <see cref="System.Runtime.InteropServices.GCHandle"/> of <see cref="System.Threading.Thread"/>, 
     /// when set tells the <see cref="SchedulerManager.InvokeCurrentThreadStart"/>
-    /// to call the managed thread start
+    /// to call the managed thread start.
     /// </summary>
     Managed = 1 << 3,
     // Bits 8-15 reserved for scheduler-specific flags

@@ -70,29 +70,9 @@ public static unsafe class ThreadPlug
         return true;
     }
 
-    [PlugMember]
-    public static void Sleep(int millisecondsTimeout)
-    {
-        if (millisecondsTimeout > 0)
-        {
-            TimerManager.Wait((uint)millisecondsTimeout);
-        }
-    }
-
-    [PlugMember]
-    public static void Sleep(TimeSpan timeout)
-    {
-        Sleep((int)timeout.TotalMilliseconds);
-    }
-
+    // TODO: Implement RhYield
     [PlugMember]
     public static bool Yield() => true;
-
-    [PlugMember]
-    public static void SpinWait(int iterations)
-    {
-        for (int i = 0; i < iterations; i++) { }
-    }
 
     [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_stopped")]
     private static extern ref ManualResetEvent _stopped(SysThread aThis);

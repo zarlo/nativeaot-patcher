@@ -61,11 +61,7 @@ public class ConditionVariable : IDisposable
         mutex.Release();
 
         SchedulerManager.BlockThread(currentThread.CpuId, currentThread);
-        do
-        {
-            InternalCpu.Halt();
-        }
-        while (currentThread.State == ThreadState.Blocked);
+        InternalCpu.Halt();
 
         // Reacquire the mutex before returning
         mutex.Acquire();
