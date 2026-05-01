@@ -133,11 +133,30 @@ static inline int sig_eq(const char* a, const char* b) {
 // Returns a virtual pointer to the table header, or NULL if not found.
 // Used by laihost_scan() to fulfill LAI's namespace-creation table requests
 // (FACP/DSDT/SSDT/PSDT) and by lai_acpi_reset() for the FADT reset register.
+//
+// DSDT is special-cased: per ACPI spec it is NOT a top-level XSDT/RSDT entry —
+// its physical address is stored inside the FADT (x_dsdt / dsdt fields), so we
+// must resolve it via FACP before falling back to the XSDT/RSDT walk.
 void* cosmos_acpi_scan_table(const char* signature, size_t index) {
     if (signature == NULL_PTR) return NULL_PTR;
 
     acpi_rsdp_t* rsdp = (acpi_rsdp_t*)cosmos_acpi_get_rsdp();
     if (rsdp == NULL_PTR) return NULL_PTR;
+
+    if (index == 0 && sig_eq(signature, "DSDT")) {
+        acpi_fadt_t* fadt = (acpi_fadt_t*)cosmos_acpi_scan_table("FACP", 0);
+        if (fadt == NULL_PTR) return NULL_PTR;
+        uint64_t dsdt_phys = 0;
+        if (fadt->header.length >= sizeof(acpi_fadt_t) && fadt->x_dsdt != 0) {
+            dsdt_phys = fadt->x_dsdt;
+        } else if (fadt->dsdt != 0) {
+            dsdt_phys = (uint64_t)fadt->dsdt;
+        }
+        if (dsdt_phys == 0) return NULL_PTR;
+        acpi_header_t* dsdt = (acpi_header_t*)phys_to_virt(dsdt_phys);
+        if (dsdt && sig_eq(dsdt->signature, "DSDT")) return dsdt;
+        return NULL_PTR;
+    }
 
     size_t matches = 0;
 
