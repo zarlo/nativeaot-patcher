@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Cosmos.Kernel.Core.Bridge;
 using Cosmos.Kernel.Core.CPU;
 using Cosmos.Kernel.Core.IO;
@@ -13,6 +14,7 @@ namespace Cosmos.Kernel.Core.Scheduler;
 /// </summary>
 public static class SchedulerManager
 {
+
     private static IScheduler? _currentScheduler;
     private static PerCpuState[]? _cpuStates;
     private static uint _cpuCount;
@@ -126,18 +128,19 @@ public static class SchedulerManager
     private static extern void StartThread(SysThread aThis, IntPtr parameter);
 
     /// <summary>
+    /// <para>
     /// Entry body for newly scheduled threads. Called from
     /// <see cref="Cosmos.Kernel.Core.Bridge.ThreadNative.EntryPointStub"/>,
     /// whose address is passed as the initial RIP / PC to the context-switch
     /// assembly by whoever creates the thread (e.g. ThreadPlug).
+    /// </para>
     ///
-    /// Reads the entry delegate off the current thread's <c>StartDelegate</c>
-    /// field, clears it so the reference can be collected, invokes it, handles
-    /// exceptions, marks the thread as exited, and halts. The scheduler will
+    /// This method handles exceptions, marks the thread as exited, and halts. The scheduler will
     /// never re-pick a halted thread; the halt loop is a safety net in case
     /// the exit path ever races with a context switch.
     /// </summary>
-    public static void InvokeCurrentThreadStart()
+    /// <param name="parameter">Generic parameter of the Thread Start, it is decoded based on the <see cref="ThreadFlags"/> set in the thread.</param>
+    public static void InvokeCurrentThreadStart(IntPtr parameter)
     {
         PerCpuState? cpuState = GetCpuState(0);
         Thread? currentThread = cpuState?.CurrentThread;
@@ -152,21 +155,26 @@ public static class SchedulerManager
         Serial.WriteNumber(threadId);
         Serial.WriteString("\n");
 
-        // Consume the entry delegate. Capture and clear in one critical section
-        // so neither the GC nor a concurrent reader sees a half-torn state.
-        IntPtr managedHandle;
-        using (InternalCpu.DisableInterruptsScope())
-        {
-            managedHandle = currentThread.ManagedThreadHandle;
-        }
-
         int exitCode = 0;
-        if (managedHandle != IntPtr.Zero)
+        if (parameter != IntPtr.Zero)
         {
             try
             {
                 Serial.WriteString("[SCHED] Invoking thread entry\n");
-                StartThread(null!, managedHandle);
+
+                // Evaluate flags, if ThreadFlags.Managed is set then this thread comes from a managed thread,
+                // if not then we assume it's a gc handle holding a delegate.
+                if ((currentThread.Flags & ThreadFlags.Managed) != 0)
+                {
+                    StartThread(null!, parameter);
+                }
+                else
+                {
+                    var handle = GCHandle<Action>.FromIntPtr(parameter);
+                    Action start = handle.Target;
+                    handle.Dispose();
+                    start();
+                }
                 Serial.WriteString("[SCHED] Thread entry completed\n");
             }
             catch (Exception ex)
@@ -202,7 +210,8 @@ public static class SchedulerManager
 
         if (exitThread != null)
         {
-
+            // Is Hightly likely that the running thread have adquire some state on it's managed counter part (even if it wasn't started from a managed thread).
+            // Here we call the OnThreadExit Callback for the managed thread so it may be cleaned.
             nint managedCallback = OnThreadExitCallback;
             if (managedCallback != IntPtr.Zero)
             {

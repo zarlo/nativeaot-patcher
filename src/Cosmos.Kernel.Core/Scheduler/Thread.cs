@@ -27,14 +27,6 @@ public unsafe class Thread : SchedulerExtensible
     public ulong LastScheduledAt { get; set; }
     public ulong WakeupTime { get; set; }
 
-    // Pointer to the managed Thread object (GCHandle) for this thread, used for initialization.
-    /// <summary>
-    /// Holds a GCHandle to the managed Thread object associated with this thread.
-    /// Set by the thread creator (e.g. ThreadPlug.CreateThread) before handing the
-    /// thread to the scheduler; invoked by <see cref="SchedulerManager.InvokeCurrentThreadStart"/>.
-    /// </summary>
-    public IntPtr ManagedThreadHandle { get; set; }
-
     // ===== GC Allocation Context (TLAB) =====
     public AllocContext AllocContext;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.

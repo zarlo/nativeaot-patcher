@@ -31,15 +31,15 @@ public static unsafe class ThreadPlug
         {
             using (InternalCpu.DisableInterruptsScope())
             {
-                // Create scheduler thread with its entry delegate attached.
-                // SchedulerManager.InvokeCurrentThreadStart reads it back off
-                // the thread when it first runs.
+                // Create scheduler thread with the ThreadFlags.Managed set.
+                // SchedulerManager.InvokeCurrentThreadStart evaluates it to
+                // call the managed startup or not.
                 SchedThread thread = new SchedThread
                 {
                     Id = SchedulerManager.AllocateThreadId(),
                     CpuId = 0,
                     State = Cosmos.Kernel.Core.Scheduler.ThreadState.Created,
-                    ManagedThreadHandle = GCHandle<SysThread>.ToIntPtr(thisThreadHandle)
+                    Flags = ThreadFlags.Managed
                 };
 
                 Serial.WriteString("[ThreadPlug] Thread ");
@@ -48,13 +48,13 @@ public static unsafe class ThreadPlug
 
                 // Initial RIP/PC is the stable native entry-point stub in Core;
                 // the scheduler's InvokeCurrentThreadStart runs the registered delegate.
-                nuint entryPoint = (nuint)(delegate* unmanaged<void>)&ThreadNative.EntryPointStub;
+                nuint entryPoint = (nuint)(delegate* unmanaged<IntPtr, void>)&ThreadNative.EntryPointStub;
 #if ARCH_X64
                 ushort cs = (ushort)Idt.GetCurrentCodeSelector();
-                thread.InitializeStack(entryPoint, cs, thread.Id);
+                thread.InitializeStack(entryPoint, cs, (nuint)GCHandle<SysThread>.ToIntPtr(thisThreadHandle));
 #elif ARCH_ARM64
                 // ARM64: no code selector needed, use 0.
-                thread.InitializeStack(entryPoint, 0, thread.Id);
+                thread.InitializeStack(entryPoint, 0, (nuint)GCHandle<SysThread>.ToIntPtr(thisThreadHandle));
 #endif
                 Serial.WriteString("[ThreadPlug] Stack initialized, registering with scheduler\n");
 
