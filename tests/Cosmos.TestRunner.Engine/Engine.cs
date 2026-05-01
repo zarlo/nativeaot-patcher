@@ -199,22 +199,20 @@ public partial class Engine
                 break;
             }
 
-            // Timeout: only continue if the kernel got far enough to start a
-            // destructive test in this boot. Otherwise bail (real hang/crash).
-            // A destructive test that hangs after pre-emitting its Pass marker
-            // (e.g. Power.Shutdown's LAI panic on missing DSDT) still counts
-            // as "boot finished its job" — we want to roll on to the next.
-            if (result.TimedOut)
+            // No suite-end marker: either the boot reached a destructive test
+            // (RunDestructive — Power.Reboot/Shutdown) and the guest exited /
+            // hung on purpose, or the kernel crashed mid-suite. The two are
+            // distinguished by the TestDestructiveReached sentinel emitted by
+            // RunDestructive immediately before invoking the destructive
+            // action. Without that marker, treat this boot as a real failure
+            // and let the suite fail — re-launching would just mask the bug.
+            if (!UartLogShowsDestructiveProgress(result.UartLog))
             {
-                if (!UartLogShowsDestructiveProgress(result.UartLog))
-                {
-                    break;
-                }
-                Console.WriteLine($"[Engine] Boot #{boot} timed out after a destructive test was reached — treating as guest exit and re-launching.");
+                break;
             }
 
-            // Otherwise QEMU exited on its own (guest rebooted/shut down).
-            // Try the next boot.
+            string exitReason = result.TimedOut ? "timed out" : "guest exited";
+            Console.WriteLine($"[Engine] Boot #{boot} {exitReason} after a destructive test was reached — re-launching.");
         }
 
         return new QemuRunResult
@@ -228,11 +226,12 @@ public partial class Engine
     }
 
     /// <summary>
-    /// Returns true if the per-boot UART log contains at least one TestPass
-    /// frame from the binary protocol (magic 0x19740807 + command 102). Used
-    /// to distinguish "destructive test was reached, then the kernel hung"
-    /// (continue to next boot) from "the kernel hung before running any test"
-    /// (real hang — bail out).
+    /// Returns true if the per-boot UART log contains at least one
+    /// TestDestructiveReached frame from the binary protocol (magic 0x19740807
+    /// + command 108). Used to distinguish "destructive test was reached, then
+    /// the kernel exited/hung as expected" (continue to next boot, advancing
+    /// skip=N) from "the kernel crashed or hung in a non-destructive test"
+    /// (real failure — bail out and let the suite fail).
     /// </summary>
     private static bool UartLogShowsDestructiveProgress(string uartLog)
     {
@@ -241,8 +240,8 @@ public partial class Engine
             return false;
         }
         // Magic 0x19740807 little-endian = bytes 07 08 74 19, then command byte.
-        // Command 102 = TestPass.
-        byte[] needle = { 0x07, 0x08, 0x74, 0x19, 102 };
+        // Command 108 = TestDestructiveReached (emitted only by RunDestructive).
+        byte[] needle = { 0x07, 0x08, 0x74, 0x19, 108 };
         byte[] haystack = System.Text.Encoding.Latin1.GetBytes(uartLog);
         for (int i = 0; i + needle.Length <= haystack.Length; i++)
         {

@@ -93,6 +93,12 @@ namespace Cosmos.TestRunner.Framework
             SendTestPass(_currentTestNumber, 0);
             _passedCount++;
 
+            // Distinct sentinel for the engine's re-launch heuristic. A regular
+            // TestPass alone is ambiguous (every passing test emits one), so
+            // without this the engine would misread a mid-suite crash as a
+            // destructive op and burn boot attempts on skip=N+1 re-launches.
+            SendTestDestructiveReached(_currentTestNumber);
+
             testAction();
 
             // Action returned — destructive op didn't fire. Demote to fail
@@ -211,7 +217,7 @@ namespace Cosmos.TestRunner.Framework
         private const byte TestFail = 103;
         private const byte TestSkip = 104;
         private const byte TestSuiteEnd = 105;
-        private const byte TestRegister = 106; // New: register a test before execution
+        private const byte TestDestructiveReached = 108;
 
         /// <summary>
         /// Send a protocol message with format: [MAGIC:4][Command:1][Length:2][Payload:N]
@@ -305,6 +311,14 @@ namespace Cosmos.TestRunner.Framework
             payload[1] = (byte)((testNumber >> 8) & 0xFF);
             Array.Copy(reasonBytes, 0, payload, 2, reasonBytes.Length);
             SendMessage(TestSkip, payload);
+        }
+
+        private static void SendTestDestructiveReached(ushort testNumber)
+        {
+            var payload = new byte[2];
+            payload[0] = (byte)(testNumber & 0xFF);
+            payload[1] = (byte)((testNumber >> 8) & 0xFF);
+            SendMessage(TestDestructiveReached, payload);
         }
 
         private static void SendTestSuiteEnd(ushort total, ushort passed, ushort failed)
