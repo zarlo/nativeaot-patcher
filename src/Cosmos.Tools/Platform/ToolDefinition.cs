@@ -16,7 +16,7 @@ public class CommandToolDefinition : ToolDefinition
     public string? VersionArg { get; init; } = "--version";
 
     /// <summary>
-    /// Asset name prefix in the tools-latest GitHub release (e.g., "llvm-tools", "xorriso", "yasm", "qemu").
+    /// Asset name prefix in the tools-latest GitHub release (e.g., "llvm-tools", "xorriso", "qemu").
     /// If null, the tool is not distributed via the release (e.g., .NET SDK — user installs it manually).
     /// </summary>
     public string? ReleaseAsset { get; init; }
@@ -89,19 +89,6 @@ public static class ToolDefinitions
         ReleaseAsset = "xorriso"
     };
 
-    public static readonly CommandToolDefinition Yasm = new()
-    {
-        Name = "yasm",
-        DisplayName = "Yasm Assembler",
-        Description = "x64 assembler for native code",
-        WindowsCommands = ["yasm"],
-        LinuxCommands = ["yasm"],
-        MacOSCommands = ["yasm"],
-        VersionArg = "--version",
-        Required = true,
-        ReleaseAsset = "yasm"
-    };
-
     public static readonly CommandToolDefinition QemuX64 = new()
     {
         Name = "qemu-system-x86_64",
@@ -147,7 +134,6 @@ public static class ToolDefinitions
         Clang,
         LLD,
         Xorriso,
-        Yasm,
         QemuX64,
         QemuArm64,
         Gdb

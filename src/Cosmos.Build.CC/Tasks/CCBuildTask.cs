@@ -75,7 +75,7 @@ public sealed class CCBuildTask : ToolTask
             byte[] fileHash = hasher.ComputeHash(stream);
             string fileHashString = BitConverter.ToString(fileHash).Replace("-", "").ToLower();
 
-            // Set file-specific output name (full SHA1 hex — matches YasmBuildTask's filename convention)
+            // Set file-specific output name (full SHA1 hex — matches AsmBuildTask's filename convention)
             string baseName = Path.GetFileNameWithoutExtension(file);
             string outputName = $"{baseName}-{fileHashString}{objExt}";
             string outputPath = Path.GetFullPath(Path.Combine(OutputPath!, outputName));

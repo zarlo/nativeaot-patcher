@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using Cosmos.Kernel.Boot.Limine;
 using Cosmos.Kernel.Core.IO;
 
 namespace Cosmos.TestRunner.Framework
@@ -72,6 +73,69 @@ namespace Cosmos.TestRunner.Framework
                 _passedCount++;
                 SendTestPass(_currentTestNumber, durationMs);
             }
+        }
+
+        /// <summary>
+        /// Run a destructive test whose action is expected to never return
+        /// (e.g. a successful Power.Reboot / Power.Shutdown). The test is
+        /// pre-emptively reported as passed before invoking the action; if
+        /// the action returns the pre-emptive pass is overridden by a fail
+        /// message and the call returns normally so the suite can finalise.
+        /// </summary>
+        public static void RunDestructive(string testName, Action testAction, string failureMessage)
+        {
+            _currentTestNumber++;
+            _testCount++;
+
+            // Pre-send TestStart + TestPass so a successful destructive op
+            // (which never returns) still leaves a passing record in the log.
+            SendTestStart(_currentTestNumber, testName);
+            SendTestPass(_currentTestNumber, 0);
+            _passedCount++;
+
+            testAction();
+
+            // Action returned — destructive op didn't fire. Demote to fail
+            // (last write wins in the parser).
+            _passedCount--;
+            _failedCount++;
+            SendTestFail(_currentTestNumber, failureMessage);
+        }
+
+        /// <summary>
+        /// Reads the <c>skip=N</c> integer from the Limine kernel cmdline.
+        /// The test runner sets this on each re-launch when a previous boot
+        /// fired a test that exited QEMU (Reboot, Shutdown). Returns 0 if
+        /// the cmdline is missing or has no <c>skip=</c> token (default
+        /// first-boot behaviour).
+        /// </summary>
+        public static unsafe int GetSkipCount()
+        {
+            byte* cmdline = Limine.Cmdline;
+            if (cmdline == null)
+            {
+                return 0;
+            }
+
+            // Walk the null-terminated cmdline looking for "skip=" then digits.
+            byte* p = cmdline;
+            while (*p != 0)
+            {
+                if (p[0] == (byte)'s' && p[1] == (byte)'k' && p[2] == (byte)'i' &&
+                    p[3] == (byte)'p' && p[4] == (byte)'=')
+                {
+                    p += 5;
+                    int value = 0;
+                    while (*p >= (byte)'0' && *p <= (byte)'9')
+                    {
+                        value = value * 10 + (*p - (byte)'0');
+                        p++;
+                    }
+                    return value;
+                }
+                p++;
+            }
+            return 0;
         }
 
         /// <summary>

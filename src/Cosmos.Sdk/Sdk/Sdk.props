@@ -24,7 +24,7 @@
   <!-- ILC and build dependencies -->
   <PropertyGroup>
     <IlcDependsOn>RunPatcher;InstrumentCoverage;$(IlcDependsOn);PrepareForILLink</IlcDependsOn>
-    <LinkTargetDependsOn>CompileWithIlc;BuildYasm;BuildCC;$(LinkTargetDependsOn)</LinkTargetDependsOn>
+    <LinkTargetDependsOn>CompileWithIlc;BuildAsm;BuildCC;$(LinkTargetDependsOn)</LinkTargetDependsOn>
   </PropertyGroup>
 
   <!-- Cosmos Feature Switches (defaults) -->

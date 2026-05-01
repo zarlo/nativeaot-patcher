@@ -13,7 +13,7 @@ public class UninstallSettings : CommandSettings
     public bool Auto { get; set; }
 
     [CommandOption("--tools")]
-    [Description("Only remove system tools (QEMU, clang, lld, xorriso, yasm)")]
+    [Description("Only remove system tools (QEMU, clang, lld, xorriso)")]
     public bool Tools { get; set; }
 
     [CommandOption("--packages")]

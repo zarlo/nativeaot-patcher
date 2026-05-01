@@ -16,7 +16,7 @@ dotnet test
 
 ### Test Projects
 
-- **Cosmos.Tests.Build.Asm** – Verifies the assembly build task runs via Yasm.
+- **Cosmos.Tests.Build.Asm** – Verifies the assembly build task runs via clang.
   - `Test1`
 - **Cosmos.Tests.Build.Analyzer.Patcher** – Validates that code does not contain plug architecture errors.
   - `Test_AnalyzeAccessedMember`
@@ -292,7 +292,7 @@ tests/
 ├── Cosmos.TestRunner.Protocol/      # Shared protocol definitions
 │   ├── Consts.cs                    # Magic signature and constants
 │   └── Messages.cs                  # Typed message classes
-├── Cosmos.Tests.Build.Asm/          # Unit tests – Yasm build task
+├── Cosmos.Tests.Build.Asm/          # Unit tests – Clang assembly build task
 ├── Cosmos.Tests.Build.Analyzer.Patcher/ # Unit tests – plug analyzer
 ├── Cosmos.Tests.Scanner/            # Unit tests – plug scanner
 ├── Cosmos.Tests.Patcher/            # Unit tests – IL patcher

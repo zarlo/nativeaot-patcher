@@ -8,7 +8,6 @@ env:
   LLVM_TAG: "llvmorg-22.1.3"
   XORRISO_VERSION: "1.5.8.pl01"
   XORRISO_DIR: "1.5.8"
-  YASM_VERSION: "1.3.0"
   QEMU_VERSION: "10.2.2"
   GDB_VERSION: "17.1"
 
@@ -191,78 +190,6 @@ jobs:
         with:
           name: xorriso-${{ matrix.target }}
           path: xorriso-${{ env.XORRISO_VERSION }}-*.*
-
-  # ═══════════════════════════════════════════════════════════════════════
-  #  Yasm — cmake build from source
-  # ═══════════════════════════════════════════════════════════════════════
-  build-yasm:
-    name: Yasm ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: linux-x64
-            host: ""
-            ext: ""
-            strip: strip
-          - os: macos-latest
-            target: darwin-arm64
-            host: ""
-            ext: ""
-            strip: strip
-          - os: ubuntu-latest
-            target: win-x64
-            host: x86_64-w64-mingw32
-            ext: .exe
-            strip: x86_64-w64-mingw32-strip
-    steps:
-      - name: Install mingw-w64
-        if: matrix.host != ''
-        run: sudo apt-get update && sudo apt-get install -y mingw-w64
-
-      - name: Download yasm source tarball
-        run: |
-          curl -L -o yasm.tar.gz \
-            "https://github.com/yasm/yasm/releases/download/v${{ env.YASM_VERSION }}/yasm-${{ env.YASM_VERSION }}.tar.gz"
-          tar xzf yasm.tar.gz
-
-      - name: Build yasm
-        shell: bash
-        run: |
-          NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
-          cd yasm-${{ env.YASM_VERSION }}
-          CONFIGURE_ARGS=""
-          if [ -n "${{ matrix.host }}" ]; then
-            CONFIGURE_ARGS="--host=${{ matrix.host }}"
-          fi
-          ./configure $CONFIGURE_ARGS
-          make -j$NPROC
-          ${{ matrix.strip }} yasm${{ matrix.ext }}
-
-      - name: Package (tar.gz)
-        if: matrix.ext == ''
-        run: |
-          mkdir -p pkg/yasm
-          cp yasm-${{ env.YASM_VERSION }}/yasm pkg/yasm/
-          echo "${{ env.YASM_VERSION }}" > pkg/yasm/VERSION
-          tar czf yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.tar.gz -C pkg yasm
-
-      - name: Package (zip)
-        if: matrix.ext == '.exe'
-        run: |
-          mkdir -p pkg/yasm
-          cp yasm-${{ env.YASM_VERSION }}/yasm.exe pkg/yasm/
-          echo "${{ env.YASM_VERSION }}" > pkg/yasm/VERSION
-          cd pkg && zip -r ../yasm-${{ env.YASM_VERSION }}-${{ matrix.target }}.zip yasm
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: yasm-${{ matrix.target }}
-          path: yasm-${{ env.YASM_VERSION }}-*.*
-
 
   # ═══════════════════════════════════════════════════════════════════════
   #  QEMU — system emulators for x64 and ARM64
@@ -738,7 +665,6 @@ jobs:
     needs:
       - build-llvm
       - build-xorriso
-      - build-yasm
       - build-qemu
       - build-gdb
     runs-on: ubuntu-latest
@@ -763,7 +689,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tools-latest
-          name: "Cosmos Tools (LLVM ${{ env.LLVM_VERSION }}, QEMU ${{ env.QEMU_VERSION }}, Yasm ${{ env.YASM_VERSION }}, xorriso ${{ env.XORRISO_VERSION }}, GDB ${{ env.GDB_VERSION }})"
+          name: "Cosmos Tools (LLVM ${{ env.LLVM_VERSION }}, QEMU ${{ env.QEMU_VERSION }}, xorriso ${{ env.XORRISO_VERSION }}, GDB ${{ env.GDB_VERSION }})"
           body: |
             Pre-built development tools for Cosmos kernel development.
 
@@ -772,7 +698,6 @@ jobs:
             |------|---------|
             | LLVM (Clang + LLD) | ${{ env.LLVM_VERSION }} |
             | xorriso | ${{ env.XORRISO_VERSION }} |
-            | Yasm | ${{ env.YASM_VERSION }} |
             | QEMU | ${{ env.QEMU_VERSION }} |
             | GDB (multiarch) | ${{ env.GDB_VERSION }} |
 

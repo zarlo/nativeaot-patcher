@@ -7,9 +7,9 @@ using Microsoft.Build.Utilities;
 
 namespace Cosmos.Build.Asm.Tasks;
 
-public sealed class YasmBuildTask : ToolTask
+public sealed class AsmBuildTask : ToolTask
 {
-    [Required] public string? YasmPath { get; set; }
+    [Required] public string? ClangPath { get; set; }
     [Required] public string[]? SourceFiles { get; set; }
     [Required] public string? OutputPath { get; set; }
     public string? TargetArchitecture { get; set; }
@@ -17,7 +17,7 @@ public sealed class YasmBuildTask : ToolTask
     protected override MessageImportance StandardErrorLoggingImportance => MessageImportance.Normal;
 
     protected override string GenerateFullPathToTool() =>
-        YasmPath!;
+        ClangPath!;
 
     private string? FilePath { get; set; }
     private string? FileName { get; set; }
@@ -25,42 +25,32 @@ public sealed class YasmBuildTask : ToolTask
     protected override string GenerateCommandLineCommands()
     {
         Log.LogMessage(MessageImportance.Low, $"[Debug] Generating command-line args for {FilePath} -> {FileName}");
+
+        string triple = TargetArchitecture == "arm64"
+            ? "aarch64-none-elf"
+            : "x86_64-elf";
+
         StringBuilder sb = new();
-
-        bool isArm64 = TargetArchitecture == "arm64";
-
-        if (isArm64)
-        {
-            // Clang integrated assembler for ARM64 .s files
-            sb.Append($" --target=aarch64-none-elf -c ");
-            sb.Append($" -o {Path.Combine(OutputPath, FileName)} ");
-            sb.Append($" {FilePath} ");
-        }
-        else
-        {
-            // YASM command line for x64
-            sb.Append($" -felf64 ");
-            sb.Append($" -o {Path.Combine(OutputPath, FileName)} ");
-            sb.Append($" {FilePath} ");
-        }
-
+        sb.Append($" --target={triple} -c ");
+        sb.Append($" -o {Path.Combine(OutputPath!, FileName!)} ");
+        sb.Append($" {FilePath} ");
         return sb.ToString();
     }
 
     public override bool Execute()
     {
         LogStandardErrorAsError = true;
-        Log.LogMessage(MessageImportance.High, "Running Cosmos.Asm-Yasm...");
-        Log.LogMessage(MessageImportance.High, $"Tool Path: {YasmPath}");
+        Log.LogMessage(MessageImportance.High, "Running Cosmos.Asm...");
+        Log.LogMessage(MessageImportance.High, $"Tool Path: {ClangPath}");
 
-        string paths = string.Join(",", SourceFiles);
+        string paths = string.Join(",", SourceFiles!);
         Log.LogMessage(MessageImportance.High, $"Source Files: {paths}");
         Log.LogMessage(MessageImportance.Low, "[Debug] Beginning file matching");
 
         if (!Directory.Exists(OutputPath))
         {
             Log.LogMessage(MessageImportance.Low, $"[Debug] Creating output directory: {OutputPath}");
-            Directory.CreateDirectory(OutputPath);
+            Directory.CreateDirectory(OutputPath!);
         }
 
         using SHA1? hasher = SHA1.Create();
@@ -87,7 +77,7 @@ public sealed class YasmBuildTask : ToolTask
 
             if (!base.Execute())
             {
-                Log.LogError($"[Debug] YasmBuildTask failed for {FilePath}");
+                Log.LogError($"[Debug] AsmBuildTask failed for {FilePath}");
                 return false;
             }
         }
@@ -103,9 +93,9 @@ public sealed class YasmBuildTask : ToolTask
             }
         }
 
-        Log.LogMessage(MessageImportance.High, "YasmBuildTask completed successfully.");
+        Log.LogMessage(MessageImportance.High, "AsmBuildTask completed successfully.");
         return true;
     }
 
-    protected override string ToolName => "Cosmos.Asm-Yasm";
+    protected override string ToolName => "Cosmos.Asm";
 }
