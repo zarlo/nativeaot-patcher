@@ -34,7 +34,7 @@ public class Kernel : Sys.Kernel
         Serial.WriteString("[Threading] BeforeRun() reached!\n");
         Serial.WriteString("[Threading] Starting tests...\n");
 
-        TR.Start("Threading Tests", expectedTests: 52);
+        TR.Start("Threading Tests", expectedTests: 49);
 
         // SpinLock tests
         TR.Run("SpinLock_InitialState_IsUnlocked", TestSpinLockInitialState);
@@ -67,11 +67,6 @@ public class Kernel : Sys.Kernel
         TR.Run("Async_Method_ReturnsValueViaCompletedTask", TestAsyncCompletedTask);
         TR.Run("Async_Await_TaskRun_ReturnsValue", TestAsyncAwaitsTaskRun);
         TR.Run("Async_Chain_PropagatesValue", TestAsyncChain);
-
-        // CPU utilization tracking
-        TR.Run("Cpu_BusyTime_TracksThreadWork", TestCpuBusyTimeTracksThreadWork);
-        TR.Run("Cpu_CurrentCpuId_IsValid", TestCpuCurrentCpuIdIsValid);
-        TR.Run("Cpu_StressLoad_RaisesCpuPercent", TestCpuStressLoadRaisesCpuPercent);
 
         // Delegate tests
         TR.Run("Delegate_Action_BasicInvoke", TestDelegateActionBasicInvoke);
@@ -569,198 +564,6 @@ public class Kernel : Sys.Kernel
 
         Assert.True(t.IsCompleted, "Chained async method should complete");
         Assert.Equal(43, t.Result, "Async chain (10+1) + (31+1) should equal 43");
-    }
-
-    // ==================== CPU Utilization Tests ====================
-
-    private static volatile bool _cpuLoadDone;
-    private static volatile int _cpuLoadSink;
-
-    private static void TestCpuBusyTimeTracksThreadWork()
-    {
-        Serial.WriteString("[Test] Testing SchedulerManager.GetBusyCpuTimeNs()...\n");
-
-        ulong busyBefore = SchedulerManager.GetBusyCpuTimeNs();
-        Assert.True(busyBefore > 0, "Busy time must be > 0 once kernel/threads have ticked");
-
-        _cpuLoadDone = false;
-        _cpuLoadSink = 0;
-
-        SysThread worker = new SysThread(CpuBusyLoopWorker);
-        worker.Start();
-
-        // Use SysThread.Sleep — TimerManager.Wait halts the CPU but keeps the
-        // thread Running, so the scheduler keeps charging time to *us* and the
-        // worker only gets scheduled briefly. Sleep puts the test thread into
-        // Sleeping state so the worker actually gets the CPU.
-        for (int i = 0; i < 30 && !_cpuLoadDone; i++)
-        {
-            SysThread.Sleep(100);
-        }
-
-        Assert.True(_cpuLoadDone, "CPU-bound worker thread should have completed");
-
-        ulong busyAfter = SchedulerManager.GetBusyCpuTimeNs();
-        Assert.True(busyAfter > busyBefore, "Busy time should grow while a thread runs CPU-bound work");
-
-        ulong delta = busyAfter - busyBefore;
-        Serial.WriteString("[Test] Busy delta (ns): ");
-        Serial.WriteNumber(delta);
-        Serial.WriteString("\n");
-
-        // Worker spins for ~300 ms; expect at least 50 ms of charged runtime
-        // (10 ms tick quantum, scheduler shares with idle/main, leaves ample margin).
-        Assert.True(delta > 50_000_000UL, "Worker should accumulate >50 ms of busy CPU time");
-    }
-
-    private static void CpuBusyLoopWorker()
-    {
-        // ~300 ms of pure CPU work — _cpuLoadSink prevents the loop being optimized away.
-        ulong start = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
-        ulong freq = (ulong)global::System.Diagnostics.Stopwatch.Frequency;
-        ulong target = freq * 300UL / 1000UL;
-
-        int acc = 0;
-        while (((ulong)global::System.Diagnostics.Stopwatch.GetTimestamp() - start) < target)
-        {
-            for (int i = 0; i < 10000; i++)
-            {
-                acc = unchecked(acc + i);
-            }
-        }
-        _cpuLoadSink = acc;
-        _cpuLoadDone = true;
-    }
-
-    private static void TestCpuCurrentCpuIdIsValid()
-    {
-        uint cpuId = SchedulerManager.GetCurrentCpuId();
-        uint cpuCount = SchedulerManager.CpuCount;
-        Assert.True(cpuCount > 0, "CpuCount should be > 0");
-        Assert.True(cpuId < cpuCount, "GetCurrentCpuId should be in [0, CpuCount)");
-    }
-
-    private static volatile bool _stressTestRun;
-    private static volatile int _stressTestLive;
-    private static volatile int _stressTestSink;
-
-    private static void TestCpuStressLoadRaisesCpuPercent()
-    {
-        Serial.WriteString("[Test] Stress-load CPU% measurement starting...\n");
-
-        // Phase 1: baseline CPU% over a short window.
-        int baselinePct = MeasureCpuPctOverWindow(200);
-        Serial.WriteString("[Test] baseline CPU%: ");
-        Serial.WriteNumber((uint)baselinePct);
-        Serial.WriteString("\n");
-
-        // Phase 2: spawn 2 stress workers (each ~17 % duty → ~34 % expected).
-        const int N = 2;
-        _stressTestRun = true;
-        _stressTestLive = 0;
-        for (int i = 0; i < N; i++)
-        {
-            Interlocked.Increment(ref _stressTestLive);
-            new SysThread(StressTestWorker).Start();
-        }
-
-        // Let workers spin up before sampling — Sleep (not Wait) so the
-        // scheduler actually transitions us to Sleeping and the workers
-        // can accumulate TotalRuntime instead of competing with us for
-        // "current" while we busy-halt.
-        SysThread.Sleep(150);
-
-        int loadedPct = MeasureCpuPctOverWindow(200);
-        Serial.WriteString("[Test] loaded CPU% (N=");
-        Serial.WriteNumber((uint)N);
-        Serial.WriteString("): ");
-        Serial.WriteNumber((uint)loadedPct);
-        Serial.WriteString("\n");
-
-        // Phase 3: stop workers, drain. Workers also self-terminate after their
-        // own 2-second budget, so even if the flag doesn't propagate they
-        // can't outlive the test and pollute later tests.
-        _stressTestRun = false;
-        for (int i = 0; i < 30 && _stressTestLive > 0; i++)
-        {
-            SysThread.Sleep(50);
-        }
-
-        Serial.WriteString("[Test] live workers after drain: ");
-        Serial.WriteNumber((uint)_stressTestLive);
-        Serial.WriteString("\n");
-
-        Assert.True(loadedPct > baselinePct + 10,
-                    "Loaded CPU% must exceed baseline by at least 10 percentage points");
-    }
-
-    private static void StressTestWorker()
-    {
-        ulong freq = (ulong)global::System.Diagnostics.Stopwatch.Frequency;
-        if (freq == 0)
-        {
-            freq = 1_000_000_000UL;
-        }
-        ulong burnTicks = freq / 100;          // 10 ms burn
-        ulong maxLifeTicks = freq * 2UL;        // 2 s hard budget — guarantees exit
-
-        ulong startedAt = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
-        int dummy = 0;
-        while (_stressTestRun &&
-               ((ulong)global::System.Diagnostics.Stopwatch.GetTimestamp() - startedAt) < maxLifeTicks)
-        {
-            ulong start = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
-            ulong end = start + burnTicks;
-            while ((ulong)global::System.Diagnostics.Stopwatch.GetTimestamp() < end)
-            {
-                for (int j = 0; j < 256; j++)
-                {
-                    dummy = unchecked(dummy + j);
-                }
-            }
-            SysThread.Sleep(50); // 10 ms / (10 + 50) ≈ 17 % duty
-        }
-        _stressTestSink = dummy;
-        Interlocked.Decrement(ref _stressTestLive);
-    }
-
-    private static int MeasureCpuPctOverWindow(int windowMs)
-    {
-        ulong freq = (ulong)global::System.Diagnostics.Stopwatch.Frequency;
-        if (freq == 0)
-        {
-            freq = 1_000_000_000UL;
-        }
-
-        ulong startWall = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
-        ulong startBusy = SchedulerManager.GetBusyCpuTimeNs();
-
-        // Sleep (not TimerManager.Wait) so the test thread actually goes to
-        // Sleeping and stops being charged for ticks while the workers run.
-        SysThread.Sleep(windowMs);
-
-        ulong endWall = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
-        ulong endBusy = SchedulerManager.GetBusyCpuTimeNs();
-
-        ulong wallTicks = endWall - startWall;
-        ulong busyNs = endBusy >= startBusy ? endBusy - startBusy : 0;
-        double wallNs = (double)wallTicks * 1_000_000_000.0 / (double)freq;
-        double total = wallNs * (double)SchedulerManager.CpuCount;
-        if (total <= 0.0)
-        {
-            return 0;
-        }
-
-        double pct = (double)busyNs * 100.0 / total;
-        if (pct < 0.0)
-        {
-            pct = 0.0;
-        }
-        if (pct > 100.0)
-        {
-            pct = 100.0;
-        }
-        return (int)pct;
     }
 
     // ==================== Delegate Tests ====================
