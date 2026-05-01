@@ -81,6 +81,11 @@ internal static class CpuStat
         int height = (int)canvas.Mode.Height;
         int lineHeight = font.Height + 2;
 
+        // Adaptive layout knobs for narrow / short framebuffers (ARM64 QEMU
+        // virt sometimes hands us a very small mode).
+        bool narrow = width < 600;
+        int graphH = height < 500 ? 90 : height < 700 ? 130 : 180;
+
         while (!Console.KeyAvailable || Console.ReadKey(true).Key != ConsoleKey.Escape)
         {
             ulong wallNow = (ulong)Stopwatch.GetTimestamp();
@@ -194,18 +199,24 @@ internal static class CpuStat
             canvas.Clear(Color.Black);
 
             int rowY = 8;
-            canvas.DrawString("CPU Utilization Monitor — ESC to exit",
-                              font, Color.Cyan, 10, rowY);
+            string header = narrow ? "CPU Monitor — ESC" : "CPU Utilization Monitor — ESC to exit";
+            DrawClipped(canvas, font, Color.Cyan, 10, rowY, width - 20, header);
             rowY += lineHeight + 4;
 
-            // Big-ish current %
+            // Current % + peak. On narrow screens the Peak label is positioned
+            // dynamically right after CPU% rather than at a fixed x=200.
             Color pctColor = currentCpuPct < 50 ? Color.LimeGreen
                             : currentCpuPct < 80 ? Color.Yellow
                             : Color.OrangeRed;
-            canvas.DrawString("CPU: " + currentCpuPct + "%",
-                              font, pctColor, 10, rowY);
-            canvas.DrawString("Peak: " + peakCpuPct + "%",
-                              font, Color.Gray, 200, rowY);
+            string cpuLabel = "CPU: " + currentCpuPct + "%";
+            string peakLabel = "Peak: " + peakCpuPct + "%";
+            DrawClipped(canvas, font, pctColor, 10, rowY, width - 20, cpuLabel);
+            int peakX = 10 + font.Width * (cpuLabel.Length + 3);
+            int peakRoom = width - 10 - peakX;
+            if (peakRoom >= peakLabel.Length * font.Width)
+            {
+                canvas.DrawString(peakLabel, font, Color.Gray, peakX, rowY);
+            }
             rowY += lineHeight + 2;
 
             // Horizontal bar (full width minus margins)
@@ -222,21 +233,23 @@ internal static class CpuStat
             }
             rowY += barH + 8;
 
-            // Stress controller stats
+            // Stress controller stats — short form on narrow screens.
             int effective = s_live - s_dropRequest;
-            canvas.DrawString("Stress  target=" + s_target +
-                              "  live=" + s_live +
-                              "  drop=" + s_dropRequest +
-                              "  effective=" + effective +
-                              "  dir=" + (s_direction > 0 ? "+" : "-"),
-                              font, Color.White, 10, rowY);
+            string statsLine = narrow
+                ? "t=" + s_target + " live=" + s_live + " drop=" + s_dropRequest +
+                  " " + (s_direction > 0 ? "+" : "-")
+                : "Stress  target=" + s_target +
+                  "  live=" + s_live +
+                  "  drop=" + s_dropRequest +
+                  "  effective=" + effective +
+                  "  dir=" + (s_direction > 0 ? "+" : "-");
+            DrawClipped(canvas, font, Color.White, 10, rowY, width - 20, statsLine);
             rowY += lineHeight + 4;
 
-            // Full-width history graph
+            // Full-width history graph — height already chosen for the screen.
             int graphX = 10;
             int graphY = rowY;
             int graphW = s_historyLen;
-            int graphH = 180;
             canvas.DrawRectangle(Color.DimGray, graphX, graphY, graphW, graphH);
 
             // 25 / 50 / 75 % gridlines
@@ -290,31 +303,49 @@ internal static class CpuStat
                 }
             }
             rowY = graphY + graphH + 6;
-            // ~10 Hz sampling → window in seconds equals s_historyLen / 10
+            // ~10 Hz sampling → window in seconds equals s_historyLen / 10.
+            // Skip later legend items if they'd overflow the screen width.
             int legendX = graphX;
             int swatchW = font.Width * 2;
             int swatchH = font.Height - 2;
             int swatchY = rowY + 1;
+            int legendEdge = width - 4;
 
-            canvas.DrawFilledRectangle(Color.LimeGreen, legendX, swatchY, swatchW, swatchH);
-            legendX += swatchW + 6;
-            canvas.DrawString("CPU %", font, Color.LimeGreen, legendX, rowY);
-            legendX += font.Width * 7;
+            string cpuLegend = narrow ? "CPU%" : "CPU %";
+            if (legendX + swatchW + 6 + cpuLegend.Length * font.Width <= legendEdge)
+            {
+                canvas.DrawFilledRectangle(Color.LimeGreen, legendX, swatchY, swatchW, swatchH);
+                legendX += swatchW + 6;
+                canvas.DrawString(cpuLegend, font, Color.LimeGreen, legendX, rowY);
+                legendX += font.Width * (cpuLegend.Length + 2);
+            }
 
-            canvas.DrawFilledRectangle(Color.DeepSkyBlue, legendX, swatchY, swatchW, swatchH);
-            legendX += swatchW + 6;
-            string threadsLabel = "stress threads (0.." + MaxStressThreads + ")";
-            canvas.DrawString(threadsLabel, font, Color.DeepSkyBlue, legendX, rowY);
-            legendX += font.Width * (threadsLabel.Length + 4);
+            string threadsLabel = narrow ? "threads" : "stress threads (0.." + MaxStressThreads + ")";
+            if (legendX + swatchW + 6 + threadsLabel.Length * font.Width <= legendEdge)
+            {
+                canvas.DrawFilledRectangle(Color.DeepSkyBlue, legendX, swatchY, swatchW, swatchH);
+                legendX += swatchW + 6;
+                canvas.DrawString(threadsLabel, font, Color.DeepSkyBlue, legendX, rowY);
+                legendX += font.Width * (threadsLabel.Length + 4);
+            }
 
-            canvas.DrawString("window " + (s_historyLen / 10) + "s",
-                              font, Color.Gray, legendX, rowY);
+            string windowLabel = "window " + (s_historyLen / 10) + "s";
+            if (legendX + windowLabel.Length * font.Width <= legendEdge)
+            {
+                canvas.DrawString(windowLabel, font, Color.Gray, legendX, rowY);
+            }
             rowY += lineHeight + 6;
 
-            // Scheduler thread registry
-            canvas.DrawString("Scheduler threads (" +
-                              SchedulerManager.ThreadCount + " live):",
-                              font, Color.Cyan, 10, rowY);
+            // Scheduler thread registry — only render if there's room left below
+            // the graph. On a very short screen this section is just dropped.
+            if (rowY + lineHeight * 2 > height)
+            {
+                canvas.Display();
+                SysThread.Sleep(100);
+                continue;
+            }
+            DrawClipped(canvas, font, Color.Cyan, 10, rowY, width - 20,
+                        "Scheduler threads (" + SchedulerManager.ThreadCount + " live):");
             rowY += lineHeight;
 
             SchedThread?[]? threads = SchedulerManager.Threads;
@@ -389,6 +420,25 @@ internal static class CpuStat
         }
 
         Console.Clear();
+    }
+
+    private static void DrawClipped(Canvas canvas, PCScreenFont font, Color color,
+                                    int x, int y, int maxWidthPx, string text)
+    {
+        if (maxWidthPx <= 0 || font.Width <= 0)
+        {
+            return;
+        }
+        int maxChars = maxWidthPx / font.Width;
+        if (maxChars <= 0)
+        {
+            return;
+        }
+        if (text.Length > maxChars)
+        {
+            text = text.Substring(0, maxChars);
+        }
+        canvas.DrawString(text, font, color, x, y);
     }
 
     private static string FormatRuntime(ulong totalRuntimeNs)
