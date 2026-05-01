@@ -34,7 +34,7 @@ public class Kernel : Sys.Kernel
         Serial.WriteString("[Threading] BeforeRun() reached!\n");
         Serial.WriteString("[Threading] Starting tests...\n");
 
-        TR.Start("Threading Tests", expectedTests: 51);
+        TR.Start("Threading Tests", expectedTests: 52);
 
         // SpinLock tests
         TR.Run("SpinLock_InitialState_IsUnlocked", TestSpinLockInitialState);
@@ -71,6 +71,7 @@ public class Kernel : Sys.Kernel
         // CPU utilization tracking
         TR.Run("Cpu_BusyTime_TracksThreadWork", TestCpuBusyTimeTracksThreadWork);
         TR.Run("Cpu_CurrentCpuId_IsValid", TestCpuCurrentCpuIdIsValid);
+        TR.Run("Cpu_StressLoad_RaisesCpuPercent", TestCpuStressLoadRaisesCpuPercent);
 
         // Delegate tests
         TR.Run("Delegate_Action_BasicInvoke", TestDelegateActionBasicInvoke);
@@ -633,6 +634,117 @@ public class Kernel : Sys.Kernel
         uint cpuCount = SchedulerManager.CpuCount;
         Assert.True(cpuCount > 0, "CpuCount should be > 0");
         Assert.True(cpuId < cpuCount, "GetCurrentCpuId should be in [0, CpuCount)");
+    }
+
+    private static volatile bool _stressTestRun;
+    private static volatile int _stressTestLive;
+    private static volatile int _stressTestSink;
+
+    private static void TestCpuStressLoadRaisesCpuPercent()
+    {
+        Serial.WriteString("[Test] Stress-load CPU% measurement starting...\n");
+
+        // Phase 1: baseline CPU% over a 500 ms window — captures whatever
+        // background work the kernel is doing without any stress threads.
+        int baselinePct = MeasureCpuPctOverWindow(500);
+        Serial.WriteString("[Test] baseline CPU%: ");
+        Serial.WriteNumber((uint)baselinePct);
+        Serial.WriteString("\n");
+
+        // Phase 2: spawn 4 stress workers (each ~17 % duty → ~68 % expected).
+        const int N = 4;
+        _stressTestRun = true;
+        _stressTestLive = 0;
+        for (int i = 0; i < N; i++)
+        {
+            Interlocked.Increment(ref _stressTestLive);
+            new SysThread(StressTestWorker).Start();
+        }
+
+        // Let workers spin up before sampling.
+        TimerManager.Wait(300);
+
+        int loadedPct = MeasureCpuPctOverWindow(500);
+        Serial.WriteString("[Test] loaded CPU% (N=");
+        Serial.WriteNumber((uint)N);
+        Serial.WriteString("): ");
+        Serial.WriteNumber((uint)loadedPct);
+        Serial.WriteString("\n");
+
+        // Phase 3: stop workers, drain.
+        _stressTestRun = false;
+        for (int i = 0; i < 50 && _stressTestLive > 0; i++)
+        {
+            TimerManager.Wait(50);
+        }
+
+        Assert.Equal(0, _stressTestLive, "All stress workers should exit before assertion");
+        Assert.True(loadedPct > baselinePct + 20,
+                    "Loaded CPU% must exceed baseline by at least 20 percentage points");
+    }
+
+    private static void StressTestWorker()
+    {
+        ulong freq = (ulong)global::System.Diagnostics.Stopwatch.Frequency;
+        if (freq == 0)
+        {
+            freq = 1_000_000_000UL;
+        }
+        ulong burnTicks = freq / 100; // 10 ms burn
+
+        int dummy = 0;
+        while (_stressTestRun)
+        {
+            ulong start = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
+            ulong end = start + burnTicks;
+            while ((ulong)global::System.Diagnostics.Stopwatch.GetTimestamp() < end)
+            {
+                for (int j = 0; j < 256; j++)
+                {
+                    dummy = unchecked(dummy + j);
+                }
+            }
+            SysThread.Sleep(50); // 10 ms / (10 + 50) ≈ 17 % duty
+        }
+        _stressTestSink = dummy;
+        Interlocked.Decrement(ref _stressTestLive);
+    }
+
+    private static int MeasureCpuPctOverWindow(int windowMs)
+    {
+        ulong freq = (ulong)global::System.Diagnostics.Stopwatch.Frequency;
+        if (freq == 0)
+        {
+            freq = 1_000_000_000UL;
+        }
+
+        ulong startWall = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
+        ulong startBusy = SchedulerManager.GetBusyCpuTimeNs();
+
+        TimerManager.Wait((uint)windowMs);
+
+        ulong endWall = (ulong)global::System.Diagnostics.Stopwatch.GetTimestamp();
+        ulong endBusy = SchedulerManager.GetBusyCpuTimeNs();
+
+        ulong wallTicks = endWall - startWall;
+        ulong busyNs = endBusy >= startBusy ? endBusy - startBusy : 0;
+        double wallNs = (double)wallTicks * 1_000_000_000.0 / (double)freq;
+        double total = wallNs * (double)SchedulerManager.CpuCount;
+        if (total <= 0.0)
+        {
+            return 0;
+        }
+
+        double pct = (double)busyNs * 100.0 / total;
+        if (pct < 0.0)
+        {
+            pct = 0.0;
+        }
+        if (pct > 100.0)
+        {
+            pct = 100.0;
+        }
+        return (int)pct;
     }
 
     // ==================== Delegate Tests ====================
