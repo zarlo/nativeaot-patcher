@@ -179,6 +179,10 @@ public class Kernel : Sys.Kernel
                     GarbadgeColectorLiveInformation();
                     break;
 
+                case "cpustat":
+                    CpuStat.Run();
+                    break;
+
                 case "gcvar":
                     foreach (KeyValuePair<string, object> varable in GC.GetConfigurationVariables())
                     {
@@ -428,6 +432,7 @@ public class Kernel : Sys.Kernel
         PrintCommand("dhcp", "Auto-configure network via DHCP");
         PrintCommand("dns <domain>", "Resolve domain name to IP");
         PrintCommand("gc", "Give live information on the GC");
+        PrintCommand("cpustat", "Live CPU% + thread monitor with stress wave");
     }
 
     private void PrintCommand(string cmd, string description)
