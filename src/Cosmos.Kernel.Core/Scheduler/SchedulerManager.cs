@@ -215,22 +215,6 @@ public static class SchedulerManager
 
         if (exitThread != null)
         {
-            // Is Hightly likely that the running thread have adquire some state on it's managed counter part (even if it wasn't started from a managed thread).
-            // Here we call the OnThreadExit Callback for the managed thread so it may be cleaned.
-            nint managedCallback = OnThreadExitCallback;
-            if (managedCallback != IntPtr.Zero)
-            {
-                Serial.WriteString("[ThreadPlug] Invoking managed thread exit callback for thread ");
-                Serial.WriteNumber(exitThreadId);
-                Serial.WriteString("\n");
-                unsafe
-                {
-                    var callback = (delegate* unmanaged<void>)managedCallback;
-                    callback();
-                }
-
-            }
-
             ExitThread(GetCurrentCpuId(), exitThread);
         }
 
@@ -409,6 +393,22 @@ public static class SchedulerManager
 
     public static void ExitThread(uint cpuId, Thread thread)
     {
+        // Is Hightly likely that the running thread have adquire some state on it's managed counter part (even if it wasn't started from a managed thread).
+        // Here we call the OnThreadExit Callback for the managed thread so it may be cleaned.
+        nint managedCallback = OnThreadExitCallback;
+        if (managedCallback != IntPtr.Zero)
+        {
+            Serial.WriteString("[ThreadPlug] Invoking managed thread exit callback for thread ");
+            Serial.WriteNumber(thread.Id);
+            Serial.WriteString("\n");
+            unsafe
+            {
+                var callback = (delegate* unmanaged<void>)managedCallback;
+                callback();
+            }
+
+        }
+
         using (CPU.InternalCpu.DisableInterruptsScope())
         {
             PerCpuState state = _cpuStates[cpuId];
