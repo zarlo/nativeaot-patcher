@@ -196,7 +196,12 @@ internal static class CpuStat
                 s_historyFilled++;
             }
 
-            canvas.Clear(Color.Black);
+            // Explicit full-canvas wipe — canvas.Clear's ClearScreen path can
+            // leave stale pixels on ARM64, which produced ghost graph lines on
+            // the left edge of the framebuffer. DrawFilledRectangle goes
+            // through the per-pixel write path the rest of the drawing uses,
+            // so it stays consistent.
+            canvas.DrawFilledRectangle(Color.Black, 0, 0, width, height);
 
             int rowY = 8;
             string header = narrow ? "CPU Monitor — ESC" : "CPU Utilization Monitor — ESC to exit";
