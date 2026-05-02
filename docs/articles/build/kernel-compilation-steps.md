@@ -29,11 +29,11 @@ flowchart TD
     COSMOS_ROOT --> ILC
 
     subgraph "Cosmos.Build.Asm"
-        ASM_BUILD[YASM Compiler]
-        ASM_BUILD --> |yasm -felf64| ASM_OBJ["Assembly Objects (.obj)"]
+        ASM_BUILD[Clang Integrated Assembler]
+        ASM_BUILD --> |clang --target=...-elf -c| ASM_OBJ["Assembly Objects (.obj)"]
         ASM_OBJ --> COSMOS_ASM["$(IntermediateOutputPath)/cosmos/asm/"]
     end
-    ASM_SRC["Assembly Files (.asm)"] --> ASM_BUILD
+    ASM_SRC["Assembly Files (.s)"] --> ASM_BUILD
 
     subgraph "Cosmos.Build.CC"
         CC_BUILD[Clang Compiler]
@@ -71,8 +71,7 @@ flowchart TD
 | Tool | Purpose | Required Version |
 |------|---------|-----------------|
 | **.NET SDK** | Core compilation | 10.0+ |
-| **Clang** | C compilation (x64/ARM64 via --target) | LLVM toolchain |
-| **YASM** | x64 assembly compilation | Latest |
+| **Clang** | C and assembly compilation (x64/ARM64 via --target) | LLVM toolchain |
 | **ld.lld** | ELF linking | LLVM toolchain |
 | **xorriso** | ISO creation | Latest |
 
@@ -96,7 +95,7 @@ Reference implementation: `examples/DevKernel/DevKernel.csproj`
 | Patching | `$(IntermediateOutputPath)/cosmos/` | Main patched assembly |
 | Patching | `$(IntermediateOutputPath)/cosmos/ref/` | Reference assemblies |
 | NativeAOT | `$(IntermediateOutputPath)/cosmos/native/` | Native object files (.o) |
-| Assembly | `$(IntermediateOutputPath)/cosmos/asm/` | YASM objects (.obj) |
+| Assembly | `$(IntermediateOutputPath)/cosmos/asm/` | Clang assembler objects (.obj) |
 | C Code | `$(IntermediateOutputPath)/cosmos/cobj/` | Clang objects (.o/.obj) |
 | Linking | `$(OutputPath)/$(AssemblyName).elf` | Linked ELF kernel |
 | ISO | `$(OutputPath)/cosmos/$(AssemblyName).iso` | Bootable ISO image |

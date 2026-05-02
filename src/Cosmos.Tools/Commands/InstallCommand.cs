@@ -19,7 +19,7 @@ public class InstallSettings : CommandSettings
     public string? Setup { get; set; }
 
     [CommandOption("--tools")]
-    [Description("Only install system tools (QEMU, clang, lld, xorriso, yasm) from the Cosmos tools release")]
+    [Description("Only install system tools (QEMU, clang, lld, xorriso) from the Cosmos tools release")]
     public bool Tools { get; set; }
 
     [CommandOption("--packages")]
@@ -192,6 +192,14 @@ public class InstallCommand : AsyncCommand<InstallSettings>
             AnsiConsole.Markup("  Tools -> PATH ... ");
             bool pathOk = AddToolsToWindowsPath(toolsPath);
             AnsiConsole.MarkupLine(pathOk ? "[green]OK[/]" : "[yellow]SKIPPED[/]");
+        }
+
+        // Pre-install ResolveAsync calls cached system-tool hits while the bundle
+        // was still missing. Drop them so the verification below sees the freshly
+        // extracted bundle binaries instead of the stale pre-download resolution.
+        if (anyDownloaded)
+        {
+            ToolResolver.InvalidateCache();
         }
 
         List<CommandToolDefinition> requiredReleaseTools = ToolDefinitions.GetAllTools()
@@ -539,7 +547,6 @@ public class InstallCommand : AsyncCommand<InstallSettings>
     private static readonly string[] ToolPathSubDirs =
     [
         Path.Combine("llvm-tools", "bin"),
-        "yasm",
         "xorriso",
         Path.Combine("qemu", "bin"),
         Path.Combine("gdb", "bin")

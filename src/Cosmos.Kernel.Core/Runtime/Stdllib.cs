@@ -74,7 +74,7 @@ namespace Cosmos.Kernel.Core.Runtime
         [RuntimeExport("InitializeModules")]
         internal static unsafe void InitializeModules(IntPtr osModule, IntPtr* pModuleHeaders, int count, IntPtr* pClasslibFunctions, int nClasslibFunctions) { }
 
-        // RhpThrowEx is now implemented in assembly (CPU/ExceptionHandling.asm)
+        // RhpThrowEx is now implemented in assembly (CPU/ExceptionHandling.s)
         // The assembly stub saves register context, creates ExInfo, then calls RhThrowEx
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace Cosmos.Kernel.Core.Runtime
         {
             if (CosmosFeatures.SchedulerEnabled && Scheduler.SchedulerManager.Enabled)
             {
-                Scheduler.PerCpuState cpuState = Scheduler.SchedulerManager.GetCpuState(0);
+                Scheduler.PerCpuState cpuState = Scheduler.SchedulerManager.GetCpuState(Scheduler.SchedulerManager.GetCurrentCpuId());
                 return cpuState.CurrentThread?.Id ?? 1;
             }
 
@@ -265,32 +265,13 @@ namespace Cosmos.Kernel.Core.Runtime
             return Memory.RhpNewFast(pEEType); // Simplified implementation (Should set gc flag)
         }
 
-        // RhpRethrow is now implemented in assembly (CPU/ExceptionHandling.asm)
-
-        [RuntimeExport("RhSpinWait")]
-        internal static void RhSpinWait(int iterations)
-        {
-            // Simple spin wait
-            for (int i = 0; i < iterations; i++)
-            {
-                // Spin
-            }
-        }
-
-        [RuntimeExport("RhSetThreadExitCallback")]
-        internal static void RhSetThreadExitCallback(IntPtr callback) { }
+        // RhpRethrow is now implemented in assembly (CPU/ExceptionHandling.s)
 
         [RuntimeExport("RhCompatibleReentrantWaitAny")]
         internal static uint RhCompatibleReentrantWaitAny(int alertable, uint timeout, uint handleCount, IntPtr pHandles)
         {
             // Single-threaded kernel: always return success immediately
             return 0x00000000; // WAIT_OBJECT_0 (SUCCESS)
-        }
-
-        [RuntimeExport("RhYield")]
-        internal static int RhYield()
-        {
-            return 0;
         }
 
         [RuntimeExport("RhBuffer_BulkMoveWithWriteBarrier")]

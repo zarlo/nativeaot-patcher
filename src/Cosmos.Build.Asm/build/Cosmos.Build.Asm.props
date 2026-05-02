@@ -10,5 +10,5 @@
       Condition="'$(CosmosAsmTasksAssembly)' == '' OR !Exists('$(CosmosAsmTasksAssembly)')">$(MSBuildThisFileDirectory)\..\tasks\netstandard2.0\Cosmos.Build.Asm.dll</CosmosAsmTasksAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="Cosmos.Build.Asm.Tasks.YasmBuildTask" AssemblyFile="$(CosmosAsmTasksAssembly)"/>
+  <UsingTask TaskName="Cosmos.Build.Asm.Tasks.AsmBuildTask" AssemblyFile="$(CosmosAsmTasksAssembly)"/>
 </Project>

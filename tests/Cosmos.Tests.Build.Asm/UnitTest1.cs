@@ -18,12 +18,12 @@ public class UnitTest1
             .Callback<BuildErrorEventArgs>(e => errors.Add(e));
     }
 
-    private static string GetYasmPath()
+    private static string GetClangPath()
     {
         var paths = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator);
         if (paths != null)
         {
-            string exeName = Environment.OSVersion.Platform == PlatformID.Win32NT ? "yasm.exe" : "yasm";
+            string exeName = Environment.OSVersion.Platform == PlatformID.Win32NT ? "clang.exe" : "clang";
             foreach (var p in paths)
             {
                 var fullPath = Path.Combine(p, exeName);
@@ -33,22 +33,23 @@ public class UnitTest1
                 }
             }
         }
-        return "yasm";
+        return "clang";
     }
 
     [Fact]
     public void Test1()
     {
-        YasmBuildTask yasm = new()
+        AsmBuildTask asm = new()
         {
-            YasmPath = GetYasmPath(),
-            SourceFiles = ["./asm/test.asm"],
+            ClangPath = GetClangPath(),
+            SourceFiles = ["./asm/test.s"],
             OutputPath = "./output",
+            TargetArchitecture = "x64",
             BuildEngine = buildEngine.Object
         };
 
 
-        bool success = yasm.Execute();
+        bool success = asm.Execute();
 
         Assert.True(success);
     }

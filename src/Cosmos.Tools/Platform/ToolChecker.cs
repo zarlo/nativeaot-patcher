@@ -72,7 +72,7 @@ public static class ToolChecker
             if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
             {
                 // Check Cosmos tools paths — installers place tools in subdirectories:
-                //   {tools}/yasm/yasm, {tools}/llvm-tools/bin/clang, etc.
+                //   {tools}/xorriso/xorriso, {tools}/llvm-tools/bin/clang, etc.
                 //   {tools}/bin/ contains symlinks (Linux/macOS)
                 string cosmosToolsPath = GetCosmosToolsPath();
                 string ext = PlatformInfo.CurrentOS == OSPlatform.Windows ? ".exe" : "";
@@ -83,7 +83,7 @@ public static class ToolChecker
                 AddPathVariants(possiblePaths, cosmosToolsPath, command, ext);
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "bin"), command, ext);
 
-                // Tool in its own subdirectory (yasm/yasm, xorriso/xorriso)
+                // Tool in its own subdirectory (xorriso/xorriso)
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, command), command, ext);
 
                 // LLVM tools (clang, ld.lld)
@@ -98,7 +98,7 @@ public static class ToolChecker
                 AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, "gdb"), command, ext);
 
                 // Named subdirectories for specific tools
-                foreach (string dir in new[] { "lld", "xorriso", "yasm" })
+                foreach (string dir in new[] { "lld", "xorriso" })
                 {
                     AddPathVariants(possiblePaths, Path.Combine(cosmosToolsPath, dir), command, ext);
                 }
@@ -108,7 +108,6 @@ public static class ToolChecker
                 {
                     AddPathVariants(possiblePaths, @"C:\Program Files\qemu", command, ext);
                     AddPathVariants(possiblePaths, @"C:\Program Files\LLVM\bin", command, ext);
-                    AddPathVariants(possiblePaths, @"C:\ProgramData\chocolatey\lib\yasm\tools", command, ext);
                 }
 
                 // macOS: brew installs some tools outside default PATH
@@ -214,7 +213,6 @@ public static class ToolChecker
             {
                 Path.Combine(toolsBase, "bin"),
                 Path.Combine(toolsBase, "llvm-tools", "bin"),
-                Path.Combine(toolsBase, "yasm"),
                 Path.Combine(toolsBase, "xorriso"),
                 Path.Combine(toolsBase, "qemu"),
                 Path.Combine(toolsBase, "gdb", "bin"),
@@ -224,7 +222,6 @@ public static class ToolChecker
             {
                 paths.Add(@"C:\Program Files\qemu");
                 paths.Add(@"C:\Program Files\LLVM\bin");
-                paths.Add(@"C:\ProgramData\chocolatey\lib\yasm\tools");
             }
             if (PlatformInfo.CurrentOS == OSPlatform.MacOS)
             {
