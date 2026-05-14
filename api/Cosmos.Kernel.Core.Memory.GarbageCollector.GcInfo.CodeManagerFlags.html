@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Enum RegSaveKind | Cosmos Gen 3 </title>
+      <title>Enum CodeManagerFlags | Cosmos Gen 3 </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Enum RegSaveKind | Cosmos Gen 3 ">
+      <meta name="title" content="Enum CodeManagerFlags | Cosmos Gen 3 ">
       
-      <meta name="description" content="Register save location during unwind">
+      <meta name="description" content="Per-frame flags passed to  (subset of ICodeManagerFlags).">
       <link rel="icon" href="../favicon.ico">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
@@ -84,26 +84,27 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="Cosmos.Kernel.Core.Runtime.RegSaveKind">
+        <article data-uid="Cosmos.Kernel.Core.Memory.GarbageCollector.GcInfo.CodeManagerFlags">
 
 
 
 
-  <h1 id="Cosmos_Kernel_Core_Runtime_RegSaveKind" data-uid="Cosmos.Kernel.Core.Runtime.RegSaveKind" class="text-break">
-Enum RegSaveKind  
+  <h1 id="Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags" data-uid="Cosmos.Kernel.Core.Memory.GarbageCollector.GcInfo.CodeManagerFlags" class="text-break">
+Enum CodeManagerFlags  
   </h1>
 
   <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="Cosmos.html">Cosmos</a>.<a class="xref" href="Cosmos.Kernel.html">Kernel</a>.<a class="xref" href="Cosmos.Kernel.Core.html">Core</a>.<a class="xref" href="Cosmos.Kernel.Core.Runtime.html">Runtime</a></dd></dl>
+    <dl><dt>Namespace</dt><dd><a class="xref" href="Cosmos.html">Cosmos</a>.<a class="xref" href="Cosmos.Kernel.html">Kernel</a>.<a class="xref" href="Cosmos.Kernel.Core.html">Core</a>.<a class="xref" href="Cosmos.Kernel.Core.Memory.html">Memory</a>.<a class="xref" href="Cosmos.Kernel.Core.Memory.GarbageCollector.html">GarbageCollector</a>.<a class="xref" href="Cosmos.Kernel.Core.Memory.GarbageCollector.GcInfo.html">GcInfo</a></dd></dl>
   <dl><dt>Assembly</dt><dd>Cosmos.Kernel.Core.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>Register save location during unwind</p>
+  <div class="markdown summary"><p>Per-frame flags passed to <a class="xref" href="Cosmos.Kernel.Core.Memory.GarbageCollector.GcInfo.GcInfoDecoder.html#Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_GcInfoDecoder_EnumerateLiveSlots_Cosmos_Kernel_Core_Runtime_REGDISPLAY__System_Boolean_Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags__System_Void__">EnumerateLiveSlots(REGDISPLAY*, bool, CodeManagerFlags, delegate*&lt;void*, nuint*, uint, void&gt;, void*)</a> (subset of ICodeManagerFlags).</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public enum RegSaveKind : byte</code></pre>
+    <pre><code class="lang-csharp hljs">[Flags]
+public enum CodeManagerFlags : uint</code></pre>
   </div>
 
 
@@ -117,16 +118,22 @@ Enum RegSaveKind
   <h2 id="fields">Fields
 </h2>
   <dl class="parameters">
-    <dt id="Cosmos_Kernel_Core_Runtime_RegSaveKind_AtCfaOffset"><code>AtCfaOffset = 2</code></dt>
+    <dt id="Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags_ActiveStackFrame"><code>ActiveStackFrame = 1</code></dt>
   
   <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_RegSaveKind_InRegister"><code>InRegister = 3</code></dt>
+    <dt id="Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags_ExecutionAborted"><code>ExecutionAborted = 2</code></dt>
   
   <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_RegSaveKind_SameValue"><code>SameValue = 1</code></dt>
+    <dt id="Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags_NoReportUntracked"><code>NoReportUntracked = 128</code></dt>
   
   <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_RegSaveKind_Undefined"><code>Undefined = 0</code></dt>
+    <dt id="Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags_None"><code>None = 0</code></dt>
+  
+  <dd></dd>
+    <dt id="Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags_ParentOfFuncletStackFrame"><code>ParentOfFuncletStackFrame = 64</code></dt>
+  
+  <dd></dd>
+    <dt id="Cosmos_Kernel_Core_Memory_GarbageCollector_GcInfo_CodeManagerFlags_ReportFPBasedSlotsOnly"><code>ReportFPBasedSlotsOnly = 512</code></dt>
   
   <dd></dd>
   </dl>

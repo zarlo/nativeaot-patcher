@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Enum DwarfRegX64 | Cosmos Gen 3 </title>
+      <title>Enum ModeEnum | Cosmos Gen 3 </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Enum DwarfRegX64 | Cosmos Gen 3 ">
+      <meta name="title" content="Enum ModeEnum | Cosmos Gen 3 ">
       
-      <meta name="description" content="DWARF register numbers for x86-64">
+      <meta name="description" content="POSIX-style file mode flags used by the VFS layer.">
       <link rel="icon" href="../favicon.ico">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
@@ -84,26 +84,27 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="Cosmos.Kernel.Core.Runtime.DwarfRegX64">
+        <article data-uid="Cosmos.Kernel.HAL.Vfs.ModeEnum">
 
 
 
 
-  <h1 id="Cosmos_Kernel_Core_Runtime_DwarfRegX64" data-uid="Cosmos.Kernel.Core.Runtime.DwarfRegX64" class="text-break">
-Enum DwarfRegX64  
+  <h1 id="Cosmos_Kernel_HAL_Vfs_ModeEnum" data-uid="Cosmos.Kernel.HAL.Vfs.ModeEnum" class="text-break">
+Enum ModeEnum  
   </h1>
 
   <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="Cosmos.html">Cosmos</a>.<a class="xref" href="Cosmos.Kernel.html">Kernel</a>.<a class="xref" href="Cosmos.Kernel.Core.html">Core</a>.<a class="xref" href="Cosmos.Kernel.Core.Runtime.html">Runtime</a></dd></dl>
-  <dl><dt>Assembly</dt><dd>Cosmos.Kernel.Core.dll</dd></dl>
+    <dl><dt>Namespace</dt><dd><a class="xref" href="Cosmos.html">Cosmos</a>.<a class="xref" href="Cosmos.Kernel.html">Kernel</a>.<a class="xref" href="Cosmos.Kernel.HAL.html">HAL</a>.<a class="xref" href="Cosmos.Kernel.HAL.Vfs.html">Vfs</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>Cosmos.Kernel.HAL.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>DWARF register numbers for x86-64</p>
+  <div class="markdown summary"><p>POSIX-style file mode flags used by the VFS layer.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public enum DwarfRegX64 : byte</code></pre>
+    <pre><code class="lang-csharp hljs">[Flags]
+public enum ModeEnum</code></pre>
   </div>
 
 
@@ -117,63 +118,101 @@ Enum DwarfRegX64
   <h2 id="fields">Fields
 </h2>
   <dl class="parameters">
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_MAX"><code>MAX = 17</code></dt>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_BlockDevice"><code>BlockDevice = CharacterDevice | Directory</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R10"><code>R10 = 10</code></dt>
+  <dd><p>Block device.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_CharacterDevice"><code>CharacterDevice = 8192</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R11"><code>R11 = 11</code></dt>
+  <dd><p>Character device.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_Directory"><code>Directory = 16384</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R12"><code>R12 = 12</code></dt>
+  <dd><p>Directory.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_FileTypeMask"><code>FileTypeMask = NamedPipe | CharacterDevice | Socket</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R13"><code>R13 = 13</code></dt>
+  <dd><p>Mask for file type bits.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_GroupExecute"><code>GroupExecute = 8</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R14"><code>R14 = 14</code></dt>
+  <dd><p>Execute permission for group.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_GroupRead"><code>GroupRead = 32</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R15"><code>R15 = 15</code></dt>
+  <dd><p>Read permission for group.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_GroupWrite"><code>GroupWrite = 16</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R8"><code>R8 = 8</code></dt>
+  <dd><p>Write permission for group.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_NamedPipe"><code>NamedPipe = 4096</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_R9"><code>R9 = 9</code></dt>
+  <dd><p>Named pipe.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_OtherExecute"><code>OtherExecute = 1</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RA"><code>RA = 16</code></dt>
+  <dd><p>Execute permission for others.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_OtherRead"><code>OtherRead = 4</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RAX"><code>RAX = 0</code></dt>
+  <dd><p>Read permission for others.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_OtherWrite"><code>OtherWrite = 2</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RBP"><code>RBP = 6</code></dt>
+  <dd><p>Write permission for others.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_OwnerExecute"><code>OwnerExecute = 64</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RBX"><code>RBX = 3</code></dt>
+  <dd><p>Execute permission for owner.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_OwnerRead"><code>OwnerRead = 256</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RCX"><code>RCX = 2</code></dt>
+  <dd><p>Read permission for owner.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_OwnerWrite"><code>OwnerWrite = 128</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RDI"><code>RDI = 5</code></dt>
+  <dd><p>Write permission for owner.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_PermissionMask"><code>PermissionMask = OtherExecute | OtherWrite | OtherRead | GroupExecute | GroupWrite | GroupRead | OwnerExecute | OwnerWrite | OwnerRead</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RDX"><code>RDX = 1</code></dt>
+  <dd><p>Mask for permission bits (owner/group/other).</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_RegularFile"><code>RegularFile = 32768</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RSI"><code>RSI = 4</code></dt>
+  <dd><p>Regular file.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_SetGroupId"><code>SetGroupId = 1024</code></dt>
   
-  <dd></dd>
-    <dt id="Cosmos_Kernel_Core_Runtime_DwarfRegX64_RSP"><code>RSP = 7</code></dt>
+  <dd><p>Set group ID on execution.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_SetUserId"><code>SetUserId = 2048</code></dt>
   
-  <dd></dd>
+  <dd><p>Set user ID on execution.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_Socket"><code>Socket = Directory | RegularFile</code></dt>
+  
+  <dd><p>Socket.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_Sticky"><code>Sticky = 512</code></dt>
+  
+  <dd><p>Sticky bit.</p>
+</dd>
+    <dt id="Cosmos_Kernel_HAL_Vfs_ModeEnum_SymbolicLink"><code>SymbolicLink = CharacterDevice | RegularFile</code></dt>
+  
+  <dd><p>Symbolic link.</p>
+</dd>
   </dl>
 
 
+  <h2 id="Cosmos_Kernel_HAL_Vfs_ModeEnum_remarks">Remarks</h2>
+  <div class="markdown level0 remarks"><p>Layout mirrors Unix mode bits:</p>
+<ul>
+<li>Permissions: owner/group/other read, write, execute (bits 0-8)</li>
+<li>Special: sticky, setgid, setuid (bits 9-11)</li>
+<li>File type: high nibble encodes the type (bits 12-15); mask with <a class="xref" href="Cosmos.Kernel.HAL.Vfs.ModeEnum.html#Cosmos_Kernel_HAL_Vfs_ModeEnum_FileTypeMask">FileTypeMask</a>.</li>
+</ul>
+</div>
 
 </article>
 

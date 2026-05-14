@@ -230,6 +230,72 @@ Class CpuNative
 
 
 
+  <a id="Cosmos_Kernel_Core_Bridge_CpuNative_RestoreIrq_" data-uid="Cosmos.Kernel.Core.Bridge.CpuNative.RestoreIrq*"></a>
+
+  <h3 id="Cosmos_Kernel_Core_Bridge_CpuNative_RestoreIrq_System_UInt64_" data-uid="Cosmos.Kernel.Core.Bridge.CpuNative.RestoreIrq(System.UInt64)">
+  RestoreIrq(ulong)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Restores an interrupt-enable state previously returned by <a class="xref" href="Cosmos.Kernel.Core.Bridge.CpuNative.html#Cosmos_Kernel_Core_Bridge_CpuNative_SaveIrqAndDisable">SaveIrqAndDisable()</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static extern void RestoreIrq(ulong flags)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>flags</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="Cosmos_Kernel_Core_Bridge_CpuNative_SaveIrqAndDisable_" data-uid="Cosmos.Kernel.Core.Bridge.CpuNative.SaveIrqAndDisable*"></a>
+
+  <h3 id="Cosmos_Kernel_Core_Bridge_CpuNative_SaveIrqAndDisable" data-uid="Cosmos.Kernel.Core.Bridge.CpuNative.SaveIrqAndDisable">
+  SaveIrqAndDisable()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Captures the current interrupt-enable state (RFLAGS / DAIF), disables interrupts, and returns
+the captured state. Pair with <a class="xref" href="Cosmos.Kernel.Core.Bridge.CpuNative.html#Cosmos_Kernel_Core_Bridge_CpuNative_RestoreIrq_System_UInt64_">RestoreIrq(ulong)</a> — <code>InternalCpu.InterruptScope</code>
+uses these so a nested inner dispose does not prematurely re-enable interrupts.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static extern ulong SaveIrqAndDisable()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
 
 </article>
 

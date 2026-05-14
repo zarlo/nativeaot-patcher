@@ -156,6 +156,45 @@ export the same names, so no arch gating is needed here.</p>
 </h2>
 
 
+  <a id="Cosmos_Kernel_Core_Bridge_ContextSwitchNative_CaptureRegDisplay_" data-uid="Cosmos.Kernel.Core.Bridge.ContextSwitchNative.CaptureRegDisplay*"></a>
+
+  <h3 id="Cosmos_Kernel_Core_Bridge_ContextSwitchNative_CaptureRegDisplay_System_Void__" data-uid="Cosmos.Kernel.Core.Bridge.ContextSwitchNative.CaptureRegDisplay(System.Void*)">
+  CaptureRegDisplay(void*)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Captures the calling frame's callee-saved registers + stack pointer into the supplied
+<code>REGDISPLAY</code> and returns the caller's return address (IP). Used by the precise GC
+stack scan to bootstrap a per-frame walk of the GC-triggering thread (issue #346).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static extern nuint CaptureRegDisplay(void* regDisplay)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>regDisplay</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.void">void</a>*</dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
   <a id="Cosmos_Kernel_Core_Bridge_ContextSwitchNative_GetContextSwitchSp_" data-uid="Cosmos.Kernel.Core.Bridge.ContextSwitchNative.GetContextSwitchSp*"></a>
 
   <h3 id="Cosmos_Kernel_Core_Bridge_ContextSwitchNative_GetContextSwitchSp" data-uid="Cosmos.Kernel.Core.Bridge.ContextSwitchNative.GetContextSwitchSp">
