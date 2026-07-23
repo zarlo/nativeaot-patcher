@@ -824,6 +824,20 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.Core.Memory.AddressSpace.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.Core.Memory.AddressSpace.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.Core.Memory.AddressSpace",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.Core.Memory.AddressSpace.yml\" sourcestartlinenumber=\"1\">Virtual address-space layout constants shared across the kernel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.Core.Memory.GarbageCollector.AllocContext.yml",
       "output": {
         ".html": {
@@ -1734,6 +1748,48 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.Alarm.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.Alarm.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.Core.Scheduler.AlarmSystem.Alarm",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.Alarm.yml\" sourcestartlinenumber=\"1\">A pending alarm entry.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.AlarmDelegate.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.AlarmDelegate.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.Core.Scheduler.AlarmSystem.AlarmDelegate",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.AlarmDelegate.yml\" sourcestartlinenumber=\"1\">The method invoked when an alarm fires.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.Core.Scheduler.AlarmSystem",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.Core.Scheduler.AlarmSystem.yml\" sourcestartlinenumber=\"1\">Runs callbacks after a delay on a dedicated kernel thread. Unlike\ninterrupt-context software timers (TimerManager.Schedule), alarm callbacks\nrun in thread context and may block, allocate, and use scheduler\nprimitives. Requires the scheduler; resolution is bounded by the scheduler\ntick.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.Core.Scheduler.ConditionVariable.yml",
       "output": {
         ".html": {
@@ -2140,76 +2196,6 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioKeyboard.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioKeyboard.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioKeyboard",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioKeyboard.yml\" sourcestartlinenumber=\"1\">Virtio-input keyboard driver for ARM64.\nProvides keyboard input via virtio-input device on QEMU virt machine.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioMouse.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioMouse.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioMouse",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Input.VirtioMouse.yml\" sourcestartlinenumber=\"1\">Virtio-input mouse driver for ARM64.\nProvides mouse input via virtio-input device on QEMU virt machine.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Input.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Input.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Input",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Network.VirtioNet.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Network.VirtioNet.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Network.VirtioNet",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Network.VirtioNet.yml\" sourcestartlinenumber=\"1\">VirtIO Network Device Driver for ARM64 using MMIO transport.\nWorks with QEMU virt machine virtio-net-device.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Network.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Network.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Network",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Timer.GenericTimer.yml",
       "output": {
         ".html": {
@@ -2234,118 +2220,6 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Timer",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioDevice.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioDevice.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioDevice",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioDevice.yml\" sourcestartlinenumber=\"1\">Provides initialization and management for virtio MMIO devices.\nHandles device discovery, initialization handshake, and registration.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioMMIO.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioMMIO.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioMMIO",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.VirtioMMIO.yml\" sourcestartlinenumber=\"1\">Virtio MMIO transport layer for ARM64.\nQEMU virt machine provides virtio devices via MMIO starting at 0x0a000000.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringAvail.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringAvail.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringAvail",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringDesc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringDesc.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringDesc",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringUsed.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringUsed.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringUsed",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringUsedElem.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringUsedElem.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.VringUsedElem",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"1\">Virtqueue implementation for virtio devices.\nA virtqueue consists of three parts:</p>\n<ul sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"3\">\n<li sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"3\">Descriptor table: array of buffer descriptors</li>\n<li sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"4\">Available ring: buffers offered to device</li>\n<li sourcefile=\"api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"5\">Used ring: buffers returned by device</li>\n</ul>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.ARM64.Devices.Virtio.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.ARM64.Devices.Virtio",
       "Summary": null
     },
     {
@@ -2518,6 +2392,776 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Capability.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Capability.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Capability",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.ClearFlags.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.ClearFlags.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.ClearFlags",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.FIFO.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.FIFO.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.FIFO",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.FIFO.yml\" sourcestartlinenumber=\"1\">FIFO values.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.FIFOCommand.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.FIFOCommand.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.FIFOCommand",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.ID.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.ID.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.ID",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.ID.yml\" sourcestartlinenumber=\"1\">ID values.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.IOPortOffset.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.IOPortOffset.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.IOPortOffset",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.IOPortOffset.yml\" sourcestartlinenumber=\"1\">IO port offset.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Register.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Register.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Register",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Register3D.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Register3D.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.Register3D",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dArray.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dArray.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dArray",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dArrayRangeHint.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dArrayRangeHint.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dArrayRangeHint",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdClear.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdClear.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdClear",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineContext.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineContext.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineContext",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineShader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineShader.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineShader",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineSurface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineSurface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDefineSurface",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDrawPrimitives.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDrawPrimitives.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdDrawPrimitives",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdHeader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdHeader.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdHeader",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdPresent.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdPresent.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdPresent",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetRenderState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetRenderState.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetRenderState",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetRenderTarget.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetRenderTarget.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetRenderTarget",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetShader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetShader.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetShader",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetShaderConst.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetShaderConst.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetShaderConst",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetTextureState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetTextureState.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetTextureState",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetTransform.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetTransform.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetTransform",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetViewport.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetViewport.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetViewport",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetZRange.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetZRange.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSetZRange",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSurfaceDMA.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSurfaceDMA.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCmdSurfaceDMA",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCopyBox.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCopyBox.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCopyBox",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCopyRect.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCopyRect.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dCopyRect",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclMethod.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclMethod.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclMethod",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclType",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclUsage.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclUsage.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dDeclUsage",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dGuestImage.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dGuestImage.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dGuestImage",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dPrimitiveRange.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dPrimitiveRange.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dPrimitiveRange",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dPrimitiveType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dPrimitiveType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dPrimitiveType",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRect.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRect.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRect",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderState.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderState",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderStateName.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderStateName.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderStateName",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderTargetType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderTargetType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dRenderTargetType",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dShaderConstType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dShaderConstType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dShaderConstType",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dShaderType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dShaderType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dShaderType",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSize.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSize.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSize",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceFlags.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceFlags.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceFlags",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceFormat.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceFormat.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceFormat",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceImageId.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceImageId.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dSurfaceImageId",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTextureState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTextureState.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTextureState",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTextureStateName.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTextureStateName.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTextureStateName",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTransferType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTransferType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTransferType",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTransformType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTransformType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dTransformType",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dVertexArrayIdentity.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dVertexArrayIdentity.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dVertexArrayIdentity",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dVertexDecl.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dVertexDecl.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dVertexDecl",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dZRange.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dZRange.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGA3dZRange",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGAGuestPtr.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGAGuestPtr.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SVGAGuestPtr",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver.yml\" sourcestartlinenumber=\"1\">VMware SVGA II display driver. Binds to one <xref href=\"Cosmos.Kernel.HAL.Pci.PciDevice\" data-throw-if-not-resolved=\"false\"></xref> and owns\nits register ports (BAR0), VRAM (BAR1) and command FIFO (BAR2). Implements\nthe <xref href=\"Cosmos.Kernel.HAL.Devices.Graphic.GraphicDevice\" data-throw-if-not-resolved=\"false\"></xref> contract over a double-buffered framebuffer:\ndrawing lands in the back buffer at <xref href=\"Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver.FrameSize\" data-throw-if-not-resolved=\"false\"></xref>, and\n<xref href=\"Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver.Swap\" data-throw-if-not-resolved=\"false\"></xref> copies it to the visible frame before submitting an\nUpdate through the FIFO. The SVGA3D command layer is\n<xref href=\"Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.VMWareSVGAII3D\" data-throw-if-not-resolved=\"false\"></xref>, built on top of this driver.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.VMWareSVGAII3D.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.VMWareSVGAII3D.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.VMWareSVGAII3D",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.VMWareSVGAII3D.yml\" sourcestartlinenumber=\"1\">SVGA3D command layer on top of <xref href=\"Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver\" data-throw-if-not-resolved=\"false\"></xref>: surfaces,\ncontexts, shaders, render state and DMA transfers, all submitted through\nthe driver's command FIFO. Only meaningful when the device negotiated 3D\nsupport (<xref href=\"Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.SvgaIIDriver.Is3DEnabled\" data-throw-if-not-resolved=\"false\"></xref>) — QEMU's vmware-svga\nexposes no 3D capability, so this layer is only exercised on real VMware.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.SVGAII.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Graphic.SVGAII",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Graphic.yml",
       "output": {
         ".html": {
@@ -2574,6 +3218,34 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Input.VirtioKeyboard.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Input.VirtioKeyboard.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Input.VirtioKeyboard",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Input.VirtioKeyboard.yml\" sourcestartlinenumber=\"1\">Virtio-input keyboard driver. Transport-agnostic: works over virtio MMIO\n(QEMU virt) and virtio PCI (q35 virtio-keyboard-pci) alike.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Input.VirtioMouse.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Input.VirtioMouse.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Input.VirtioMouse",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Input.VirtioMouse.yml\" sourcestartlinenumber=\"1\">Virtio-input mouse driver. Transport-agnostic: works over virtio MMIO\n(QEMU virt) and virtio PCI (q35 virtio-mouse-pci) alike.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Input.yml",
       "output": {
         ".html": {
@@ -2613,6 +3285,20 @@
       "IsMRef": true,
       "Title": "Cosmos.Kernel.HAL.Devices.Network.NetworkDevice",
       "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Network.NetworkDevice.yml\" sourcestartlinenumber=\"1\">Abstract base class for all network devices.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Network.VirtioNet.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Network.VirtioNet.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Network.VirtioNet",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Network.VirtioNet.yml\" sourcestartlinenumber=\"1\">VirtIO network device driver. Transport-agnostic: works over virtio MMIO\n(QEMU virt virtio-net-device) and virtio PCI (virtio-net-pci) alike.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -3060,7 +3746,7 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "Cosmos.Kernel.HAL.Devices.Timer.TimerDevice",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Timer.TimerDevice.yml\" sourcestartlinenumber=\"1\">Abstract base class for all timer devices.</p>\n"
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Timer.TimerDevice.yml\" sourcestartlinenumber=\"1\">Abstract base class for all timer devices. Maintains the software timer\nregistry that is advanced on each hardware tick of the device.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -3074,6 +3760,188 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "Cosmos.Kernel.HAL.Devices.Timer",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioDevice.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioDevice.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.VirtioDevice",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioDevice.yml\" sourcestartlinenumber=\"1\">Registry and driver binding for virtio devices, independent of transport.\nThe MMIO bus scan is driven by the platform initializer that knows the\nwindow layout (QEMU virt on ARM64); the PCI scan runs on every architecture\nfrom the shared HAL initialization after PCI enumeration.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioDma.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioDma.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.VirtioDma",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioDma.yml\" sourcestartlinenumber=\"1\">Address translation helpers for virtio DMA and register access.\nVirtio devices perform DMA with guest physical addresses while the kernel\nworks with HHDM virtual addresses; register windows are accessed through\ntheir HHDM alias so the per-arch device-memory attributes apply.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioInterruptHandler.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioInterruptHandler.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.VirtioInterruptHandler",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioInterruptHandler.yml\" sourcestartlinenumber=\"1\">Driver callback invoked from interrupt context when the device signals.\n<code class=\"paramref\">isrStatus</code> carries the transport ISR bits\n(<xref href=\"Cosmos.Kernel.HAL.Devices.Virtio.VirtioTransport.IsrQueue\" data-throw-if-not-resolved=\"false\"></xref> / <xref href=\"Cosmos.Kernel.HAL.Devices.Virtio.VirtioTransport.IsrConfig\" data-throw-if-not-resolved=\"false\"></xref>);\nthe transport has already acknowledged the interrupt.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioIrqEnable.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioIrqEnable.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.VirtioIrqEnable",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioIrqEnable.yml\" sourcestartlinenumber=\"1\">Wires a platform line interrupt (e.g. a GIC SPI) to a transport dispatch\nhandler. Supplied by the platform initializer that owns the bus, so the\nshared transport stays free of per-arch interrupt-controller calls.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioMmioTransport.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioMmioTransport.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.VirtioMmioTransport",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioMmioTransport.yml\" sourcestartlinenumber=\"1\">Virtio MMIO transport (virtio spec section 4.2): a fixed per-slot register\nwindow, supporting both legacy (version 1) and modern (version 2) register\nflows. Slot discovery is platform-specific (device tree / QEMU virt\nlayout), so the platform initializer supplies the window address, the\ninterrupt line, and the line-interrupt wiring callback.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioPciTransport.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioPciTransport.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.VirtioPciTransport",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioPciTransport.yml\" sourcestartlinenumber=\"1\">Virtio PCI transport (virtio spec section 4.1), modern interface only: the\ncommon/notify/ISR/device config regions are located through vendor-specific\nPCI capabilities pointing into BARs. Interrupts use MSI-X through the\narch-neutral <xref href=\"Cosmos.Kernel.HAL.Pci.MsiX\" data-throw-if-not-resolved=\"false\"></xref>/MsiRouting path (LAPIC on x64, GICv3 ITS on\nARM64); without MSI-X the device runs in polled mode. Legacy-only\nvirtio-pci devices (I/O BAR interface, no vendor capabilities) are not\nsupported.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioTransport.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioTransport.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.VirtioTransport",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.VirtioTransport.yml\" sourcestartlinenumber=\"1\">Transport-independent core of a virtio device (virtio spec 1.x): device\nstatus handshake, feature negotiation, virtqueue setup, notifications,\ninterrupts, and device-specific config access. Device drivers (VirtioNet,\nVirtioKeyboard, VirtioMouse) are written against this class only;\n<xref href=\"Cosmos.Kernel.HAL.Devices.Virtio.VirtioMmioTransport\" data-throw-if-not-resolved=\"false\"></xref> and <xref href=\"Cosmos.Kernel.HAL.Devices.Virtio.VirtioPciTransport\" data-throw-if-not-resolved=\"false\"></xref>\nimplement the per-transport register access.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringAvail.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringAvail.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringAvail",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringDesc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringDesc.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringDesc",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringUsed.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringUsed.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringUsed",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringUsedElem.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringUsedElem.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.VringUsedElem",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"1\">Virtqueue implementation for virtio devices (split ring layout).\nA virtqueue consists of three parts:</p>\n<ul sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"3\">\n<li sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"3\">Descriptor table: array of buffer descriptors</li>\n<li sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"4\">Available ring: buffers offered to device</li>\n<li sourcefile=\"api/Cosmos.Kernel.HAL.Devices.Virtio.Virtqueue.yml\" sourcestartlinenumber=\"5\">Used ring: buffers returned by device\nThe layout is transport-independent; the same rings work over MMIO and PCI.</li>\n</ul>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Devices.Virtio.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Devices.Virtio",
       "Summary": null
     },
     {
@@ -3201,6 +4069,20 @@
       "IsMRef": true,
       "Title": "Cosmos.Kernel.HAL.Interfaces.Devices.PacketReceivedHandler",
       "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Interfaces.Devices.PacketReceivedHandler.yml\" sourcestartlinenumber=\"1\">Delegate for handling packet received events.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.HAL.Interfaces.Devices.SoftwareTimer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.HAL.Interfaces.Devices.SoftwareTimer.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.HAL.Interfaces.Devices.SoftwareTimer",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.Interfaces.Devices.SoftwareTimer.yml\" sourcestartlinenumber=\"1\">A software timer that invokes a callback after a delay, driven by the\nperiodic tick of the timer device it is registered with. Callbacks run\nin interrupt context and must not block.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -3918,34 +4800,6 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer.OnTrigger.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer.OnTrigger.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer.OnTrigger",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer.OnTrigger.yml\" sourcestartlinenumber=\"1\">Represents the trigger handler for a <xref href=\"Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.PITTimer.yml\" sourcestartlinenumber=\"1\">Represents a virtual timer that can be handled using the\nProgrammable Interrupt Timer (PIT).</p>\n"
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.yml",
       "output": {
         ".html": {
@@ -3956,7 +4810,7 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "Cosmos.Kernel.HAL.X64.Devices.Timer.PIT",
-      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.yml\" sourcestartlinenumber=\"1\">Handles the Programmable Interval Timer (PIT).</p>\n"
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.HAL.X64.Devices.Timer.PIT.yml\" sourcestartlinenumber=\"1\">Handles the Programmable Interval Timer (PIT). Software timers registered\nvia <xref href=\"Cosmos.Kernel.HAL.Devices.Timer.TimerDevice.RegisterTimer(Cosmos.Kernel.HAL.Interfaces.Devices.SoftwareTimer)\" data-throw-if-not-resolved=\"false\"></xref> are driven by the channel 0 IRQ.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -4436,6 +5290,20 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.System.Graphics.SVGAII3DCanvas.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.System.Graphics.SVGAII3DCanvas.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.System.Graphics.SVGAII3DCanvas",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.System.Graphics.SVGAII3DCanvas.yml\" sourcestartlinenumber=\"1\">Defines a VMWare SVGAII canvas implementation.\nPlease note that this implementation of <xref href=\"Cosmos.Kernel.System.Graphics.Canvas\" data-throw-if-not-resolved=\"false\"></xref> can only be\nused with virtualizers that implement SVGAII. This class will not work on\nregular hardware.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.System.Graphics.yml",
       "output": {
         ".html": {
@@ -4898,6 +5766,34 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.System.Network.IPv4.ICMPClient.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.System.Network.IPv4.ICMPClient.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.System.Network.IPv4.ICMPClient",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.System.Network.IPv4.ICMPClient.yml\" sourcestartlinenumber=\"1\">Used to manage the ICMP connection to a client.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.System.Network.IPv4.ICMPPacket.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.System.Network.IPv4.ICMPPacket.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.System.Network.IPv4.ICMPPacket",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.System.Network.IPv4.ICMPPacket.yml\" sourcestartlinenumber=\"1\">Represents an ICMP packet.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/Cosmos.Kernel.System.Network.IPv4.IPPacket.yml",
       "output": {
         ".html": {
@@ -5147,6 +6043,20 @@
       "IsMRef": true,
       "Title": "Cosmos.Kernel.System.Network.IPv4.UDP.DNS.DNSQuery",
       "Summary": "<p sourcefile=\"api/Cosmos.Kernel.System.Network.IPv4.UDP.DNS.DNSQuery.yml\" sourcestartlinenumber=\"1\">Represents a DNS query.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Cosmos.Kernel.System.Network.IPv4.UDP.DNS.DNSRecordType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Cosmos.Kernel.System.Network.IPv4.UDP.DNS.DNSRecordType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Cosmos.Kernel.System.Network.IPv4.UDP.DNS.DNSRecordType",
+      "Summary": "<p sourcefile=\"api/Cosmos.Kernel.System.Network.IPv4.UDP.DNS.DNSRecordType.yml\" sourcestartlinenumber=\"1\">DNS resource record types this stack understands (RFC 1035).</p>\n"
     },
     {
       "type": "ManagedReference",
